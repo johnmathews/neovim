@@ -189,7 +189,7 @@ nvim_tree.setup {
     ignore_list = {},
   },
   filters = {
-    dotfiles = true,
+    dotfiles = false,
     custom = {},
   },
   git = {

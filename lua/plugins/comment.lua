@@ -7,14 +7,33 @@ local map = vim.api.nvim_set_keymap
 
 -- invert commenting of visually selected lines
 -- https://github.com/numToStr/Comment.nvim/issues/17#issuecomment-939410954
-map("v", "gci", ":normal gcc<cr>",  { noremap = true, silent = true })
+map("v", "gci", ":normal gcc<cr>", { noremap = true, silent = true })
 
 -- Add support for Dockerfile comments
 -- https://github.com/numToStr/Comment.nvim#%EF%B8%8F-filetypes--languages
 local ft = require('Comment.ft')
-ft.Dockerfile = {'#%s', '#%s'}
+ft.Dockerfile = { '#%s', '#%s' }
 
 local setup = {
+
+  context_commentstring = {
+    enable = true,
+    enable_autocmd = false,
+    config = {
+      -- You can specify the commentstring for various types of text objects
+      -- For example, for JavaScript inside TSX:
+      typescript = '// %s',
+      tsx = {
+        __default = '// %s',
+        jsx_element = '{/* %s */}',
+        jsx_fragment = '{/* %s */}',
+        jsx_attribute = '{/* %s */}',
+        comment = '// %s'
+      },
+      html = '<!-- %s -->'
+    }
+  },
+
   ---Add a space b/w comment and the line
   ---@type boolean|fun():boolean
   padding = true,
@@ -78,28 +97,7 @@ local setup = {
   },
 
 
-  pre_hook = function(ctx)
-    -- Only calculate commentstring for tsx filetypes
-    if vim.bo.filetype == 'typescriptreact' then
-      local U = require('Comment.utils')
-
-      -- Determine whether to use linewise or blockwise commentstring
-      local type = ctx.ctype == U.ctype.line and '__default' or '__multiline'
-
-      -- Determine the location where to calculate commentstring from
-      local location = nil
-      if ctx.ctype == U.ctype.block then
-        location = require('ts_context_commentstring.utils').get_cursor_location()
-      elseif ctx.cmotion == U.cmotion.v or ctx.cmotion == U.cmotion.V then
-        location = require('ts_context_commentstring.utils').get_visual_start_location()
-      end
-
-      return require('ts_context_commentstring.internal').calculate_commentstring({
-        key = type,
-        location = location,
-      })
-    end
-  end,
+  pre_hook = require('ts_context_commentstring.integrations.comment_nvim').create_pre_hook(),
 
   post_hook = function(ctx)
     if ctx.range.srow == ctx.range.erow then

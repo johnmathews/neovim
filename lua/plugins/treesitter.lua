@@ -114,6 +114,7 @@ require 'nvim-treesitter.configs'.setup {
     "toml",
     "tree-sitter-query",
     "tsx",
+    "typescript",
     "yaml",
   },
   auto_install = true,
