@@ -90,16 +90,15 @@ lualine.setup({
       { 'diff', padding = { left = 3, right = 3 }, color = { fg = '#000000', bg = '#36454F', gui = 'bold' }, separator = { left = '', right = '' } },
     },
     lualine_c = {
+      { show_filepath, padding = { left = 2, right = 0 }, color = { fg = "#000000", bg = "#55F954", gui = 'bold' }, separator = { left = '', right = '' } },
       { 'diagnostics', padding = { left = 2, right = 2 } },
-      { 'searchcount', maxcount = 999, timout = 500, color = { fg = 'black', bg = '#00FF00' }, padding = { left = 2, right = 2 }, separator = { left = '', right = '' } },
-      { symbols_outline, padding = { left = 2, right = 2 }},
+      { 'searchcount', maxcount = 999, timout = 500, color = { fg = 'white', gui = 'bold' }, padding = { left = 2, right = 2 }, separator = { left = '', right = '' } },
+      { symbols_outline, padding = { left = 2, right = 2 } },
       -- { "lsp_progress" },
     },
-    lualine_x = {
-      { show_filepath, padding = { left = 2, right = 0 }, color = { fg = "#000000", bg = "#55F954", gui = 'bold' }, separator = { left = '', right = '' } },
-    },
+    lualine_x = {},
     lualine_y = { 'encoding', 'fileformat', 'filetype' },
-    lualine_z = { },
+    lualine_z = {},
   },
   extensions = {
     'fzf',

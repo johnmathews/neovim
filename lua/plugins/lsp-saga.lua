@@ -3,6 +3,7 @@ local saga = require('lspsaga')
 
 -- DOCUMENTATION https://nvimdev.github.io/lspsaga/
 -- lspsage.symbols in breadcrumbs
+-- winbar?
 
 saga.setup({
   outline = {

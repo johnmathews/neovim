@@ -35,8 +35,7 @@ end
 set_python_host_prog()
 
 
-vim.cmd("let g:node_host_prog = expand('~/.nvm/versions/node/v20.5.0/bin/node')")
--- vim.cmd("let g:node_host_pro = expand('~/.nvm/versions/node/v20.5.0/bin/node')")
+vim.cmd("let g:node_host_prog = expand('~/.nvm/versions/node/v20.12.2/bin/node')")
 
 -- convenience function for adding keybind details to whichkey from a plugins config
 function KeymapOptions(description)
