@@ -82,7 +82,8 @@ lualine.setup({
   },
   sections = {
     lualine_a = {
-      { Row_max_row, color = { bg = '#04FBD1', gui = 'bold' } },
+      { 'searchcount', maxcount = 999, timout = 500, color = { fg = 'white', bg = "black", gui = 'bold' }, padding = { left = 2, right = 2 }, separator = { left = '', right = '' } },
+      { Row_max_row, color = { bg = '#04FBD1', gui = 'bold' }, separator = { left = '', right = '' } },
       { Current_col, { 'mode', color = { bg = '#04FBD1', gui = 'bold' } } },
     },
     lualine_b = {
@@ -92,7 +93,6 @@ lualine.setup({
     lualine_c = {
       { show_filepath, padding = { left = 2, right = 0 }, color = { fg = "#000000", bg = "#55F954", gui = 'bold' }, separator = { left = '', right = '' } },
       { 'diagnostics', padding = { left = 2, right = 2 } },
-      { 'searchcount', maxcount = 999, timout = 500, color = { fg = 'white', gui = 'bold' }, padding = { left = 2, right = 2 }, separator = { left = '', right = '' } },
       { symbols_outline, padding = { left = 2, right = 2 } },
       -- { "lsp_progress" },
     },
