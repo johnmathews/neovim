@@ -180,9 +180,8 @@ return lazy.setup({
       "nvim-tree/nvim-web-devicons"
     },
   },
+
   {
-    -- dir = '/Users/john/projects/lspsaga.nvim',
-    -- branch = "outline-nodes-collaps",
     "nvimdev/lspsaga.nvim",
     branch = "main",
     -- tag = "*",
@@ -398,7 +397,7 @@ return lazy.setup({
       require("glow").setup({
         style = "dark",
         pager = false,
-        border = "double", 
+        border = "double",
       })
     end,
   },

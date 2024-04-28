@@ -29,6 +29,8 @@ local options = {
   backupdir = "/tmp/,/private/tmp",
   directory = "/tmp/,/private/tmp", -- maybe this is swapfile location?
 
+  winbar = nil, -- force winbar to be disabled. because lspsaga winbar doesnt seem to work as documented
+
   timeout = true,
   timeoutlen = 300,
   ttimeoutlen = 200,
