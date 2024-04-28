@@ -5,12 +5,12 @@ setlocal expandtab
 setlocal shiftwidth=4
 setlocal smarttab
 
-setlocal textwidth=119
+setlocal textwidth=125
 setlocal autoindent
 setlocal nowrap
 
 if exists('+colorcolumn')
-    setlocal colorcolumn=121
+    setlocal colorcolumn=125
 else
     au! BufEnter <buffer> match ColorColumn /\%121v.*/
 endif
