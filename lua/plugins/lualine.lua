@@ -17,7 +17,7 @@ local function symbols_outline()
     symbols = ""
   elseif not vim.api.nvim_win_get_config(0).zindex then
     -- https://nvimdev.github.io/lspsaga/breadcrumbs/
-    symbols = require('lspsaga.symbol.winbar').get_bar() or " "
+    symbols = require('lspsaga.symbol.winbar').get_bar() or nil
   end
   return symbols
 end

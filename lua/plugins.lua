@@ -63,6 +63,11 @@ return lazy.setup({
     end
   },
 
+  -- copy text to the system clipboard using the ANSI OSC52 sequence.
+  {
+    'ojroques/vim-oscyank'
+  },
+
   -- resizing windows
   {
     "simeji/winresizer",

@@ -31,7 +31,8 @@ saga.setup({
     virtual_text = true,
   },
   symbol_in_winbar = {
-    enable  = false,
+    show_file  = false,
+    enable = false,
   }
 })
 
