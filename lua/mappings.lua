@@ -14,7 +14,7 @@ if not Functions_ok then
 end
 
 ----- INSERT MODE ---------------
-map("i", "jk", "<ESC>", KeymapOptions("enter Insert Mode"))
+map("i", "kj", "<ESC>", KeymapOptions("enter Insert Mode"))
 --jump back one word
 map("i", "<C-h>", "<C-o>b", KeymapOptions("jump back one word"))
 -- delete the word infront of the cursor
