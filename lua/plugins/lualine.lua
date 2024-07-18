@@ -63,8 +63,7 @@ local function show_filepath()
       vim.pesc(vim.fn.fnamemodify(project_root, ':h')) .. '/', '')
     return project_root_name .. '/' .. relative_path .. ' '
   else
-    -- Fallback to showing just the parent directory if no project root is found
-    return vim.fn.expand('%:h')
+    return current_file
   end
 end
 
@@ -91,7 +90,7 @@ lualine.setup({
       { 'diff', padding = { left = 3, right = 3 }, color = { fg = '#000000', bg = '#36454F', gui = 'bold' }, separator = { left = '', right = '' } },
     },
     lualine_c = {
-      { show_filepath, padding = { left = 2, right = 0 }, color = { fg = "#000000", bg = "#55F954", gui = 'bold' }, separator = { left = '', right = '' } },
+      { show_filepath, padding = { left = 1, right = 0 }, color = { fg = "#000000", bg = "#55F954", gui = 'bold' }, separator = { left = '', right = '' } },
       { 'diagnostics', padding = { left = 2, right = 2 } },
       { symbols_outline, padding = { left = 2, right = 2 } },
       -- { "lsp_progress" },
