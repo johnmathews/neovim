@@ -7,16 +7,16 @@ vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,
 
 require("auto-session").setup {
   -- log_level = "debug",
-  auto_session_suppress_dirs = { "~/", "~/Projects", "~/Downloads", "/" }, -- Suppress session create/restore if in one of these
-  auto_save_enabled = true,
+  auto_save = true,
+  bypass_save_filetypes = { "NvimTree" },
   pre_save_cmds = { "NvimTreeClose" },
-  bypass_session_save_file_types = { "NvimTree" },
-
   session_lens = {
-    theme_conf = { border = true },
     previewer = false,
+    theme_conf = {
+      border = true
+    }
   },
-
+  suppressed_dirs = { "~/", "~/Projects", "~/Downloads", "/" }
 }
 
 vim.cmd [[

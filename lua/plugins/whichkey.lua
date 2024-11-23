@@ -25,20 +25,6 @@ local setup = {
       g = true,            -- bindings for prefixed with g
     },
   },
-  -- add operators that will trigger motion and text object completion
-  -- to enable all native operators, set the preset / operators plugin above
-
-  -- deprecated see opts.defer
-  -- operators = { gc = "Comments" },
-
-  -- deprecated see opts.replace
-  -- key_labels = {
-  --   -- override the label used to display some keys. It doesn't effect WK in any other way.
-  --   -- For example:
-  --   -- ["<space>"] = "SPC",
-  --   -- ["<cr>"] = "RET",
-  --   -- ["<tab>"] = "TAB",
-  -- },
 
   icons = {
     breadcrumb = "»", -- symbol used in the command line area that shows your active key combo
@@ -46,56 +32,21 @@ local setup = {
     group = "+", -- symbol prepended to a group
   },
 
-  -- deprecated see opts.keys
-  -- popup_mappings = {
-  --   scroll_down = "<c-d>", -- binding to scroll down inside the popup
-  --   scroll_up = "<c-u>",   -- binding to scroll up inside the popup
-  -- },
-
-  -- depracated see opts.win
-  -- window = {
-  --   border = "none",          -- none, single, double, shadow
-  --   position = "bottom",      -- bottom, top
-  --   margin = { 1, 0, 1, 0 },  -- extra window margin [top, right, bottom, left]
-  --   padding = { 2, 2, 2, 2 }, -- extra window padding [top, right, bottom, left]
-  --   winblend = 0,
-  -- },
-
   layout = {
     height = { min = 4, max = 25 }, -- min and max height of the columns
     width = { min = 20, max = 50 }, -- min and max width of the columns
     spacing = 3,                    -- spacing between columns
     align = "left",                 -- align columns left, center or right
   },
-
-  -- deprecated see opts.filter
-  -- ignore_missing = false,                                                       -- enable this to hide mappings for which you didn't specify a labe
-
-  -- deprecated
-  -- hidden = { "<silent>", "<cmd>", "<Cmd>", "<CR>", "call", "lua", "^:", "^ " }, -- hide mapping boilerplate
-  show_help = true, -- show help message on the command line when the popup is visible
-
-  -- deprecated must be a table
-  -- triggers = "auto",                                                            -- automatically setup triggers
-
-  -- triggers = {"<leader>"} -- or specify a list manually
-
-  -- deprecated see opts.triggers
-  -- triggers_blacklist = {
-  --   -- list of mode / prefixes that should never be hooked by WhichKey
-  --   -- this is mostly relevant for key maps that start with a native binding
-  --   -- most people should not need to change this
-  --   i = { "j", "k", "<Tab>" },
-  --   v = { "j", "k" },
-  -- },
+  show_help = true,                 -- show help message on the command line when the popup is visible
 }
 
 which_key.setup(setup)
 
-which_key.register({
-  { "D",  group = "Database" },
-  { "Df", "<Cmd>DBUIFindBuffer<Cr>",    desc = "Find buffer" },
-  { "Dq", "<Cmd>DBUILastQueryInfo<Cr>", desc = "Last query info" },
-  { "Dr", "<Cmd>DBUIRenameBuffer<Cr>",  desc = "Rename buffer" },
-  { "Du", "<Cmd>DBUIToggle<Cr>",        desc = "Toggle UI" }
-})
+-- which_key.register({
+  -- { "D",  group = "Database" },
+  -- { "Df", "<Cmd>DBUIFindBuffer<Cr>",    desc = "Find buffer" },
+  -- { "Dq", "<Cmd>DBUILastQueryInfo<Cr>", desc = "Last query info" },
+  -- { "Dr", "<Cmd>DBUIRenameBuffer<Cr>",  desc = "Rename buffer" },
+  -- { "Du", "<Cmd>DBUIToggle<Cr>",        desc = "Toggle UI" }
+-- })
