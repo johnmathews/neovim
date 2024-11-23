@@ -313,6 +313,7 @@ return lazy.setup({
     end,
     event = "VimEnter",
   },
+
   {
     "tpope/vim-dadbod",
     lazy = true,
@@ -333,12 +334,12 @@ return lazy.setup({
     },
   },
 
-  {
-    "lewis6991/gitsigns.nvim",
-    config = function()
-      require("plugins.git-signs")
-    end,
-  },
+  -- {
+  --   "lewis6991/gitsigns.nvim",
+  --   config = function()
+  --     require("plugins.git-signs")
+  --   end,
+  -- },
 
   {
     "lukas-reineke/indent-blankline.nvim",

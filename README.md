@@ -1,5 +1,7 @@
 # Notes about this Neovim config
 
+## Upgrade to latest version of neovim
+
 ## Window (Split) management
 
 1. `<C-w>` then lots of options in `which-key` window
@@ -7,6 +9,7 @@
 3. Horizontal split to vertical split: `<C-w>H`
    - this rotates the splits anti-clockwise. Will work on any layout.
    - `J`, `K`, `L` keys also work.
+
 ## Leap(ing about like a ninja)
 
 1. Jump to text based on character pairs. In normal mode type `s` (or `S` to search backwards from
