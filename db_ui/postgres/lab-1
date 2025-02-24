@@ -1,0 +1,60 @@
+-- select * from player_seasons;  
+
+-- create type season_stats as (
+--   season INTEGER,
+--   gp INTEGER,
+--   pts REAL,
+--   reb REAL,
+--   ast REAL
+-- );
+
+-- create table players (
+--   player_name TEXT,
+--   height TEXT,
+--   college TEXT,
+--   country TEXT,
+--   draft_year TEXT,
+--   draft_round TEXT,
+--   draft_number TEXT,
+--   season_stats season_stats[],
+--   current_season INTEGER
+-- );
+
+-- select min(season) from player_seasons
+
+with yesterday as (
+    select * from players
+    where current_season = 1995
+),
+
+today as (
+    select * from player_seasons
+    where season = 1996
+)
+
+select
+    COALESCE(t.player_name, y.player_name) as player_name,
+    COALESCE(t.height, y.height) as height,
+    COALESCE(t.college, y.college) as college,
+    COALESCE(t.draft_year, y.draft_year) as draft_year,
+    COALESCE(t.draft_number, y.draft_number) as draft_number,
+    case
+        when y.season_stats is null
+            then array[ROW(
+                t.season,
+                t.gp,
+                t.pts,
+                t.reb,
+                t.ast
+            )::season_stats]
+        else
+            y.season_stats || array[ROW(
+                t.season,
+                t.gp,
+                t.pts,
+                t.reb,
+                t.ast
+            )::season_stats]
+    end as season_stats
+from today as t full outer join yesterday as y
+    on t.player_name = y.player_name;

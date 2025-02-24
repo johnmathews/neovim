@@ -43,12 +43,19 @@ null_ls.setup({
 
     -- PYTHON
     -- https://github.com/jose-elias-alvarez/null-ls.nvim/blob/main/doc/BUILTINS.md
-    null_ls.builtins.diagnostics.pyproject_flake8,
+    -- null_ls.builtins.diagnostics.pyproject_flake8,
     null_ls.builtins.formatting.isort,
     null_ls.builtins.formatting.autoflake,
     null_ls.builtins.formatting.black.with({
       -- extra_args = { "--line-length=120" }
     }), -- use pyproject.toml for modifications
 
+    -- SQL
+    null_ls.builtins.formatting.sqlfluff.with({
+      extra_args = { "--dialect", "postgres" }, -- change to your dialect
+    }),
+    -- null_ls.builtins.diagnostics.sqlfluff.with({
+    --   extra_args = { "--dialect", "postgres" },   -- change to your dialect
+    -- }),
   },
 })

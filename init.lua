@@ -87,5 +87,6 @@ vim.api.nvim_create_autocmd({"BufRead", "BufNewFile"}, {
     end,
 })
 
+vim.lsp.set_log_level("debug")
 -- use the following to see what highlight group the text under the cursor is part of
 -- :exe 'hi '.synIDattr(synstack(line('.'), col('.'))[-1], 'name')

@@ -27,6 +27,8 @@ if not lspconfig_status_ok then
   return
 end
 
+local util = require 'lspconfig.util'
+
 function KeymapBufferOptions(args)
   local description = args.description or "no description"
   local bufnr = args.bufnr
@@ -48,7 +50,7 @@ local on_attach = function(client, bufnr)
     KeymapBufferOptions({ description = "LSP format buffer", bufnr = bufnr }))
 
   -- Enable completion triggered by <c-x><c-o>
-  vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+  -- vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
 
   vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, KeymapOptions("Diagnostic - Open Location List")) -- view a list of errors and warnings
 
@@ -126,6 +128,33 @@ mason_lspconfig.setup_handlers({
       settings = pyright_settings,
     }
   end,
+  ["sqlls"] = function()
+    require("lspconfig").sqlls.setup {
+      on_attach = on_attach,
+      capabilities = capabilities,
+      command = { "sql-language-server", "up", "--method", "stdio" },
+      filetypes = { 'sql', 'mysql' },
+      root_dir = util.root_pattern '.sqllsrc.json',
+      settings = {},
+    }
+  end,
+  -- ["sqls"] = function()
+  --   require("lspconfig").sqls.setup {
+  --     on_attach = on_attach,
+  --     capabilities = capabilities,
+
+  --     settings = {
+  --       sqls = {
+  --         connections = {
+  --           {
+  --             driver = "postgresql",
+  --             dataSourceName = "john@tcp(localhost:5432)/postgres",
+  --           },
+  --         },
+  --       },
+  --     },
+  --   }
+  -- end,
   ["lua_ls"] = function()
     -- documentation about annotations and ignoring a row: https://luals.github.io/wiki/annotations/#diagnostic
     -- just search this repo for ---@diagnostic
