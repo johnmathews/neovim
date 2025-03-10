@@ -519,15 +519,15 @@ return lazy.setup({
   -- " " toml icon ,
   {
     "nvim-tree/nvim-web-devicons",
-    config = function()
-      require("nvim-web-devicons").set_icon {
-        toml = {
-          icon = "",
-          color = "#6d8086",
-          name = "Toml"
-        },
-      }
-    end,
+    -- config = function()
+    --   require("nvim-web-devicons").set_icon {
+    --     toml = {
+    --       icon = "",
+    --       color = "#6d8086",
+    --       name = "Toml"
+    --     },
+    --   }
+    -- end,
   },
 
 })
