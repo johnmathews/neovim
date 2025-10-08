@@ -37,15 +37,15 @@ null_ls.setup({
 
     -- ESLint https://github.com/mantoni/eslint_d.js
     -- this might not be necessary in addition to prettier
-    null_ls.builtins.code_actions.eslint_d,
-    null_ls.builtins.diagnostics.eslint_d,
-    null_ls.builtins.formatting.eslint_d,
+    -- null_ls.builtins.code_actions.eslint_d,
+    -- null_ls.builtins.diagnostics.eslint_d,
+    -- null_ls.builtins.formatting.eslint_d,
 
     -- PYTHON
     -- https://github.com/jose-elias-alvarez/null-ls.nvim/blob/main/doc/BUILTINS.md
     -- null_ls.builtins.diagnostics.pyproject_flake8,
     null_ls.builtins.formatting.isort,
-    null_ls.builtins.formatting.autoflake,
+    -- null_ls.builtins.formatting.autoflake,
     null_ls.builtins.formatting.black.with({
       -- extra_args = { "--line-length=120" }
     }), -- use pyproject.toml for modifications

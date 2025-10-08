@@ -146,20 +146,40 @@ return lazy.setup({
     end,
   },
 
+  -- MASON ---
+  -- tool-installer
   {
     "williamboman/mason.nvim",
     dependencies = {
       "neovim/nvim-lspconfig",
       "williamboman/mason-lspconfig.nvim",
+      'WhoIsSethDaniel/mason-tool-installer.nvim',
       "mfussenegger/nvim-dap"
     },
     config = function()
       require("plugins.mason")
     end,
   },
+  -- MASON lspconfig---
+  {
+    "mason-org/mason-lspconfig.nvim",
+    opts = {
+      ensure_installed = { "lua_ls", "rust_analyzer" },
+    },
+    dependencies = {
+      { "mason-org/mason.nvim", opts = {} },
+      "neovim/nvim-lspconfig",
+    },
+  },
+  -- MASON nvim dap ---
+  {
+    "williamboman/mason.nvim",
+    "mfussenegger/nvim-dap",
+    "jay-babu/mason-nvim-dap.nvim",
+  },
 
   {
-    "jose-elias-alvarez/null-ls.nvim",
+    "nvimtools/none-ls.nvim",
     config = function()
       require("plugins.null-ls")
     end
@@ -334,12 +354,12 @@ return lazy.setup({
     },
   },
 
-  -- {
-  --   "lewis6991/gitsigns.nvim",
-  --   config = function()
-  --     require("plugins.git-signs")
-  --   end,
-  -- },
+  {
+    "lewis6991/gitsigns.nvim",
+    config = function()
+      require("plugins.git-signs")
+    end,
+  },
 
   {
     "lukas-reineke/indent-blankline.nvim",
@@ -483,7 +503,7 @@ return lazy.setup({
     end,
   },
 
-  -- syntax highlighting for coffeeScript 
+  -- syntax highlighting for coffeeScript
   { "kchmck/vim-coffee-script" },
 
   -- syntax highlighting for requirements.txt files
