@@ -79,15 +79,18 @@ end
 
 M.toggle_diagnostics = (function()
 	local modes = {
-		-- 1) Normal: signs + underline + virtual_text OFF + virtual_lines OFF
-		{ vt = false, vl = false, signs = true, underline = true },
-		-- 2) Text:   virtual_text ON (small hints), virtual_lines OFF
-		{ vt = { source = true, spacing = 1, prefix = "" }, vl = false, signs = true, underline = true },
-		-- 3) Lines:  virtual_lines ON (expanded), virtual_text OFF
-		{ vt = false, vl = { only_current_line = false }, signs = true, underline = true },
-		-- 4) Silent: everything off
-		{ vt = false, vl = false, signs = false, underline = false },
+		{ name = "Normal", vt = false, vl = false, signs = true, underline = true },
+		{
+			name = "Text",
+			vt = { source = true, spacing = 1, prefix = "" },
+			vl = false,
+			signs = true,
+			underline = true,
+		},
+		{ name = "Lines", vt = false, vl = { only_current_line = false }, signs = true, underline = true },
+		{ name = "Silent", vt = false, vl = false, signs = false, underline = false },
 	}
+
 	local i = 1
 	return function()
 		local m = modes[i]
@@ -98,10 +101,50 @@ M.toggle_diagnostics = (function()
 			underline = m.underline,
 			severity_sort = true,
 		})
-		vim.notify(("Diagnostics mode: %d"):format(i))
+		vim.notify(("Diagnostics mode: %s"):format(m.name), vim.log.levels.INFO, { title = "LSP Diagnostics" })
 		i = (i % #modes) + 1
 	end
 end)()
+
+M.active_tools = function()
+	local bufnr = vim.api.nvim_get_current_buf()
+
+	-- LSP clients
+	local lsp = {}
+	for _, c in pairs(vim.lsp.get_clients({ bufnr = bufnr })) do
+		table.insert(lsp, c.name)
+	end
+
+	-- Conform (formatters)
+	local fmt = {}
+	pcall(function()
+		local conform = require("conform")
+		for _, f in ipairs(conform.list_formatters(bufnr)) do
+			table.insert(fmt, f.name or f)
+		end
+	end)
+
+	-- nvim-lint (linters)
+	local linters = {}
+	pcall(function()
+		local lint = require("lint")
+		local ft = vim.bo[bufnr].filetype
+		local by_ft = lint.linters_by_ft or {}
+		for _, l in ipairs(by_ft[ft] or {}) do
+			table.insert(linters, l)
+		end
+	end)
+
+	vim.notify(
+		("%s\n%s\n%s"):format(
+			"LSP: " .. (#lsp > 0 and table.concat(lsp, ", ") or "—"),
+			"Formatters: " .. (#fmt > 0 and table.concat(fmt, ", ") or "—"),
+			"Linters: " .. (#linters > 0 and table.concat(linters, ", ") or "—")
+		),
+		vim.log.levels.INFO,
+		{ title = "Active tools (current buffer)" }
+	)
+end
 
 -- toggle the quickfix window
 -- in mappings.lua gq is mapped to this

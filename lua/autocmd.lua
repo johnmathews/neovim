@@ -8,24 +8,22 @@
 --   augroup END
 -- ]], false)
 
-
 vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "python", "yaml", "lua" },
-  callback = function()
-    vim.opt_local.foldmethod = "expr"
-    vim.opt_local.foldexpr = "nvim_treesitter#foldexpr()"
-    vim.opt_local.foldlevel = 99
-  end,
+	pattern = { "python", "yaml", "lua" },
+	callback = function()
+		vim.opt_local.foldmethod = "expr"
+		vim.opt_local.foldexpr = "nvim_treesitter#foldexpr()"
+		vim.opt_local.foldlevel = 99
+	end,
 })
 
 -- highlight on yank
 vim.cmd([[
   augroup YankHighlight
     autocmd!
-    autocmd TextYankPost * silent! lua vim.highlight.on_yank()
+    autocmd TextYankPost * silent! lua vim.hl.on_yank()
   augroup end
 ]])
-
 
 vim.cmd([[
   augroup RedrawOnFocusGained
@@ -48,7 +46,6 @@ vim.cmd([[
 --   augroup END
 -- ]])
 
-
 vim.cmd([[
   autocmd BufEnter,BufNew *.bq setl filetype=sql
 ]])
@@ -68,4 +65,4 @@ vim.cmd([[
 ]])
 
 -- set linenumber in telescope previews
-vim.cmd "autocmd User TelescopePreviewerLoaded setlocal number"
+vim.cmd("autocmd User TelescopePreviewerLoaded setlocal number")

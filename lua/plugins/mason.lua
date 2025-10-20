@@ -127,12 +127,9 @@ local pyright_settings = {
 	},
 }
 
--- mason-lspconfig v2 notes:
--- * 'automatic_installation' was removed
--- * use 'automatic_enable = true' so installed servers auto-enable
 mason_lspconfig.setup({
-	ensure_installed = { "tailwindcss", "lua_ls", "jsonls", "pyright", "yamlls" },
-	automatic_enable = true, -- <-- new in v2
+	ensure_installed = { "tailwindcss", "lua_ls", "jsonls", "pyright", "sqls", "yamlls" },
+	automatic_enable = true,
 })
 
 -- Common LSP opts
@@ -151,7 +148,7 @@ end
 -- Tip: get a list of names with :lua =require("mason-lspconfig").get_available_servers()
 for _, name in ipairs(require("mason-lspconfig").get_available_servers()) do
 	-- we'll override these below, so skip them here
-	if not vim.tbl_contains({ "lua_ls", "pyright", "sqlls" }, name) then
+	if not vim.tbl_contains({ "lua_ls", "pyright", "sqls" }, name) then
 		vim.lsp.config(name, with_defaults())
 	end
 end
@@ -201,27 +198,37 @@ vim.lsp.config(
 				completion = { callSnippet = "Both" },
 				diagnostics = {
 					globals = {
+						"KeymapBufferOptions",
+						"KeymapOptions",
 						"P",
 						"pcall",
+						"require",
 						"string",
 						"vim",
-						"require",
-						"KeymapOptions",
-						"KeymapBufferOptions",
+						"Functions",
 					},
-					disable = { "trailing-space" },
+					disable = { "lowercase-global", "trailing-space" },
 				},
 			},
 		},
 	})
 )
 
--- SQL (sqlls)
+-- SQL (sqls)
 vim.lsp.config(
-	"sqlls",
+	"sqls",
 	with_defaults({
-		cmd = { "sql-language-server", "up", "--method", "stdio" },
+		cmd = { "sqls" }, -- installed via Mason
 		filetypes = { "sql", "mysql" },
-		root_dir = util.root_pattern(".sqllsrc.json"),
+		root_dir = util.root_pattern("config.yml", ".git"),
+		settings = {
+			sqls = {
+				connections = {
+					-- Example (optional): configure DSNs for hover/completion across DBs
+					-- {driver = "postgresql", dataSourceName = "host=127.0.0.1 port=5432 user=postgres dbname=mydb sslmode=disable" },
+					-- {driver = "mysql",      dataSourceName = "user:pass@tcp(127.0.0.1:3306)/mydb" },
+				},
+			},
+		},
 	})
 )
