@@ -19,7 +19,7 @@ if not status_ok then
 end
 
 return lazy.setup({
-  { "lewis6991/impatient.nvim" },
+  -- { "lewis6991/impatient.nvim" },
   { "nvim-lua/plenary.nvim" },
   { "nvim-lua/popup.nvim" },
   { "dstein64/vim-startuptime" },
@@ -57,10 +57,16 @@ return lazy.setup({
 
   -- https://github.com/rmagatti/auto-session#-command-hooks
   {
-    'rmagatti/auto-session',
+    "rmagatti/auto-session",
+    dependencies = {
+      "nvim-telescope/telescope.nvim",
+      "rmagatti/session-lens", -- <-- add this
+    },
     config = function()
-      require("plugins.auto-session")
-    end
+      require("plugins.auto-session") -- keep your existing config file
+      -- load Telescope extension
+      pcall(function() require("telescope").load_extension("session-lens") end)
+    end,
   },
 
   -- copy text to the system clipboard using the ANSI OSC52 sequence.
@@ -146,45 +152,40 @@ return lazy.setup({
     end,
   },
 
-  -- MASON ---
-  -- tool-installer
+  -- Load Mason early and configure in your existing plugins/mason.lua
   {
     "williamboman/mason.nvim",
-    dependencies = {
-      "neovim/nvim-lspconfig",
-      "williamboman/mason-lspconfig.nvim",
-      'WhoIsSethDaniel/mason-tool-installer.nvim',
-      "mfussenegger/nvim-dap"
-    },
+    lazy = false,              -- ensure it's available before anything depending on it
+    priority = 1000,           -- load very early
     config = function()
-      require("plugins.mason")
+      require("plugins.mason") -- your mason.lua already calls mason.setup() and mason-lspconfig.setup()
     end,
   },
-  -- MASON lspconfig---
+
+  -- Bridge Mason <-> LSP (no opts here; setup happens in plugins/mason.lua)
   {
-    "mason-org/mason-lspconfig.nvim",
-    opts = {
-      ensure_installed = { "lua_ls", "rust_analyzer" },
-    },
+    "williamboman/mason-lspconfig.nvim",
     dependencies = {
-      { "mason-org/mason.nvim", opts = {} },
+      "williamboman/mason.nvim",
       "neovim/nvim-lspconfig",
     },
   },
-  -- MASON nvim dap ---
+
+  -- (Optional) DAP bridge, no duplicate mason spec
   {
-    "williamboman/mason.nvim",
-    "mfussenegger/nvim-dap",
     "jay-babu/mason-nvim-dap.nvim",
+    dependencies = {
+      "williamboman/mason.nvim",
+      "mfussenegger/nvim-dap",
+    },
   },
 
-  {
-    "nvimtools/none-ls.nvim",
-    config = function()
-      require("plugins.null-ls")
-    end
-  },
-  { "ray-x/lsp_signature.nvim",   dependencies = "neovim/nvim-lspconfig" },
+  -- deprecated - use conform and nvim-lint instead.
+  -- { "nvimtools/none-ls.nvim", config = function() require("plugins.null-ls") end },
+  { "stevearc/conform.nvim",    config = function() require("plugins.conform") end },
+  { "mfussenegger/nvim-lint",   config = function() require("plugins.nvim-lint") end },
+
+  { "ray-x/lsp_signature.nvim", dependencies = "neovim/nvim-lspconfig" },
   {
     "WhoIsSethDaniel/toggle-lsp-diagnostics.nvim",
     config = function()
@@ -287,6 +288,7 @@ return lazy.setup({
   -- snippets engine
   {
     "L3MON4D3/LuaSnip",
+    build = "make install_jsregexp",
     config = function()
       require("plugins.luasnip")
     end,
@@ -304,7 +306,8 @@ return lazy.setup({
       "nvim-treesitter/nvim-treesitter-textobjects",
       -- this is an (unmaintained) treesitter plugin.
       -- config is in the `rainbow` attribute in treesitter.lua
-      "p00f/nvim-ts-rainbow",
+      "HiPhish/rainbow-delimiters.nvim",
+      -- "p00f/nvim-ts-rainbow",
     },
     event = 'bufread',
   },
@@ -503,6 +506,9 @@ return lazy.setup({
     end,
   },
 
+  -- alloy filetype
+  { "grafana/vim-alloy" },
+
   -- syntax highlighting for coffeeScript
   { "kchmck/vim-coffee-script" },
 
@@ -518,7 +524,7 @@ return lazy.setup({
   -- file explorer
   -- https://github.com/nvim-tree/nvim-tree.lua/commits/master
   {
-    "kyazdani42/nvim-tree.lua",
+    "nvim-tree/nvim-tree.lua",
     dependencies = {
       'nvim-tree/nvim-web-devicons'
     },
@@ -526,7 +532,6 @@ return lazy.setup({
       require("plugins.nvim-tree")
     end,
     event = "VimEnter",
-    -- commit = "8b8d457e07d279976a9baac6bbff5aa036afdc5f",
   },
 
   -- COLORS + colorschemes

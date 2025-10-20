@@ -28,7 +28,7 @@ require("one_monokai").setup({
     diff_change = "#27406b",
     diff_text = "#23324d",
   },
-  themes = function(colors)
+  highlights = function(colors)
     return {
       -- nvim-tree
       -- NvimTreeFolderName = {
