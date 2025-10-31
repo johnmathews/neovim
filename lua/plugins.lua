@@ -47,7 +47,6 @@ return lazy.setup({
 			require("plugins.alpha")
 		end,
 	},
-	-- finding the project root and setting it as the working directory
 	{
 		"ahmedkhalf/project.nvim",
 		config = function()
@@ -55,18 +54,16 @@ return lazy.setup({
 		end,
 	},
 
-	-- https://github.com/rmagatti/auto-session#-command-hooks
 	{
 		"rmagatti/auto-session",
 		dependencies = {
 			"nvim-telescope/telescope.nvim",
-			"rmagatti/session-lens", -- <-- add this
+			"rmagatti/session-lens",
 		},
 		config = function()
-			require("plugins.auto-session") -- keep your existing config file
-			-- load Telescope extension
+			require("plugins.auto-session")
 			pcall(function()
-				require("telescope").load_extension("session-lens")
+				require("plugins.telescope").load_extension("session-lens")
 			end)
 		end,
 	},
