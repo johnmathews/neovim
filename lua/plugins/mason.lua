@@ -35,18 +35,28 @@ function KeymapBufferOptions(args)
 	}
 end
 
--- Use an on_attach function to only map the following keys
--- after the language server attaches to the current buffer
 local on_attach = function(client, bufnr)
-	-- run ascii conversion function before async lsp.buf.format
-	-- vim.keymap.set('n', '<leader>f', function() Convert_smart_and_fancy_ascii_chars_to_normal_chars() vim.lsp.buf.format { async = true } end, KeymapBufferOptions({ description = "LSP format buffer", bufnr = bufnr }))
+	-- <leader>f uses conform, with LSP as a fallback
+	vim.keymap.set(
+		{ "n", "v" },
+		"<leader>f",
+		function()
+			require("conform").format({
+				lsp_fallback = true,
+				async = true,
+				timeout_ms = 3000,
+			})
+		end,
+		KeymapBufferOptions({
+			description = "Format (Conform with LSP fallback)",
+			bufnr = bufnr,
+		})
+	)
 
-	vim.keymap.set("n", "<leader>f", function()
-		vim.lsp.buf.format({ async = true })
-	end, KeymapBufferOptions({ description = "LSP format buffer", bufnr = bufnr }))
-
-	-- Enable completion triggered by <c-x><c-o>
-	-- vim.api.nvim_buf_set_option(bufnr, 'omnifunc', 'v:lua.vim.lsp.omnifunc')
+	-- Disable LSP formatting for yamlls so Conform handles it exclusively
+	if client.name == "yamlls" then
+		client.server_capabilities.documentFormattingProvider = false
+	end
 
 	vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, KeymapOptions("Diagnostic - Open Location List")) -- view a list of errors and warnings
 
@@ -97,16 +107,6 @@ local on_attach = function(client, bufnr)
 	vim.keymap.set("n", "<leader>wl", function()
 		print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
 	end, KeymapBufferOptions({ description = "LSP list workspace folders", bufnr = bufnr }))
-
-	-- UNUSED AND PROBABLY HANDLED BETTER BY LSPSAGA.
-	--   vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, opts) -- LSPSaga has a better float
-	--   vim.keymap.set('n', '[e', vim.diagnostic.goto_prev, opts)
-	--   vim.keymap.set('n', ']e', vim.diagnostic.goto_next, opts)
-
-	--   See `:help vim.lsp.*` for documentation on any of the below functions
-	--   vim.keymap.set('n', 'K', vim.lsp.buf.hover, bufopts)
-	--   vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, bufopts)
-	--   vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, bufopts)
 end
 
 local lsp_flags = {
