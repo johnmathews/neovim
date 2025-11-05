@@ -22,7 +22,7 @@ if ok_mti then
 			"biome",
 			"black",
 			"isort",
-			"ruff", -- CLI (pairs with ruff_lsp)
+			"ruff",
 			-- linters
 			"eslint_d",
 			"markdownlint-cli2",

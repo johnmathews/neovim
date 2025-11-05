@@ -1,13 +1,17 @@
 -- lua/plugins/lsp.lua
-local lspconfig = require("lspconfig")
+local ok_lsp, lspconfig = pcall(require, "lspconfig")
+if not ok_lsp then
+	return
+end
+
 local util = require("lspconfig.util")
 
--- Faster module loading (Nvim ≥ 0.9)
+-- Faster Lua module loading (Nvim ≥ 0.9)
 pcall(vim.loader.enable)
 
--- Global diagnostic style (toggle virtual_text via your plugin or here)
+-- Diagnostic style (you can toggle virtual_text at runtime elsewhere)
 vim.diagnostic.config({
-	virtual_text = false, -- you can toggle this at runtime if you want
+	virtual_text = false,
 	signs = true,
 	underline = true,
 	update_in_insert = false,
@@ -15,7 +19,7 @@ vim.diagnostic.config({
 	float = { border = "rounded" },
 })
 
--- Better LSP borders
+-- Rounded borders for all LSP floats
 local _open_floating_preview = vim.lsp.util.open_floating_preview
 function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
 	opts = opts or {}
@@ -25,15 +29,13 @@ end
 
 -- Capabilities (nvim-cmp)
 local capabilities = vim.lsp.protocol.make_client_capabilities()
-do
-	local ok_cmp, cmp_cap = pcall(require, "cmp_nvim_lsp")
-	if ok_cmp then
-		capabilities = cmp_cap.default_capabilities(capabilities)
-	end
+local ok_cmp, cmp_cap = pcall(require, "cmp_nvim_lsp")
+if ok_cmp then
+	capabilities = cmp_cap.default_capabilities(capabilities)
 end
 
--- on_attach: minimal, with inlay-hint toggle
-local on_attach = function(_client, bufnr)
+-- on_attach with inlay-hint toggle
+local on_attach = function(client, bufnr)
 	local map = function(mode, lhs, rhs)
 		vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true })
 	end
@@ -50,115 +52,146 @@ local on_attach = function(_client, bufnr)
 			if vim.lsp.inlay_hint.enable then
 				vim.lsp.inlay_hint.enable(not enabled, { bufnr = bufnr })
 			else
-				vim.lsp.inlay_hint(bufnr, not enabled) -- very old API
+				vim.lsp.inlay_hint(bufnr, not enabled) -- very old API fallback
 			end
 		end)
 	end
 end
 
--- mason-lspconfig: install + per-server handlers
+-- mason-lspconfig v2
 local ok_mlc, mason_lspconfig = pcall(require, "mason-lspconfig")
 if not ok_mlc then
 	return
 end
 
 mason_lspconfig.setup({
+	-- NOTE: v2 uses the *lspconfig* server names
 	ensure_installed = {
 		"lua_ls",
-		"basedpyright", -- or "pyright"
-		"ruff_lsp",
-		"ts_ls", -- or "vtsls"
+		"basedpyright", -- or "pyright" if you prefer
+		"ruff", -- was "ruff_lsp" in older lspconfig
+		"ts_ls", -- was "tsserver" in older lspconfig
 		"bashls",
 		"yamlls",
 		"jsonls",
 		"dockerls",
 	},
-})
 
-mason_lspconfig.setup_handlers({
-	-- default handler
-	function(server)
-		lspconfig[server].setup({
-			on_attach = on_attach,
-			capabilities = capabilities,
-		})
-	end,
+	handlers = {
+		-- default handler for anything not overridden below
+		function(server)
+			lspconfig[server].setup({
+				on_attach = on_attach,
+				capabilities = capabilities,
+			})
+		end,
 
-	["lua_ls"] = function()
-		lspconfig.lua_ls.setup({
-			on_attach = on_attach,
-			capabilities = capabilities,
-			root_dir = function(fname)
-				return util.find_git_ancestor(fname)
-					or util.root_pattern(".luarc.json", ".luarc.jsonc", ".stylua.toml", "stylua.toml")(fname)
-					or vim.fn.stdpath("config")
-			end,
-			settings = {
-				Lua = {
-					runtime = { version = "LuaJIT" },
-					workspace = { checkThirdParty = false },
-					diagnostics = {
-						unusedLocalExclude = { "^_" }, -- allow _foo/_client
-						globals = { "vim", "KeymapOptions", "Functions", "Functions_ok" },
-					},
-					hint = { enable = true },
-					telemetry = { enable = false },
-				},
-			},
-		})
-	end,
-
-	["ruff_lsp"] = function()
-		lspconfig.ruff_lsp.setup({
-			on_attach = function(client, bufnr)
-				-- Keep Ruff for lint/code actions; let Pyright handle hovers/signature
-				client.server_capabilities.hoverProvider = false
-				client.server_capabilities.signatureHelpProvider = nil
-				on_attach(client, bufnr)
-			end,
-			capabilities = capabilities,
-		})
-	end,
-
-	["basedpyright"] = function()
-		lspconfig.basedpyright.setup({
-			on_attach = on_attach,
-			capabilities = capabilities,
-			root_dir = function(fname)
-				return util.root_pattern("pyproject.toml", "setup.cfg", "requirements.txt", ".git")(fname)
-					or util.find_git_ancestor(fname)
-			end,
-			settings = {
-				basedpyright = {
-					analysis = {
-						typeCheckingMode = "basic", -- try "standard"/"strict" if you like
-						autoImportCompletions = true,
+		-- Lua
+		["lua_ls"] = function()
+			lspconfig.lua_ls.setup({
+				on_attach = on_attach,
+				capabilities = capabilities,
+				root_dir = function(fname)
+					return util.find_git_ancestor(fname)
+						or util.root_pattern(".luarc.json", ".luarc.jsonc", ".stylua.toml", "stylua.toml")(fname)
+						or vim.fn.stdpath("config")
+				end,
+				settings = {
+					Lua = {
+						runtime = { version = "LuaJIT" },
+						workspace = { checkThirdParty = false },
+						diagnostics = {
+							unusedLocalExclude = { "^_" }, -- allow _client, _foo
+							globals = { "vim", "KeymapOptions", "Functions", "Functions_ok" },
+						},
+						hint = { enable = true },
+						telemetry = { enable = false },
 					},
 				},
-			},
-		})
-	end,
+			})
+		end,
 
-	["yamlls"] = function()
-		lspconfig.yamlls.setup({
-			on_attach = on_attach,
-			capabilities = capabilities,
-			settings = {
-				yaml = {
-					validate = true,
-					format = { enable = false }, -- keep conform.nvim as the formatter
-					keyOrdering = false,
+		-- Ruff (lint + fixes; leave hovers to Pyright/BasedPyright)
+		["ruff"] = function()
+			lspconfig.ruff.setup({
+				on_attach = function(client, bufnr)
+					client.server_capabilities.hoverProvider = false
+					client.server_capabilities.signatureHelpProvider = nil
+					on_attach(client, bufnr)
+				end,
+				capabilities = capabilities,
+			})
+		end,
+
+		-- BasedPyright
+		["basedpyright"] = function()
+			lspconfig.basedpyright.setup({
+				on_attach = on_attach,
+				capabilities = capabilities,
+				root_dir = function(fname)
+					return util.root_pattern("pyproject.toml", "setup.cfg", "requirements.txt", ".git")(fname)
+						or util.find_git_ancestor(fname)
+				end,
+				settings = {
+					basedpyright = {
+						analysis = {
+							typeCheckingMode = "basic", -- try "standard"/"strict" later if you like
+							autoImportCompletions = true,
+						},
+					},
 				},
-			},
-		})
-	end,
+			})
+		end,
 
-	["ts_ls"] = function()
-		lspconfig.ts_ls.setup({
-			on_attach = on_attach,
-			capabilities = capabilities,
-			root_dir = util.root_pattern("package.json", "tsconfig.json", "jsconfig.json", ".git"),
-			single_file_support = true,
-		})
-	end,
+		-- YAML (disable formatting so conform.nvim owns it)
+		["yamlls"] = function()
+			lspconfig.yamlls.setup({
+				on_attach = on_attach,
+				capabilities = capabilities,
+				settings = {
+					yaml = {
+						validate = true,
+						format = { enable = false },
+						keyOrdering = false,
+					},
+				},
+			})
+		end,
+
+		-- TypeScript/JavaScript
+		["ts_ls"] = function()
+			lspconfig.ts_ls.setup({
+				on_attach = on_attach,
+				capabilities = capabilities,
+				root_dir = util.root_pattern("package.json", "tsconfig.json", "jsconfig.json", ".git"),
+				single_file_support = true,
+			})
+		end,
+
+		-- Bash (suppress diagnostics; let nvim-lint/shellcheck handle them)
+		["bashls"] = function()
+			local has_shellcheck = (vim.fn.executable("shellcheck") == 1)
+
+			require("lspconfig").bashls.setup({
+				on_attach = on_attach, -- DO NOT override publishDiagnostics here
+				capabilities = capabilities,
+				settings = {
+					bashIde = {
+						globPattern = "*@(.sh|.inc|.bash|.command)",
+						shellcheckPath = has_shellcheck and "shellcheck" or "", -- enable if present
+						shellcheckArguments = { "-x" }, -- follow sourced files (optional)
+					},
+				},
+			})
+
+			if not has_shellcheck then
+				vim.schedule(function()
+					vim.notify(
+						"[bashls] shellcheck not found on PATH; diagnostics will be limited",
+						vim.log.levels.WARN
+					)
+				end)
+			end
+		end,
+	},
 })

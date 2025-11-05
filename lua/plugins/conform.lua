@@ -1,8 +1,11 @@
 -- lua/plugins/conform.lua
+-- FORMATTERS
 
 local conform = require("conform")
 conform.setup({
+
 	notify_on_error = true,
+
 	format_on_save = function(bufnr)
 		-- Don’t auto-format huge files
 		local max = 200 * 1024
@@ -12,6 +15,7 @@ conform.setup({
 		end
 		return { timeout_ms = 1000, lsp_fallback = true }
 	end,
+
 	formatters_by_ft = {
 		lua = { "stylua" },
 		python = { "ruff_format", "black" }, -- fast + stable formatting
@@ -22,9 +26,11 @@ conform.setup({
 		markdown = { "prettierd", "prettier" },
 		sh = { "shfmt" },
 	},
+
 	-- Prefer project-local binaries where possible
 	formatters = { prettierd = { cwd = require("conform.util").root_file({ ".prettierrc", "package.json", ".git" }) } },
 })
+
 -- Optional mapping
 vim.keymap.set({ "n", "v" }, "<leader>cf", function()
 	require("conform").format({ async = true, lsp_fallback = true })
