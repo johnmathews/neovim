@@ -108,12 +108,12 @@ echo ""
 
 # Check 8: Documentation
 echo -e "${BLUE}8. Checking documentation...${NC}"
-DOCS=("AGENTS.md" "KEYMAPS.md" "LSP.md" "PERFORMANCE.md")
-for doc in "${DOCS[@]}"; do
-    if [ -f "$doc" ]; then
-        echo -e "   ${GREEN}✓${NC} $doc"
+DOC_FILES=("docs/AGENTS.md" "docs/KEYMAPS.md" "docs/LSP.md" "docs/PERFORMANCE.md")
+for file in "${DOC_FILES[@]}"; do
+    if [ -f "$file" ]; then
+        echo -e "   ${GREEN}✓${NC} $file"
     else
-        echo -e "   ${YELLOW}⚠${NC} $doc (missing)"
+        echo -e "   ${YELLOW}⚠${NC} $file (missing)"
     fi
 done
 echo ""

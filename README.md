@@ -53,8 +53,8 @@ nvim
 ### First Steps
 
 1. **Check health:** `:checkhealth` or run `./scripts/health-check`
-2. **View keymaps:** `<Tab>tk` or see [KEYMAPS.md](KEYMAPS.md)
-3. **Configure LSP:** See [LSP.md](LSP.md) for language server setup
+2. **View keymaps:** `<Tab>tk` or see [KEYMAPS.md](docs/KEYMAPS.md)
+3. **Configure LSP:** See [LSP.md](docs/LSP.md) for language server setup
 4. **Test LSP:** Run `./test/test_lsp.sh` to verify LSP attachment
 
 ---
@@ -102,7 +102,7 @@ nvim
 | `]d`         | Next diagnostic                 |
 | `<leader>q`  | Diagnostic quickfix list        |
 
-**LSP Documentation:** See [LSP.md](LSP.md) for detailed server configurations and troubleshooting.
+**LSP Documentation:** See [LSP.md](docs/LSP.md) for detailed server configurations and troubleshooting.
 
 ### 3. Git Integration (Gitsigns)
 
@@ -186,15 +186,16 @@ nvim
 │   ├── lua/                    # Lua test files
 │   ├── javascript/             # JavaScript test files
 │   └── ...
-├── AGENTS.md                   # Architecture & conventions
-├── CHANGELOG.md                # Version history
-├── IMPROVEMENTS.md             # Enhancement tracking
-├── KEYMAPS.md                  # Complete keymap reference
-├── LSP.md                      # LSP documentation
-├── PERFORMANCE.md              # Performance analysis
-├── TESTING.md                  # Testing infrastructure
-├── TEST_RESULTS.md             # Latest test results
-└── TESTING_CHANGELOG_GUIDE.md  # Testing & changelog guide
+└── docs/
+    ├── AGENTS.md               # Architecture & conventions
+    ├── CHANGELOG.md            # Version history
+    ├── IMPROVEMENTS.md         # Enhancement tracking
+    ├── KEYMAPS.md              # Complete keymap reference
+    ├── LSP.md                  # LSP documentation
+    ├── PERFORMANCE.md          # Performance analysis
+    ├── TESTING.md              # Testing infrastructure
+    ├── TEST_RESULTS.md         # Latest test results
+    └── TESTING_CHANGELOG_GUIDE.md # Testing & changelog guide
 ```
 
 ---
@@ -221,7 +222,7 @@ nvim
 - ✅ **LSP Attachment:** 4/4 languages (100%)
 - ✅ **Startup Performance:** 347ms (acceptable)
 
-**Detailed Results:** See [TEST_RESULTS.md](TEST_RESULTS.md)
+**Detailed Results:** See [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)
 
 ---
 
@@ -239,7 +240,7 @@ nvim
 - Gitsigns (loads on `BufReadPre`)
 - Alpha dashboard (loads on `VimEnter`)
 
-**Performance Guide:** See [PERFORMANCE.md](PERFORMANCE.md) for detailed analysis and optimization tips.
+**Performance Guide:** See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for detailed analysis and optimization tips.
 
 ---
 
@@ -247,15 +248,15 @@ nvim
 
 | Document | Purpose |
 |----------|---------|
-| [AGENTS.md](AGENTS.md) | Architecture, design principles, conventions |
-| [CHANGELOG.md](CHANGELOG.md) | Version history and change tracking |
-| [IMPROVEMENTS.md](IMPROVEMENTS.md) | Enhancement implementation details |
-| [KEYMAPS.md](KEYMAPS.md) | Complete keymap reference (searchable via `<Tab>tk`) |
-| [LSP.md](LSP.md) | LSP servers, formatters, linters |
-| [PERFORMANCE.md](PERFORMANCE.md) | Startup analysis and optimization |
-| [TESTING.md](TESTING.md) | Testing infrastructure and CI/CD |
-| [TEST_RESULTS.md](TEST_RESULTS.md) | Latest test execution results |
-| [TESTING_CHANGELOG_GUIDE.md](TESTING_CHANGELOG_GUIDE.md) | Testing & changelog workflows |
+| [AGENTS.md](docs/AGENTS.md) | Architecture, design principles, conventions |
+| [CHANGELOG.md](docs/CHANGELOG.md) | Version history and change tracking |
+| [IMPROVEMENTS.md](docs/IMPROVEMENTS.md) | Enhancement implementation details |
+| [KEYMAPS.md](docs/KEYMAPS.md) | Complete keymap reference (searchable via `<Tab>tk`) |
+| [LSP.md](docs/LSP.md) | LSP servers, formatters, linters |
+| [PERFORMANCE.md](docs/PERFORMANCE.md) | Startup analysis and optimization |
+| [TESTING.md](docs/TESTING.md) | Testing infrastructure and CI/CD |
+| [TEST_RESULTS.md](docs/TEST_RESULTS.md) | Latest test execution results |
+| [TESTING_CHANGELOG_GUIDE.md](docs/TESTING_CHANGELOG_GUIDE.md) | Testing & changelog workflows |
 
 ---
 
@@ -324,19 +325,19 @@ nvim
 2. Verify server installed: `:Mason`
 3. Check logs: `:LspLog`
 4. Run LSP test: `./test/test_lsp.sh`
-5. See [LSP.md](LSP.md) for detailed troubleshooting
+5. See [LSP.md](docs/LSP.md) for detailed troubleshooting
 
 ### Slow Startup
 
 1. Check startup time: `nvim --startuptime startup.log +qa`
 2. Profile plugins: `:Lazy profile`
-3. See [PERFORMANCE.md](PERFORMANCE.md) for optimization tips
+3. See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for optimization tips
 
 ### Linting/Formatting Issues
 
 1. Check conform status: `:ConformInfo`
 2. Verify formatter installed: `:Mason`
-3. Check configuration: See [LSP.md](LSP.md)
+3. Check configuration: See [docs/LSP.md](docs/LSP.md)
 
 ### Plugin Errors
 
