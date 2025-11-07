@@ -30,8 +30,9 @@ A robust, performant Neovim configuration optimized for Python, JavaScript/TypeS
 - **Node.js:** v18+ (for LSP servers)
 - **CLI Tools:**
   ```bash
-  brew install luacheck stylua ripgrep fd
+  brew install luacheck stylua ripgrep fd glow
   ```
+  `glow` powers the in-editor Markdown preview described below.
 - **Optional:** `pynvim` for Python support
 
 ### Installation
@@ -154,6 +155,19 @@ nvim
 | `<C-w>J/K/L` | Rotate layout other directions  |
 | `<C-w>q`  | Close window                       |
 | `<C-w>=`  | Equalize window sizes              |
+
+### 6. Markdown Authoring
+
+| Keymap/Command | Function |
+|----------------|----------|
+| `<leader>mg`   | Open a live Glow preview for the current Markdown buffer |
+| `:Glow`        | Manually trigger the Glow preview command |
+
+**Details:**
+- Uses [glow.nvim](https://github.com/ellisonleao/glow.nvim) with a 120-column floating window, rounded border, and 85% screen height.
+- Automatically lazy-loads when editing Markdown, running `:Glow`, or pressing `<leader>mg`.
+- Requires the [`glow`](https://github.com/charmbracelet/glow) CLI (install via `brew install glow`).
+- Falls back with a warning if the CLI is missing so you know why the preview did not start.
 
 ---
 

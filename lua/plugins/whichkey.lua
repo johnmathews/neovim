@@ -48,6 +48,8 @@ which_key.add({
 	{ "<Tab>", group = "Telescope" },
 	{ "<Tab>g", group = "Git" },
 	{ "<Tab>t", group = "Tools" },
+	{ "<leader>m", group = "Markdown" },
+	{ "<leader>mg", desc = "Preview (Glow)" },
 })
 
 -- which_key.register({

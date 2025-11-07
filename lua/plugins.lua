@@ -55,6 +55,34 @@ return lazy.setup({
 	},
 
 	{
+		"rcarriga/nvim-notify",
+		event = "VeryLazy",
+		config = function()
+			require("plugins.notify")
+		end,
+	},
+
+	{
+		"stevearc/dressing.nvim",
+		event = "VeryLazy",
+		config = function()
+			require("plugins.dressing")
+		end,
+	},
+
+	{
+		"folke/noice.nvim",
+		event = "VeryLazy",
+		dependencies = {
+			"MunifTanjim/nui.nvim",
+			"rcarriga/nvim-notify",
+		},
+		config = function()
+			require("plugins.noice")
+		end,
+	},
+
+	{
 		"rmagatti/auto-session",
 		dependencies = {
 			"nvim-telescope/telescope.nvim",
@@ -148,6 +176,18 @@ return lazy.setup({
 					right = true, -- align fidgets along right edge of buffer
 				},
 			})
+		end,
+	},
+
+	{
+		"SmiteshP/nvim-navic",
+		dependencies = {
+			"neovim/nvim-lspconfig",
+			"nvim-tree/nvim-web-devicons",
+		},
+		event = "VeryLazy",
+		config = function()
+			require("plugins.navic")
 		end,
 	},
 
@@ -277,6 +317,29 @@ return lazy.setup({
 		"Asheq/close-buffers.vim",
 		config = function()
 			require("plugins.close-buffers")
+		end,
+	},
+
+	{
+		"akinsho/bufferline.nvim",
+		event = "VeryLazy",
+		dependencies = {
+			"nvim-tree/nvim-web-devicons",
+		},
+		config = function()
+			require("plugins.bufferline")
+		end,
+	},
+
+	{
+		"echasnovski/mini.map",
+		version = false,
+		event = {
+			"BufReadPost",
+			"BufNewFile",
+		},
+		config = function()
+			require("plugins.minimap")
 		end,
 	},
 
@@ -437,18 +500,6 @@ return lazy.setup({
 		end,
 	},
 
-	-- preview markdown
-	{
-		"ellisonleao/glow.nvim",
-		config = function()
-			require("glow").setup({
-				style = "dark",
-				pager = false,
-				border = "double",
-			})
-		end,
-	},
-
 	-- used only because it can format yaml frontmatter in a markdown blog post
 	{
 		"preservim/vim-markdown",
@@ -457,6 +508,25 @@ return lazy.setup({
 		},
 		config = function()
 			require("plugins.vim-markdown")
+		end,
+	},
+
+	-- Beautiful markdown preview in terminal
+	{
+		"ellisonleao/glow.nvim",
+		ft = { "markdown" }, -- Only load for markdown buffers
+		cmd = "Glow", -- Also load on :Glow command
+		keys = {
+			{
+				"<leader>mg",
+				function()
+					vim.cmd("Glow")
+				end,
+				desc = "Markdown: preview with Glow",
+			},
+		},
+		config = function()
+			require("plugins.glow")
 		end,
 	},
 

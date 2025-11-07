@@ -188,6 +188,14 @@ Complete reference of all custom keybindings in this Neovim configuration.
 
 ---
 
+## Markdown
+
+| Key | Mode | Description |
+|-----|------|-------------|
+| `<leader>mg` | Normal | Preview the current Markdown buffer with Glow |
+
+---
+
 ## Miscellaneous
 
 ### Function Keys

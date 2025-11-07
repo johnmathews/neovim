@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Markdown Preview (Glow)**: Enabled [glow.nvim](https://github.com/ellisonleao/glow.nvim) with lazy-loading, `<leader>mg` keymap, and detection of the `glow` CLI (`lua/plugins.lua`, `lua/plugins/glow.lua`, `lua/plugins/whichkey.lua`).
+- **Documentation**: Updated `README.md` and `docs/KEYMAPS.md` with Glow usage instructions, installation requirements, and keymap references.
+
 ## [1.1.0] - 2025-11-07
 
 ### Added

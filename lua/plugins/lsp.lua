@@ -6,6 +6,8 @@ end
 
 local util = require("lspconfig.util")
 
+local navic_ok, navic = pcall(require, "nvim-navic")
+
 -- Faster Lua module loading (Nvim ≥ 0.9)
 pcall(vim.loader.enable)
 
@@ -35,13 +37,17 @@ if ok_cmp then
 end
 
 -- on_attach with inlay-hint toggle
-local on_attach = function(_, bufnr)
+local on_attach = function(client, bufnr)
 	local map = function(mode, lhs, rhs)
 		vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true })
 	end
 	map("n", "gd", vim.lsp.buf.definition)
 	map("n", "gr", vim.lsp.buf.references)
 	map("n", "K", vim.lsp.buf.hover)
+
+	if navic_ok and client.server_capabilities.documentSymbolProvider then
+		navic.attach(client, bufnr)
+	end
 
 	if vim.lsp.inlay_hint then
 		map("n", "<leader>li", function()
