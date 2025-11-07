@@ -100,14 +100,19 @@ Fast quality gate for pre-commit/pre-push checks.
 
 ---
 
-### 3. Pre-Commit Hook (`./scripts/pre-commit`)
+### 3. Git Hooks (Automatic Quality Assurance)
 
-Automated quality gate that runs on every `git commit`.
+Automated quality checks that run before commits and pushes.
 
-**Installation:**
+**Installation (one-time setup):**
 ```bash
-ln -s ../../scripts/pre-commit .git/hooks/pre-commit
+./scripts/install-hooks
 ```
+
+This installs two hooks:
+
+#### Pre-Commit Hook (`./scripts/pre-commit`)
+Runs automatically before every `git commit` (fast, <10 seconds).
 
 **What it checks:**
 - ✓ Luacheck (0 warnings/errors)
