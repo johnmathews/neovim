@@ -19,7 +19,6 @@ Session.vim
 .sw[a-p]
 
 # neovim
-
 plugin/packer_compiled.lua
 
 node_modules/

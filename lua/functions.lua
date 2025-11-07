@@ -51,7 +51,7 @@ function M.asyncGitCommitAndPush(commitMessage)
 	end
 
 	vim.loop.spawn("git", {
-		args = { "rev-parse", "--is-inside-work-tree" },
+		args = { "rev-parse", "--inside-work-tree" },
 		cwd = vim.loop.cwd(),
 	}, function(code)
 		if code ~= 0 then
@@ -72,7 +72,7 @@ end
 
 -- convert ascii typographuc quotes to normal quotes including slanty quotes,
 function M.Convert_smart_and_fancy_ascii_chars_to_normal_chars()
-	vim.cmd([[
+	vim.cmd([[ 
     exe 'normal! ma' | %!iconv -f utf-8 -t ascii//translit | if search('pattern') == 0 | exe 'normal! `a' | endif
   ]])
 end
@@ -148,7 +148,7 @@ end
 
 -- toggle the quickfix window
 -- in mappings.lua gq is mapped to this
-vim.cmd([[
+vim.cmd([[ 
   function! ToggleQuickFix()
     if empty(filter(getwininfo(), 'v:val.quickfix'))
       copen 15
@@ -160,7 +160,7 @@ vim.cmd([[
 ]])
 
 -- blog post
-vim.cmd([[
+vim.cmd([[ 
 function! s:NewPost(fn)
   execute "e " . "~/projects/blog/data/blog/" . a:fn . ".md"
 endfunction
@@ -168,7 +168,7 @@ command! -nargs=1 Mp call s:NewPost(<q-args>)
 ]])
 
 -- clear registers and overwrite shada file so that register state is persisted
-vim.cmd([[
+vim.cmd([[ 
 function! ClearAllRegisters()
     let regs='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-="*+'
     let i=0
@@ -183,7 +183,7 @@ endfunction
 command! ClearAllRegisters call ClearAllRegisters()
 ]])
 
-vim.cmd([[
+vim.cmd([[ 
 function! ClearLetterRegisters()
     let regs='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     let i=0
@@ -198,7 +198,7 @@ endfunction
 command! ClearLetterRegisters call ClearLetterRegisters()
 ]])
 
-vim.cmd([[
+vim.cmd([[ 
 function! ClearNumberRegisters()
     let regs='0123456789'
     let i=0
@@ -212,5 +212,60 @@ endfunction
 
 command! ClearNumberRegisters call ClearNumberRegisters()
 ]])
+
+local diagnostic_state = 1
+function M.cycle_diagnostics()
+	if diagnostic_state == 1 then
+		-- Mode 1: Signs Only
+		vim.diagnostic.config({
+			signs = true,
+			underline = false,
+			virtual_text = false,
+			virtual_lines = false,
+		})
+		vim.notify("Diagnostics: Signs Only", vim.log.levels.INFO)
+		diagnostic_state = 2
+	elseif diagnostic_state == 2 then
+		-- Mode 2: Signs and Underlines
+		vim.diagnostic.config({
+			signs = true,
+			underline = true,
+			virtual_text = false,
+			virtual_lines = false,
+		})
+		vim.notify("Diagnostics: Signs and Underlines", vim.log.levels.INFO)
+		diagnostic_state = 3
+	elseif diagnostic_state == 3 then
+		-- Mode 3: Virtual Text (at end of line)
+		vim.diagnostic.config({
+			signs = true,
+			underline = true,
+			virtual_text = true,
+			virtual_lines = false,
+		})
+		vim.notify("Diagnostics: Virtual Text", vim.log.levels.INFO)
+		diagnostic_state = 4
+	elseif diagnostic_state == 4 then
+		-- Mode 4: Virtual Lines (new lines below)
+		vim.diagnostic.config({
+			signs = true,
+			underline = true,
+			virtual_text = false,
+			virtual_lines = true,
+		})
+		vim.notify("Diagnostics: Virtual Lines", vim.log.levels.INFO)
+		diagnostic_state = 5
+	else
+		-- Mode 5: Disabled
+		vim.diagnostic.config({
+			signs = false,
+			underline = false,
+			virtual_text = false,
+			virtual_lines = false,
+		})
+		vim.notify("Diagnostics: Disabled", vim.log.levels.INFO)
+		diagnostic_state = 1
+	end
+end
 
 return M
