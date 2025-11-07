@@ -52,10 +52,11 @@ nvim
 
 ### First Steps
 
-1. **Check health:** `:checkhealth` or run `./scripts/health-check`
-2. **View keymaps:** `<Tab>tk` or see [KEYMAPS.md](docs/KEYMAPS.md)
-3. **Configure LSP:** See [LSP.md](docs/LSP.md) for language server setup
-4. **Test LSP:** Run `./test/test_lsp.sh` to verify LSP attachment
+1. **Install git hooks:** Run `./scripts/install-hooks` to enable automatic quality checks
+2. **Check health:** `:checkhealth` or run `./scripts/health-check`
+3. **View keymaps:** `<Tab>tk` or see [KEYMAPS.md](docs/KEYMAPS.md)
+4. **Configure LSP:** See [LSP.md](docs/LSP.md) for language server setup
+5. **Test LSP:** Run `./test/test_lsp.sh` to verify LSP attachment
 
 ---
 
@@ -305,14 +306,37 @@ nvim
 ### Run Tests
 
 ```bash
+# Install git hooks (one-time setup)
+./scripts/install-hooks
+
 # Test LSP stack
 ./test/test_lsp.sh
 
 # Full health check
 ./scripts/health-check
 
-# Quality gate (before commit)
+# Quality gate (linting + formatting)
 ./scripts/quality-gate
+```
+
+### Git Hooks (Automatic Quality Assurance)
+
+**Pre-commit hook** (runs before each commit):
+- Luacheck validation
+- Code formatting check
+- Neovim load test
+- Common issue detection
+
+**Pre-push hook** (runs before push to remote):
+- Full quality gate
+- LSP attachment tests
+- Health check
+- Documentation validation
+
+**Bypass hooks** (emergency only):
+```bash
+git commit --no-verify
+git push --no-verify
 ```
 
 ---

@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# Install git hooks for Neovim configuration
+# Run this script to set up automatic quality checks
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+GIT_DIR="$(git rev-parse --git-dir)"
+HOOKS_DIR="$GIT_DIR/hooks"
+
+echo "🔧 Installing git hooks..."
+echo ""
+
+# Create hooks directory if it doesn't exist
+mkdir -p "$HOOKS_DIR"
+
+# Install pre-commit hook
+echo "📝 Installing pre-commit hook..."
+if [ -f "$HOOKS_DIR/pre-commit" ] && [ ! -L "$HOOKS_DIR/pre-commit" ]; then
+    echo "   ⚠️  Backing up existing pre-commit hook to pre-commit.backup"
+    mv "$HOOKS_DIR/pre-commit" "$HOOKS_DIR/pre-commit.backup"
+fi
+
+ln -sf "../../scripts/pre-commit" "$HOOKS_DIR/pre-commit"
+chmod +x "$HOOKS_DIR/pre-commit"
+echo "   ✓ Pre-commit hook installed"
+
+# Install pre-push hook
+echo "🚀 Installing pre-push hook..."
+if [ -f "$HOOKS_DIR/pre-push" ] && [ ! -L "$HOOKS_DIR/pre-push" ]; then
+    echo "   ⚠️  Backing up existing pre-push hook to pre-push.backup"
+    mv "$HOOKS_DIR/pre-push" "$HOOKS_DIR/pre-push.backup"
+fi
+
+ln -sf "../../scripts/pre-push" "$HOOKS_DIR/pre-push"
+chmod +x "$HOOKS_DIR/pre-push"
+echo "   ✓ Pre-push hook installed"
+
+echo ""
+echo "✅ Git hooks installed successfully!"
+echo ""
+echo "Hooks installed:"
+echo "  • pre-commit: Runs luacheck, format check, basic validation"
+echo "  • pre-push:   Runs full test suite including LSP tests"
+echo ""
+echo "To bypass hooks (emergency only):"
+echo "  git commit --no-verify"
+echo "  git push --no-verify"
+echo ""
