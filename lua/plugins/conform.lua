@@ -18,9 +18,9 @@ conform.setup({
 
 	formatters_by_ft = {
 		lua = { "stylua" },
-		python = { "ruff_format", "black" }, -- fast + stable formatting
-		javascript = { "biome", "prettierd", "prettier" },
-		typescript = { "biome", "prettierd", "prettier" },
+		python = { "ruff_format" }, -- fast, modern Python formatter (handles black's functionality)
+		javascript = { "biome" }, -- fast, modern JS/TS formatter and linter
+		typescript = { "biome" },
 		json = { "biome", "jq" },
 		yaml = { "yamlfmt", "lsp" },
 		markdown = { "prettierd", "prettier" },

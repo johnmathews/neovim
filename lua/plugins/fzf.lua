@@ -11,7 +11,8 @@ vim.cmd([[
 
   " Add an AllFiles variation that ignores .gitignore files
   command! -bang -nargs=? -complete=dir AllFiles
-      \ call fzf#run(fzf#wrap('allfiles', fzf#vim#with_preview({ 'dir': <q-args>, 'sink': 'e', 'source': 'rg --files --hidden --no-ignore' }), <bang>0))
+      \ call fzf#run(fzf#wrap('allfiles', fzf#vim#with_preview({
+      \ 'dir': <q-args>, 'sink': 'e', 'source': 'rg --files --hidden --no-ignore' }), <bang>0))
 
   " nnoremap <silent> <Leader>r :Buffers<CR>
   " nnoremap <silent> <Leader>f :Rg<CR>

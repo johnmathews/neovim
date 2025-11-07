@@ -16,7 +16,8 @@
 -- ]h: go to Current header. <Plug>Markdown_MoveToCurHeader
 -- ]u: go to parent header (Up). <Plug>Markdown_MoveToParentHeader
 
--- ge: open the link under the cursor in Vim for editing. Useful for relative markdown links. Falls back to gf with force editing, if not on a markdown link.
+-- ge: open the link under the cursor in Vim for editing.
+-- Useful for relative markdown links. Falls back to gf with force editing, if not on a markdown link.
 
 vim.cmd([[
   " https://github.com/preservim/vim-markdown#yaml-front-matter

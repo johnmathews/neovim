@@ -83,7 +83,9 @@ map("n", "<Tab>qq", ":NvimTreeClose<CR>|:qa<CR>", KeymapOptions("Quit Vim"))
 map(
 	"n",
 	"wc",
-	":echo 'hi<' . synIDattr(synID(line('.'),col('.'),1),'name') . '> trans<' . synIDattr(synID(line('.'),col('.'),0),'name') .'> lo<' . synIDattr(synIDtrans(synID(line('.'),col('.'),1)),'name') . '>'<CR>",
+	":echo 'hi<' . synIDattr(synID(line('.'),col('.'),1),'name') . '> trans<'"
+		.. " . synIDattr(synID(line('.'),col('.'),0),'name') .'> lo<'"
+		.. " . synIDattr(synIDtrans(synID(line('.'),col('.'),1)),'name') . '>'<CR>",
 	KeymapOptions("Get current highlight group")
 )
 
@@ -116,4 +118,3 @@ end
 
 -- backgroud git commit and push
 map("n", "gG", ":lua Functions.asyncGitCommitAndPush()<CR>", KeymapOptions("Quietly push all changes to remote"))
-

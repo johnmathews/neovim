@@ -35,7 +35,7 @@ if ok_cmp then
 end
 
 -- on_attach with inlay-hint toggle
-local on_attach = function(client, bufnr)
+local on_attach = function(_, bufnr)
 	local map = function(mode, lhs, rhs)
 		vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true })
 	end

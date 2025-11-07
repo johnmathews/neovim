@@ -1,8 +1,8 @@
 -- require("harpoon").setup()
 require("harpoon").setup({
-  menu = {
-    width = 100,
-  }
+	menu = {
+		width = 100,
+	},
 })
 
 local map = vim.api.nvim_set_keymap
@@ -25,4 +25,3 @@ map("n", "<Tab>5", ":lua require('harpoon.ui').nav_file(5)<CR>", KeymapOptions("
 -- vim.cmd [[
 --     autocmd Filetype harpoon winhighlight LineNr guifg='#A9DC76' guibg='#A9DC76'
 -- ]]
-

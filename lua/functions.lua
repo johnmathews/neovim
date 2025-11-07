@@ -72,7 +72,7 @@ end
 
 -- convert ascii typographuc quotes to normal quotes including slanty quotes,
 function M.Convert_smart_and_fancy_ascii_chars_to_normal_chars()
-	vim.cmd([[ 
+	vim.cmd([[
     exe 'normal! ma' | %!iconv -f utf-8 -t ascii//translit | if search('pattern') == 0 | exe 'normal! `a' | endif
   ]])
 end
@@ -148,7 +148,7 @@ end
 
 -- toggle the quickfix window
 -- in mappings.lua gq is mapped to this
-vim.cmd([[ 
+vim.cmd([[
   function! ToggleQuickFix()
     if empty(filter(getwininfo(), 'v:val.quickfix'))
       copen 15
@@ -160,7 +160,7 @@ vim.cmd([[
 ]])
 
 -- blog post
-vim.cmd([[ 
+vim.cmd([[
 function! s:NewPost(fn)
   execute "e " . "~/projects/blog/data/blog/" . a:fn . ".md"
 endfunction
@@ -168,7 +168,7 @@ command! -nargs=1 Mp call s:NewPost(<q-args>)
 ]])
 
 -- clear registers and overwrite shada file so that register state is persisted
-vim.cmd([[ 
+vim.cmd([[
 function! ClearAllRegisters()
     let regs='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-="*+'
     let i=0
@@ -183,7 +183,7 @@ endfunction
 command! ClearAllRegisters call ClearAllRegisters()
 ]])
 
-vim.cmd([[ 
+vim.cmd([[
 function! ClearLetterRegisters()
     let regs='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
     let i=0
@@ -198,7 +198,7 @@ endfunction
 command! ClearLetterRegisters call ClearLetterRegisters()
 ]])
 
-vim.cmd([[ 
+vim.cmd([[
 function! ClearNumberRegisters()
     let regs='0123456789'
     let i=0

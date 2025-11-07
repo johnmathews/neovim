@@ -6,6 +6,8 @@ lint.linters_by_ft = {
 	javascript = { "eslint_d" },
 	typescript = { "eslint_d" },
 	markdown = { "markdownlint-cli2" },
+	sh = { "shellcheck" },
+	bash = { "shellcheck" },
 }
 
 -- Run linters on save/leave insert

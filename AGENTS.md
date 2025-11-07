@@ -11,6 +11,7 @@ It contains configuration details for plugins, options for Neovim itself, custom
 - **Neovim:** v0.11+
 - **Plugin manager:** `lazy.nvim`
 - **Required CLIs:** `stylua`, `luacheck`, `ripgrep`, `fd`, `node` > v18
+  - Install luacheck: `brew install luacheck` (macOS)
 - **Optional CLIs:** ...
 - **Python:** used for data and scripting; ensure `pynvim` installed if needed.
 
@@ -60,6 +61,10 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 ## Build / Lint / Test Commands
 
 - **Lint Lua:** `luacheck lua/` (uses `.luacheckrc`)
+  - Should report: `0 warnings / 0 errors in 51 files`
+  - Config: `.luacheckrc` defines globals, disables line length, ignores unused vars in snippets
+  - Run from config root: `cd ~/.config/nvim && luacheck lua/`
+- **Format Lua:** `stylua .` (formats all Lua files)
 - **Format on save:** Auto via `conform.nvim`
 - **Manual format:** `<leader>cf`
 - **Manual lint:** `<leader>cl`
@@ -72,13 +77,14 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 
 - **Formatting:** Stylua, 2-space indents, spaces not tabs.
 - **Files:** plugin configs in `lua/plugins/`, snippets in `lua/snippets/`.
-- **Globals allowed:** `vim`, `P`, `Functions` (per `.luacheckrc`).
+- **Globals allowed:** `vim`, `P`, `Functions`, `KeymapOptions`, and plugin-specific globals (per `.luacheckrc`).
 - **Naming:** snake_case for files/functions; PascalCase for modules.
 - **Error handling:** `pcall(require, "module")` for safety.
 - **Keymaps:** define in `lua/mappings.lua` with `desc` for discoverability.
 - **Imports:** lazy-load plugins when possible; require locally in functions.
 - **Comments:** use single-line `--`, avoid multi-line comment blocks.
-- **Commits:** atomic, tested with `:checkhealth` before commit.
+- **Linting:** All code must pass `luacheck lua/` with 0 warnings before commit.
+- **Commits:** atomic, tested with `:checkhealth` and linted before commit.
 
 ---
 
@@ -88,9 +94,44 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 | ----------------- | ------------------------------------ |
 | Format all Lua    | `stylua .`                           |
 | Lint Lua          | `luacheck lua/`                      |
+| Lint single file  | `luacheck lua/plugins/telescope.lua` |
+| Health check      | `./scripts/health-check`             |
+| Quality gate      | `./scripts/quality-gate`             |
+| Pre-commit hook   | `./scripts/pre-commit`               |
 | Validate setup    | `nvim --headless "+CheckHealth" +qa` |
 | Re-index OpenCode | `:reload` inside OpenCode            |
 | Export summaries  | `:export summary.md` inside OpenCode |
+
+### Testing & Quality Scripts
+
+Three automation scripts are provided in `scripts/`:
+
+1. **`health-check`** - Comprehensive configuration health check
+   - Verifies Neovim version and CLI tools
+   - Runs luacheck
+   - Tests Neovim loads
+   - Measures startup performance
+   - Checks config structure and documentation
+
+2. **`quality-gate`** - Pre-commit/pre-push validation
+   - Checks formatting (stylua)
+   - Runs linter (luacheck)
+   - Tests Neovim loads
+   - Use before committing: `./scripts/quality-gate`
+
+3. **`pre-commit`** - Git pre-commit hook (optional)
+   - Install: `ln -s ../../scripts/pre-commit .git/hooks/pre-commit`
+   - Runs on every commit automatically
+   - Prevents commits with linting/formatting issues
+
+### Luacheck Configuration
+
+The `.luacheckrc` file configures luacheck behavior:
+
+- **Allowed globals:** Neovim-specific globals like `vim`, `KeymapOptions`, plugin toggle functions
+- **Line length:** Maximum 150 characters (`max_line_length = 150`)
+- **Snippet exceptions:** Unused variables/functions allowed in `lua/snippets/` (common for snippet helpers)
+- **Target:** Zero warnings/errors across all 51 Lua files
 
 ---
 
@@ -115,6 +156,48 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 - Verify format-on-save and linting consistency.
 - Modernize plugin declarations for Lazy.nvim.
 - Ensure startup time stays under 150 ms cold boot.
+
+---
+
+## Performance Benchmarks
+
+**Target:** <150ms cold boot startup  
+**Current:** ~342ms (as of 2025-01-13)  
+**Status:** 2.3x slower than target
+
+### Startup Profiling
+
+```bash
+# Quick check
+nvim --startuptime /dev/stdout --headless +qa | grep "NVIM STARTED"
+
+# Detailed profile
+nvim --startuptime startup.log --headless +qa
+cat startup.log | awk '{if ($2 > 1) print $0}'
+
+# Interactive profiling (vim-startuptime plugin installed)
+nvim +StartupTime
+```
+
+### Top Contributors to Startup Time
+
+1. **Lazy.nvim plugin loading** (~108ms) - Plugin manager overhead
+2. **LSP configuration** (~15ms) - Mason + multiple servers
+3. **Telescope setup** (~16ms) - Fuzzy finder + extensions
+4. **Completion stack** (~10ms) - nvim-cmp + LuaSnip
+5. **Treesitter** (~11ms) - Core + plugins
+
+**See `PERFORMANCE.md` for detailed analysis and optimization recommendations.**
+
+---
+
+## Documentation
+
+- **`KEYMAPS.md`** - Complete keymap reference (searchable via `<Tab>tk`)
+- **`LSP.md`** - Language Server Protocol, formatters, and linters documentation
+- **`PERFORMANCE.md`** - Startup performance analysis and optimization guide
+- **`TESTING.md`** - Testing infrastructure, quality gates, and CI/CD setup
+- **`AGENTS.md`** - This file (architecture and conventions)
 
 ---
 

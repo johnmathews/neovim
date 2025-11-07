@@ -29,7 +29,7 @@ local options = {
 	backupdir = "/tmp/,/private/tmp",
 	directory = "/tmp/,/private/tmp", -- maybe this is swapfile location?
 
-	winbar = nil, -- force winbar to be disabled. because lspsaga winbar doesnt seem to work as documented
+	winbar = nil, -- winbar disabled
 
 	timeout = true,
 	timeoutlen = 300,
@@ -66,14 +66,7 @@ local options = {
 	background = "dark",
 
 	filetype = "on",
-	-- opt.plugin = "on"
-	-- opt.indent = "on"
 	syntax = "on",
-
-	-- Cursor settings https://vim.fandom.com/wiki/Change_cursor_shape_in_different_modes
-	-- let &t_SI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=1\x7\<Esc>\\"
-	-- let &t_SR = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=2\x7\<Esc>\\"
-	-- let &t_EI = "\<Esc>Ptmux;\<Esc>\<Esc>]50;CursorShape=0\x7\<Esc>\\"
 
 	cursorline = false,
 	cursorcolumn = false,
@@ -102,21 +95,6 @@ vim.cmd("au TextYankPost * lua vim.hl.on_yank {on_visual = true}")
 vim.cmd("set path+=~/.config/nvim/lua/plugins/")
 
 vim.g.markdown_fenced_languages = { "html", "javascript", "typescript", "css", "scss", "lua", "vim" }
-
--- opt.hlsearch = true -- Highlight found searches
--- opt.ignorecase = true -- Ignore case
--- opt.inccommand = "split" -- Get a preview of replacements
--- opt.incsearch = true -- Shows the match while typing
--- opt.joinspaces = false -- No double spaces with join
--- opt.linebreak = true -- Stop words being broken on wrap
--- opt.shiftround = true -- Round indent
--- opt.signcolumn = "yes:1" -- always show signcolumns
--- opt.smartcase = true -- Do not ignore case with capitals
--- vim.o.whichwrap = vim.o.whichwrap .. "<,>" -- Wrap movement between lines in edit mode with arrows
--- opt.wrap = true
--- -- opt.cc = "80"
-
--- vim.opt.shortmess:append("c") -- already appended
 
 -- autoswap plugin, if using tmux, switch to the tmux pain containing the open buffer.
 vim.g.autoswap_detect_tmux = 1

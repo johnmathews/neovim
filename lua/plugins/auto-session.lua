@@ -6,20 +6,19 @@ vim.g.session_dir = "~/.config/nvim/sessions/"
 vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,terminal,localoptions"
 
 require("auto-session").setup({
-  auto_save = true,
-  bypass_save_filetypes = { "NvimTree" },
-  pre_save_cmds = { "NvimTreeClose" },
-  session_lens = {
-    picker_opts = { border = true },
-    previewer = false,
-  },
-  suppressed_dirs = { "~/", "~/Projects", "~/Downloads", "/" },
+	auto_save = true,
+	bypass_save_filetypes = { "NvimTree" },
+	pre_save_cmds = { "NvimTreeClose" },
+	session_lens = {
+		picker_opts = { border = true },
+		previewer = false,
+	},
+	suppressed_dirs = { "~/", "~/Projects", "~/Downloads", "/" },
 })
 
-vim.cmd [[
+vim.cmd([[
   let g:auto_session_pre_save_cmds = ["tabdo NvimTreeClose"]
-]]
-
+]])
 
 -- this stops sessions from being loaded automatically
 -- vim.cmd("let g:auto_session_enabled = v:false")

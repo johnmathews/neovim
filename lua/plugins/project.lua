@@ -19,8 +19,8 @@ require("project_nvim").setup({
 	-- Don't calculate root dir on specific directories
 	-- Ex: { "~/.cargo/*", ... }
 	exclude_dirs = {
-    '~/projects/lettergun/web-app/lettergun/*',
-  },
+		"~/projects/lettergun/web-app/lettergun/*",
+	},
 
 	-- Show hidden files in telescope
 	show_hidden = true,

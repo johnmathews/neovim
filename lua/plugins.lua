@@ -191,8 +191,7 @@ return lazy.setup({
 		},
 	},
 
-	-- deprecated - use conform and nvim-lint instead.
-	-- { "nvimtools/none-ls.nvim", config = function() require("plugins.null-ls") end },
+	-- Formatters and linters are handled by conform.nvim and nvim-lint
 	{
 		"stevearc/conform.nvim",
 		config = function()
@@ -207,12 +206,6 @@ return lazy.setup({
 	},
 
 	{ "ray-x/lsp_signature.nvim", dependencies = "neovim/nvim-lspconfig" },
-	-- {
-	-- 	"WhoIsSethDaniel/toggle-lsp-diagnostics.nvim",
-	-- 	config = function()
-	-- 		require("plugins.toggle-lsp-diagnostics")
-	-- 	end,
-	-- },
 	{
 		"folke/trouble.nvim",
 		opts = {}, -- for default options, refer to the configuration section for custom setup.
@@ -283,35 +276,6 @@ return lazy.setup({
 			require("plugins.close-buffers")
 		end,
 	},
-
-	-- {
-	--   "zbirenbaum/copilot.lua",
-	--   event = "VimEnter",
-	--   config = function()
-	--     vim.defer_fn(function()
-	--       require("copilot").setup({
-	--         suggestion = { enabled = false },
-	--         panel = { enabled = false },
-	--       })
-	--     end, 100)
-	--   end,
-	--   dependencies = {
-	--     "copilot.lua",
-	--   },
-	-- },
-	-- {
-	--   "zbirenbaum/copilot-cmp",
-	--   config = function()
-	--     require("copilot_cmp").setup({
-	--       method = "getCompletionsCycling",
-	--       formatters = {
-	--         label = require("copilot_cmp.format").format_label_text, -- this breaks multiline suggestions sometimes
-	--         insert_text = require("copilot_cmp.format").remove_existing,
-	--         preview = require("copilot_cmp.format").deindent,
-	--       },
-	--     })
-	--   end
-	-- },
 
 	-- completions
 	{
@@ -542,9 +506,6 @@ return lazy.setup({
 	},
 
 	{ "hashivim/vim-vagrant" },
-
-	-- highlights the XML/HTML tags that enclose your cursor location.
-	-- { "valloric/matchtagalways" },
 
 	-- highlight matching tags in html, js, jsx, vue, svelte
 	{
