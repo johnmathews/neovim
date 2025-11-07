@@ -186,16 +186,15 @@ nvim
 │   ├── lua/                    # Lua test files
 │   ├── javascript/             # JavaScript test files
 │   └── ...
-└── docs/
-    ├── AGENTS.md               # Architecture & conventions
-    ├── CHANGELOG.md            # Version history
-    ├── IMPROVEMENTS.md         # Enhancement tracking
-    ├── KEYMAPS.md              # Complete keymap reference
-    ├── LSP.md                  # LSP documentation
-    ├── PERFORMANCE.md          # Performance analysis
-    ├── TESTING.md              # Testing infrastructure
-    ├── TEST_RESULTS.md         # Latest test results
-    └── TESTING_CHANGELOG_GUIDE.md # Testing & changelog guide
+├── AGENTS.md                   # Architecture & conventions
+├── CHANGELOG.md                # Version history
+├── IMPROVEMENTS.md             # Enhancement tracking
+├── KEYMAPS.md                  # Complete keymap reference
+├── LSP.md                      # LSP documentation
+├── PERFORMANCE.md              # Performance analysis
+├── TESTING.md                  # Testing infrastructure
+├── TEST_RESULTS.md             # Latest test results
+└── TESTING_CHANGELOG_GUIDE.md  # Testing & changelog guide
 ```
 
 ---
