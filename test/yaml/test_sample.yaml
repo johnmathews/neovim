@@ -1,0 +1,31 @@
+# Test file for YAML LSP and linting
+# Contains intentional errors for testing diagnostics
+
+name: test-config
+version: "1.0.0"
+
+# Intentional indentation error
+services:
+  web:
+    image: nginx:latest
+    ports:
+      - "80:80"
+     # Wrong indentation below
+     environment:
+      - NODE_ENV=production
+
+# Intentional duplicate key
+database:
+  host: localhost
+  port: 5432
+database:  # Duplicate key
+  host: remotehost
+
+# Missing quotes for string with special characters
+config:
+  path: /path/to/config:with:colons
+
+# Intentional type mismatch
+settings:
+  enabled: "yes"  # Should be boolean
+  count: "10"     # Should be number

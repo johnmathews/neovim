@@ -43,6 +43,13 @@ local setup = {
 
 which_key.setup(setup)
 
+-- Register Telescope key groups for better discoverability
+which_key.add({
+	{ "<Tab>", group = "Telescope" },
+	{ "<Tab>g", group = "Git" },
+	{ "<Tab>t", group = "Tools" },
+})
+
 -- which_key.register({
 -- { "D",  group = "Database" },
 -- { "Df", "<Cmd>DBUIFindBuffer<Cr>",    desc = "Find buffer" },

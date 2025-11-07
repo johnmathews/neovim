@@ -65,9 +65,11 @@ echo -e "${BLUE}5. Measuring startup performance...${NC}"
 nvim --startuptime /tmp/nvim_health_startup.log --headless +qa 2>&1
 STARTUP_TIME=$(grep "NVIM STARTED" /tmp/nvim_health_startup.log | awk '{print $1}')
 echo "   Startup time: ${STARTUP_TIME}ms"
-if (( $(echo "$STARTUP_TIME < 150" | bc -l) )); then
+# Convert to integer for comparison (remove decimal point)
+STARTUP_MS=$(echo "$STARTUP_TIME" | awk '{printf "%d", $1}')
+if (( STARTUP_MS < 150 )); then
     echo -e "   ${GREEN}✓ Under 150ms target${NC}"
-elif (( $(echo "$STARTUP_TIME < 500" | bc -l) )); then
+elif (( STARTUP_MS < 500 )); then
     echo -e "   ${YELLOW}⚠ Acceptable (150-500ms)${NC}"
 else
     echo -e "   ${RED}✗ Slow (>500ms)${NC}"

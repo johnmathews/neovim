@@ -42,6 +42,7 @@ return lazy.setup({
 	},
 	{
 		"goolord/alpha-nvim",
+		event = "VimEnter", -- Lazy-load dashboard on startup (after other plugins)
 		config = function()
 			require("plugins.alpha")
 		end,
@@ -92,6 +93,8 @@ return lazy.setup({
 			"nvim-telescope/telescope-smart-history.nvim",
 			"nvim-telescope/telescope-fzf-native.nvim",
 		},
+		keys = { "<Tab>" }, -- Lazy-load on first Tab keypress (all telescope keymaps use <Tab> prefix)
+		cmd = "Telescope", -- Also load on :Telescope command
 		config = function()
 			require("plugins.telescope")
 		end,
@@ -280,6 +283,7 @@ return lazy.setup({
 	-- completions
 	{
 		"hrsh7th/nvim-cmp",
+		event = "InsertEnter", -- Lazy-load completion on entering insert mode
 		dependencies = {
 			"hrsh7th/cmp-nvim-lua",
 			"hrsh7th/cmp-nvim-lsp",
@@ -297,6 +301,7 @@ return lazy.setup({
 	-- snippets engine
 	{
 		"L3MON4D3/LuaSnip",
+		event = "InsertEnter", -- Lazy-load snippets on entering insert mode
 		build = "make install_jsregexp",
 		config = function()
 			require("plugins.luasnip")
@@ -371,6 +376,7 @@ return lazy.setup({
 
 	{
 		"lewis6991/gitsigns.nvim",
+		event = "BufReadPre", -- Lazy-load when reading a file
 		config = function()
 			require("plugins.git-signs")
 		end,
