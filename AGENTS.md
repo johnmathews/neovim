@@ -17,6 +17,15 @@ It contains configuration details for plugins, options for Neovim itself, custom
 
 ---
 
+## Development Flow
+
+All changes should be tested before being accepted.
+A test directory should exist that contains test files of different file types, with a variety of errors in them. These files can be used to verify that nvim and
+its plugins behave as expected. they function like test data to test nvim against.
+LSP features should be tested, but how can things like code actions, or go to definition be tested?
+
+---
+
 ## Repo Map
 
 - Entrypoint: `./init.lua` - loads files that loads other files
@@ -107,6 +116,7 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 Three automation scripts are provided in `scripts/`:
 
 1. **`health-check`** - Comprehensive configuration health check
+
    - Verifies Neovim version and CLI tools
    - Runs luacheck
    - Tests Neovim loads
@@ -114,6 +124,7 @@ Three automation scripts are provided in `scripts/`:
    - Checks config structure and documentation
 
 2. **`quality-gate`** - Pre-commit/pre-push validation
+
    - Checks formatting (stylua)
    - Runs linter (luacheck)
    - Tests Neovim loads
@@ -161,7 +172,7 @@ The `.luacheckrc` file configures luacheck behavior:
 
 ## Performance Benchmarks
 
-**Target:** <150ms cold boot startup  
+**Target:** less than 150ms cold boot startup  
 **Current:** ~342ms (as of 2025-01-13)  
 **Status:** 2.3x slower than target
 
