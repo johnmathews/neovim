@@ -1,49 +1,4 @@
-function PrintTable(tbl, indent)
-	local formatting
-	if not indent then
-		indent = 0
-	end
-	for k, v in pairs(tbl) do
-		formatting = string.rep("  ", indent) .. k .. ": "
-		if type(v) == "table" then
-			print(formatting)
-			PrintTable(v, indent + 1)
-		else
-			print(formatting .. tostring(v))
-		end
-	end
-end
-
 local M = {}
-
--- Function to toggle diagnostic configuration
-function M.setDiagnosticConfig()
-	local current_config = vim.diagnostic.config()
-
-	-- print("before")
-	-- printTable(vim.diagnostic.config(), 2)
-
-	local custom_config
-
-	if type(current_config.virtual_text) == "table" and current_config.virtual_text["source"] == true then
-		custom_config = {
-			virtual_text = false,
-		}
-	else
-		custom_config = {
-			severity_sort = true,
-			virtual_text = {
-				source = true,
-			},
-		}
-	end
-
-	-- set the configuration
-	vim.diagnostic.config(custom_config)
-
-	-- print("after")
-	-- printTable(vim.diagnostic.config(), 2)
-end
 
 function M.asyncGitCommitAndPush(commitMessage)
 	if commitMessage == nil or commitMessage == "" then
@@ -69,42 +24,6 @@ function M.asyncGitCommitAndPush(commitMessage)
 		end)
 	end)
 end
-
--- convert ascii typographuc quotes to normal quotes including slanty quotes,
-function M.Convert_smart_and_fancy_ascii_chars_to_normal_chars()
-	vim.cmd([[
-    exe 'normal! ma' | %!iconv -f utf-8 -t ascii//translit | if search('pattern') == 0 | exe 'normal! `a' | endif
-  ]])
-end
-
-M.toggle_diagnostics = (function()
-	local modes = {
-		{ name = "Normal", vt = false, vl = false, signs = true, underline = true },
-		{
-			name = "Text",
-			vt = { source = true, spacing = 1, prefix = "" },
-			vl = false,
-			signs = true,
-			underline = true,
-		},
-		{ name = "Lines", vt = false, vl = { only_current_line = false }, signs = true, underline = true },
-		{ name = "Silent", vt = false, vl = false, signs = false, underline = false },
-	}
-
-	local i = 1
-	return function()
-		local m = modes[i]
-		vim.diagnostic.config({
-			virtual_text = m.vt,
-			virtual_lines = m.vl,
-			signs = m.signs,
-			underline = m.underline,
-			severity_sort = true,
-		})
-		vim.notify(("Diagnostics mode: %s"):format(m.name), vim.log.levels.INFO, { title = "LSP_Diagnostics" })
-		i = (i % #modes) + 1
-	end
-end)()
 
 M.active_tools = function()
 	local bufnr = vim.api.nvim_get_current_buf()
@@ -166,44 +85,6 @@ function! s:NewPost(fn)
 endfunction
 command! -nargs=1 Mp call s:NewPost(<q-args>)
 ]])
-
--- Clear all registers (letters, numbers, and special)
-function M.clear_all_registers()
-	local regs = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-="*+'
-	for i = 1, #regs do
-		local reg = regs:sub(i, i)
-		vim.fn.setreg(reg, "")
-	end
-	vim.cmd("wshada!") -- Write shada to persist register state
-	vim.notify("Cleared all registers. Inspect with :reg", vim.log.levels.INFO)
-end
-
--- Clear letter registers only
-function M.clear_letter_registers()
-	local regs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	for i = 1, #regs do
-		local reg = regs:sub(i, i)
-		vim.fn.setreg(reg, "")
-	end
-	vim.cmd("wshada!")
-	vim.notify("Cleared letter registers. Inspect with :reg", vim.log.levels.INFO)
-end
-
--- Clear number registers only
-function M.clear_number_registers()
-	local regs = "0123456789"
-	for i = 1, #regs do
-		local reg = regs:sub(i, i)
-		vim.fn.setreg(reg, "")
-	end
-	vim.cmd("wshada!")
-	vim.notify("Reset registers 1-9. Inspect with :reg", vim.log.levels.INFO)
-end
-
--- Create commands
-vim.api.nvim_create_user_command("ClearAllRegisters", M.clear_all_registers, {})
-vim.api.nvim_create_user_command("ClearLetterRegisters", M.clear_letter_registers, {})
-vim.api.nvim_create_user_command("ClearNumberRegisters", M.clear_number_registers, {})
 
 local diagnostic_state = 1
 function M.cycle_diagnostics()
