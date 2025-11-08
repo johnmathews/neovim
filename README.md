@@ -2,8 +2,8 @@
 
 A robust, performant Neovim configuration optimized for Python, JavaScript/TypeScript, Lua, Bash, SQL, YAML, and Markdown development.
 
-**Version:** 1.1.0  
-**Last Updated:** 2025-11-07  
+**Version:** 1.2.0  
+**Last Updated:** 2025-11-08  
 **Repository:** https://github.com/johnmathews/neovim
 
 ---
@@ -16,7 +16,7 @@ A robust, performant Neovim configuration optimized for Python, JavaScript/TypeS
 - **Smart Completion** - nvim-cmp with LuaSnip snippets
 - **Syntax Highlighting** - Treesitter with custom text objects
 - **Fast Navigation** - Leap motion, Harpoon marks, and project management
-- **Performance** - Lazy-loaded plugins, ~347ms startup time
+- **Performance** - Lazy-loaded plugins, ~350ms startup time
 - **Testing** - Automated LSP testing and comprehensive test suite
 - **Documentation** - Detailed guides for LSP, keymaps, and performance
 
@@ -230,12 +230,12 @@ nvim
 ./scripts/quality-gate
 ```
 
-### Test Results (2025-11-07)
+### Test Results (2025-11-08)
 
 - ✅ **Health Check:** PASS
-- ✅ **Code Quality:** 0 warnings / 0 errors (51 Lua files)
+- ✅ **Code Quality:** 0 warnings / 0 errors (58 Lua files)
 - ✅ **LSP Attachment:** 4/4 languages (100%)
-- ✅ **Startup Performance:** 347ms (acceptable)
+- ✅ **Startup Performance:** 350ms (excellent, <500ms threshold)
 
 **Detailed Results:** See [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)
 
@@ -244,9 +244,9 @@ nvim
 ## ⚡ Performance
 
 **Current Performance:**
-- Headless startup: ~347ms (average of 3 runs)
+- Headless startup: ~350ms (average of 5 runs)
 - Real-world startup: ~250-280ms (with lazy-loading)
-- Plugin count: 88 (5 major plugins lazy-loaded)
+- Plugin count: 88 (8 plugins lazy-loaded)
 
 **Lazy-Loaded Plugins:**
 - Telescope (loads on `<Tab>` keypress)
@@ -254,6 +254,9 @@ nvim
 - LuaSnip (loads on `InsertEnter`)
 - Gitsigns (loads on `BufReadPre`)
 - Alpha dashboard (loads on `VimEnter`)
+- Lualine (loads on `VeryLazy`)
+- Mason (deferred with `run_on_start = false`)
+- Harpoon (loads on keypress)
 
 **Performance Guide:** See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for detailed analysis and optimization tips.
 

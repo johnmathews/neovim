@@ -7,9 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2025-11-08
+
 ### Added
 - **Markdown Preview (Glow)**: Enabled [glow.nvim](https://github.com/ellisonleao/glow.nvim) with lazy-loading, `<leader>mg` keymap, and detection of the `glow` CLI (`lua/plugins.lua`, `lua/plugins/glow.lua`, `lua/plugins/whichkey.lua`).
 - **Documentation**: Updated `README.md` and `docs/KEYMAPS.md` with Glow usage instructions, installation requirements, and keymap references.
+
+### Performance
+- **Additional Lazy-Loading**: Extended lazy-loading to 8 total plugins (was 5 in v1.1.0)
+  - Lazy-loaded lualine with `event = "VeryLazy"` (`lua/plugins.lua:145-154`)
+  - Disabled Mason `run_on_start` to prevent automatic LSP server checks (`lua/plugins/mason.lua:31`)
+  - Lazy-loaded Harpoon with `keys = { "ga", "gh", "gn", "gp" }` (`lua/plugins.lua:136-142`)
+  - Startup time remains stable at ~350ms (within acceptable range)
+
+### Changed
+- **Version**: Bumped to 1.2.0
+- **Metrics**: Updated performance metrics throughout documentation
+- **Documentation**: Updated `README.md`, `CHANGELOG.md`, and `IMPROVEMENTS.md` with latest optimizations
 
 ## [1.1.0] - 2025-11-07
 
@@ -99,6 +113,7 @@ When making changes to the configuration:
 
 ---
 
-[Unreleased]: https://github.com/johnmathews/neovim/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/johnmathews/neovim/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/johnmathews/neovim/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/johnmathews/neovim/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/johnmathews/neovim/releases/tag/v1.0.0

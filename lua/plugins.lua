@@ -136,6 +136,7 @@ return lazy.setup({
 	{
 		"ThePrimeagen/harpoon",
 		dependencies = "nvim-lua/plenary.nvim",
+		keys = { "ga", "gh", "gn", "gp" }, -- Lazy-load on harpoon keybinds
 		config = function()
 			require("plugins.harpoon")
 		end,
@@ -148,6 +149,7 @@ return lazy.setup({
 			"nvim-tree/nvim-web-devicons",
 			"WhoIsSethDaniel/lualine-lsp-progress.nvim",
 		},
+		event = "VeryLazy", -- Defer statusline to after UI is ready
 		config = function()
 			require("plugins.lualine")
 		end,

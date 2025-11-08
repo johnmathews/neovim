@@ -28,6 +28,6 @@ if ok_mti then
 			"mypy", -- Python type checking
 		},
 		auto_update = false,
-		run_on_start = true,
+		run_on_start = false, -- Don't check tools on startup (use :Mason to check manually)
 	})
 end
