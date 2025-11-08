@@ -556,6 +556,14 @@ return lazy.setup({
 		end,
 	},
 
+	-- search enhancements with customizable virtual text
+	{
+		"kevinhwang91/nvim-hlslens",
+		config = function()
+			require("plugins.hlslens")
+		end,
+	},
+
 	{ "tpope/vim-repeat" },
 	{ "tpope/vim-surround" },
 	{ "tpope/vim-unimpaired" },

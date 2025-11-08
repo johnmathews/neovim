@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Pre-push hook for Neovim config
-# Runs comprehensive tests before pushing to remote
+# Runs 5 comprehensive tests before pushing to remote:
+#   - Quality gate (./scripts/quality-gate: stylua + luacheck + Neovim load test)
+#   - LSP attachment tests (./test/test_lsp.sh, 30s timeout, non-blocking)
+#   - Health check (./scripts/health-check: all 8 validation checks, non-blocking)
+#   - Broken symlink detection (find all symlinks, verify targets exist)
+#   - Documentation verification (README.md, docs/CHANGELOG.md presence check)
 # Install: ln -s ../../scripts/pre-push .git/hooks/pre-push
 
 set -e
@@ -24,66 +29,66 @@ FAILED=0
 # Check 1: Run quality gate (format + lint)
 echo -e "${BLUE}1. Running quality gate...${NC}"
 if ./scripts/quality-gate; then
-    echo -e "${GREEN}✓ Quality gate passed${NC}"
+  echo -e "${GREEN}✓ Quality gate passed${NC}"
 else
-    echo -e "${RED}✗ Quality gate failed${NC}"
-    FAILED=1
+  echo -e "${RED}✗ Quality gate failed${NC}"
+  FAILED=1
 fi
 echo ""
 
 # Check 2: Run LSP tests (if test script exists)
 if [ -f "./test/test_lsp.sh" ]; then
-    echo -e "${BLUE}2. Testing LSP attachment...${NC}"
-    if timeout 30 ./test/test_lsp.sh > /dev/null 2>&1; then
-        echo -e "${GREEN}✓ LSP tests passed${NC}"
-    else
-        echo -e "${YELLOW}⚠ LSP tests failed or timed out${NC}"
-        echo "  (Not blocking push - may be environment-specific)"
-        # Don't fail on LSP tests - they can be environment-dependent
-    fi
-    echo ""
+  echo -e "${BLUE}2. Testing LSP attachment...${NC}"
+  if timeout 30 ./test/test_lsp.sh >/dev/null 2>&1; then
+    echo -e "${GREEN}✓ LSP tests passed${NC}"
+  else
+    echo -e "${YELLOW}⚠ LSP tests failed or timed out${NC}"
+    echo "  (Not blocking push - may be environment-specific)"
+    # Don't fail on LSP tests - they can be environment-dependent
+  fi
+  echo ""
 fi
 
 # Check 3: Run health check
 echo -e "${BLUE}3. Running health check...${NC}"
-if ./scripts/health-check > /dev/null 2>&1; then
-    echo -e "${GREEN}✓ Health check passed${NC}"
+if ./scripts/health-check >/dev/null 2>&1; then
+  echo -e "${GREEN}✓ Health check passed${NC}"
 else
-    echo -e "${YELLOW}⚠ Health check had warnings${NC}"
-    echo "  (Not blocking push - see ./scripts/health-check for details)"
+  echo -e "${YELLOW}⚠ Health check had warnings${NC}"
+  echo "  (Not blocking push - see ./scripts/health-check for details)"
 fi
 echo ""
 
 # Check 4: Verify no broken symlinks
 echo -e "${BLUE}4. Checking for broken symlinks...${NC}"
 if find . -type l ! -exec test -e {} \; -print | grep -q .; then
-    echo -e "${RED}✗ Found broken symlinks${NC}"
-    FAILED=1
+  echo -e "${RED}✗ Found broken symlinks${NC}"
+  FAILED=1
 else
-    echo -e "${GREEN}✓ No broken symlinks${NC}"
+  echo -e "${GREEN}✓ No broken symlinks${NC}"
 fi
 echo ""
 
 # Check 5: Verify README is up to date
 echo -e "${BLUE}5. Checking documentation...${NC}"
 if [ -f "README.md" ] && [ -f "docs/CHANGELOG.md" ]; then
-    echo -e "${GREEN}✓ Core documentation present${NC}"
+  echo -e "${GREEN}✓ Core documentation present${NC}"
 else
-    echo -e "${YELLOW}⚠ Missing documentation files${NC}"
+  echo -e "${YELLOW}⚠ Missing documentation files${NC}"
 fi
 echo ""
 
 # Summary
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 if [ $FAILED -eq 0 ]; then
-    echo -e "${GREEN}✅ All pre-push checks passed!${NC}"
-    echo ""
-    echo "Safe to push to remote."
-    exit 0
+  echo -e "${GREEN}✅ All pre-push checks passed!${NC}"
+  echo ""
+  echo "Safe to push to remote."
+  exit 0
 else
-    echo -e "${RED}❌ Pre-push checks failed!${NC}"
-    echo ""
-    echo "Fix errors before pushing, or bypass with:"
-    echo "  git push --no-verify"
-    exit 1
+  echo -e "${RED}❌ Pre-push checks failed!${NC}"
+  echo ""
+  echo "Fix errors before pushing, or bypass with:"
+  echo "  git push --no-verify"
+  exit 1
 fi

@@ -101,7 +101,7 @@ M.toggle_diagnostics = (function()
 			underline = m.underline,
 			severity_sort = true,
 		})
-		vim.notify(("Diagnostics mode: %s"):format(m.name), vim.log.levels.INFO, { title = "LSP Diagnostics" })
+		vim.notify(("Diagnostics mode: %s"):format(m.name), vim.log.levels.INFO, { title = "LSP_Diagnostics" })
 		i = (i % #modes) + 1
 	end
 end)()
@@ -142,7 +142,7 @@ M.active_tools = function()
 			"Linters: " .. (#linters > 0 and table.concat(linters, ", ") or "—")
 		),
 		vim.log.levels.INFO,
-		{ title = "Active tools (current buffer)" }
+		{ title = "Active_Tools" }
 	)
 end
 
@@ -167,66 +167,48 @@ endfunction
 command! -nargs=1 Mp call s:NewPost(<q-args>)
 ]])
 
--- clear registers and overwrite shada file so that register state is persisted
-vim.cmd([[
-function! ClearAllRegisters()
-    let regs='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-="*+'
-    let i=0
-    while (i<strlen(regs))
-        exec 'let @'.regs[i].'=""'
-        let i=i+1
-    endwhile
-    wsh!
-    echom "cleared all registers. Inspect with :reg"
-endfunction
+-- Clear all registers (letters, numbers, and special)
+function M.clear_all_registers()
+	local regs = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-="*+'
+	for i = 1, #regs do
+		local reg = regs:sub(i, i)
+		vim.fn.setreg(reg, "")
+	end
+	vim.cmd("wshada!") -- Write shada to persist register state
+	vim.notify("Cleared all registers. Inspect with :reg", vim.log.levels.INFO)
+end
 
-command! ClearAllRegisters call ClearAllRegisters()
-]])
+-- Clear letter registers only
+function M.clear_letter_registers()
+	local regs = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	for i = 1, #regs do
+		local reg = regs:sub(i, i)
+		vim.fn.setreg(reg, "")
+	end
+	vim.cmd("wshada!")
+	vim.notify("Cleared letter registers. Inspect with :reg", vim.log.levels.INFO)
+end
 
-vim.cmd([[
-function! ClearLetterRegisters()
-    let regs='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    let i=0
-    while (i<strlen(regs))
-        exec 'let @'.regs[i].'=""'
-        let i=i+1
-    endwhile
-    wsh!
-    echom "cleared letter registers. Inspect with :reg"
-endfunction
+-- Clear number registers only
+function M.clear_number_registers()
+	local regs = "0123456789"
+	for i = 1, #regs do
+		local reg = regs:sub(i, i)
+		vim.fn.setreg(reg, "")
+	end
+	vim.cmd("wshada!")
+	vim.notify("Reset registers 1-9. Inspect with :reg", vim.log.levels.INFO)
+end
 
-command! ClearLetterRegisters call ClearLetterRegisters()
-]])
-
-vim.cmd([[
-function! ClearNumberRegisters()
-    let regs='0123456789'
-    let i=0
-    while (i<strlen(regs))
-        exec 'let @'.regs[i].'=""'
-        let i=i+1
-    endwhile
-    wsh!
-    echom "reset registers 1 - 9. Inspect with :reg"
-endfunction
-
-command! ClearNumberRegisters call ClearNumberRegisters()
-]])
+-- Create commands
+vim.api.nvim_create_user_command("ClearAllRegisters", M.clear_all_registers, {})
+vim.api.nvim_create_user_command("ClearLetterRegisters", M.clear_letter_registers, {})
+vim.api.nvim_create_user_command("ClearNumberRegisters", M.clear_number_registers, {})
 
 local diagnostic_state = 1
 function M.cycle_diagnostics()
 	if diagnostic_state == 1 then
-		-- Mode 1: Signs Only
-		vim.diagnostic.config({
-			signs = true,
-			underline = false,
-			virtual_text = false,
-			virtual_lines = false,
-		})
-		vim.notify("Diagnostics: Signs Only", vim.log.levels.INFO)
-		diagnostic_state = 2
-	elseif diagnostic_state == 2 then
-		-- Mode 2: Signs and Underlines
+		-- Mode 1: Signs and Underlines
 		vim.diagnostic.config({
 			signs = true,
 			underline = true,
@@ -234,9 +216,9 @@ function M.cycle_diagnostics()
 			virtual_lines = false,
 		})
 		vim.notify("Diagnostics: Signs and Underlines", vim.log.levels.INFO)
-		diagnostic_state = 3
-	elseif diagnostic_state == 3 then
-		-- Mode 3: Virtual Text (at end of line)
+		diagnostic_state = 2
+	elseif diagnostic_state == 2 then
+		-- Mode 2: Virtual Text (at end of line)
 		vim.diagnostic.config({
 			signs = true,
 			underline = true,
@@ -244,9 +226,9 @@ function M.cycle_diagnostics()
 			virtual_lines = false,
 		})
 		vim.notify("Diagnostics: Virtual Text", vim.log.levels.INFO)
-		diagnostic_state = 4
-	elseif diagnostic_state == 4 then
-		-- Mode 4: Virtual Lines (new lines below)
+		diagnostic_state = 3
+	elseif diagnostic_state == 3 then
+		-- Mode 3: Virtual Lines (new lines below)
 		vim.diagnostic.config({
 			signs = true,
 			underline = true,
@@ -254,9 +236,9 @@ function M.cycle_diagnostics()
 			virtual_lines = true,
 		})
 		vim.notify("Diagnostics: Virtual Lines", vim.log.levels.INFO)
-		diagnostic_state = 5
+		diagnostic_state = 4
 	else
-		-- Mode 5: Disabled
+		-- Mode 4: Disabled
 		vim.diagnostic.config({
 			signs = false,
 			underline = false,

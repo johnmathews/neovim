@@ -1,5 +1,14 @@
 #!/usr/bin/env bash
 # Health check automation script for Neovim config
+# Runs 8 comprehensive checks:
+#   - Neovim version verification
+#   - CLI tools presence (luacheck, stylua, rg, fd, node)
+#   - Luacheck linting (lua/ directory)
+#   - Neovim load test (10s timeout)
+#   - Startup performance (<150ms target, warn 150-500ms, fail >500ms)
+#   - Plugin directory verification (lazy.nvim)
+#   - Config file structure (init.lua, options.lua, mappings.lua, plugins.lua, autocmd.lua)
+#   - Documentation files (AGENTS.md, KEYMAPS.md, LSP.md, PERFORMANCE.md)
 
 set -e
 
@@ -16,13 +25,13 @@ NC='\033[0m' # No Color
 
 # Check 1: Neovim version
 echo -e "${BLUE}1. Checking Neovim version...${NC}"
-if command -v nvim &> /dev/null; then
-    NVIM_VERSION=$(nvim --version | head -1)
-    echo "   $NVIM_VERSION"
-    echo -e "   ${GREEN}✓ Neovim is installed${NC}"
+if command -v nvim &>/dev/null; then
+  NVIM_VERSION=$(nvim --version | head -1)
+  echo "   $NVIM_VERSION"
+  echo -e "   ${GREEN}✓ Neovim is installed${NC}"
 else
-    echo -e "   ${RED}✗ Neovim not found${NC}"
-    exit 1
+  echo -e "   ${RED}✗ Neovim not found${NC}"
+  exit 1
 fi
 echo ""
 
@@ -30,12 +39,12 @@ echo ""
 echo -e "${BLUE}2. Checking required CLI tools...${NC}"
 REQUIRED_TOOLS=("luacheck" "stylua" "rg" "fd" "node")
 for tool in "${REQUIRED_TOOLS[@]}"; do
-    if command -v "$tool" &> /dev/null; then
-        VERSION=$("$tool" --version 2>&1 | head -1 || echo "installed")
-        echo -e "   ${GREEN}✓${NC} $tool: $VERSION"
-    else
-        echo -e "   ${YELLOW}⚠${NC} $tool: not found"
-    fi
+  if command -v "$tool" &>/dev/null; then
+    VERSION=$("$tool" --version 2>&1 | head -1 || echo "installed")
+    echo -e "   ${GREEN}✓${NC} $tool: $VERSION"
+  else
+    echo -e "   ${YELLOW}⚠${NC} $tool: not found"
+  fi
 done
 echo ""
 
@@ -43,20 +52,20 @@ echo ""
 echo -e "${BLUE}3. Running luacheck...${NC}"
 cd "$(dirname "$0")/.." || exit 1
 if luacheck lua/ --quiet; then
-    WARNINGS=$(luacheck lua/ 2>&1 | grep "warnings / " | grep -oE "[0-9]+ warnings" || echo "0 warnings")
-    echo -e "   ${GREEN}✓ Luacheck passed${NC} ($WARNINGS)"
+  WARNINGS=$(luacheck lua/ 2>&1 | grep "warnings / " | grep -oE "[0-9]+ warnings" || echo "0 warnings")
+  echo -e "   ${GREEN}✓ Luacheck passed${NC} ($WARNINGS)"
 else
-    echo -e "   ${RED}✗ Luacheck failed${NC}"
-    echo "   Run: luacheck lua/ (for details)"
+  echo -e "   ${RED}✗ Luacheck failed${NC}"
+  echo "   Run: luacheck lua/ (for details)"
 fi
 echo ""
 
 # Check 4: Neovim loads successfully
 echo -e "${BLUE}4. Testing Neovim loads...${NC}"
 if timeout 10 nvim --headless "+lua print('Health check: OK')" +qa 2>&1 | grep -q "OK"; then
-    echo -e "   ${GREEN}✓ Neovim loads successfully${NC}"
+  echo -e "   ${GREEN}✓ Neovim loads successfully${NC}"
 else
-    echo -e "   ${RED}✗ Neovim failed to load${NC}"
+  echo -e "   ${RED}✗ Neovim failed to load${NC}"
 fi
 echo ""
 
@@ -67,12 +76,12 @@ STARTUP_TIME=$(grep "NVIM STARTED" /tmp/nvim_health_startup.log | awk '{print $1
 echo "   Startup time: ${STARTUP_TIME}ms"
 # Convert to integer for comparison (remove decimal point)
 STARTUP_MS=$(echo "$STARTUP_TIME" | awk '{printf "%d", $1}')
-if (( STARTUP_MS < 150 )); then
-    echo -e "   ${GREEN}✓ Under 150ms target${NC}"
-elif (( STARTUP_MS < 500 )); then
-    echo -e "   ${YELLOW}⚠ Acceptable (150-500ms)${NC}"
+if ((STARTUP_MS < 150)); then
+  echo -e "   ${GREEN}✓ Under 150ms target${NC}"
+elif ((STARTUP_MS < 500)); then
+  echo -e "   ${YELLOW}⚠ Acceptable (150-500ms)${NC}"
 else
-    echo -e "   ${RED}✗ Slow (>500ms)${NC}"
+  echo -e "   ${RED}✗ Slow (>500ms)${NC}"
 fi
 echo ""
 
@@ -80,12 +89,12 @@ echo ""
 echo -e "${BLUE}6. Checking plugin directory...${NC}"
 PLUGIN_DIR="$HOME/.local/share/nvim/lazy"
 if [ -d "$PLUGIN_DIR" ]; then
-    PLUGIN_COUNT=$(find "$PLUGIN_DIR" -maxdepth 1 -type d | wc -l)
-    echo -e "   ${GREEN}✓ Plugin directory exists${NC}"
-    echo "   Plugins installed: $((PLUGIN_COUNT - 1))"
+  PLUGIN_COUNT=$(find "$PLUGIN_DIR" -maxdepth 1 -type d | wc -l)
+  echo -e "   ${GREEN}✓ Plugin directory exists${NC}"
+  echo "   Plugins installed: $((PLUGIN_COUNT - 1))"
 else
-    echo -e "   ${YELLOW}⚠ Plugin directory not found${NC}"
-    echo "   Plugins will be installed on first run"
+  echo -e "   ${YELLOW}⚠ Plugin directory not found${NC}"
+  echo "   Plugins will be installed on first run"
 fi
 echo ""
 
@@ -94,15 +103,15 @@ echo -e "${BLUE}7. Checking config structure...${NC}"
 REQUIRED_FILES=("init.lua" "lua/options.lua" "lua/mappings.lua" "lua/plugins.lua" "lua/autocmd.lua")
 ALL_FOUND=true
 for file in "${REQUIRED_FILES[@]}"; do
-    if [ -f "$file" ]; then
-        echo -e "   ${GREEN}✓${NC} $file"
-    else
-        echo -e "   ${RED}✗${NC} $file (missing)"
-        ALL_FOUND=false
-    fi
+  if [ -f "$file" ]; then
+    echo -e "   ${GREEN}✓${NC} $file"
+  else
+    echo -e "   ${RED}✗${NC} $file (missing)"
+    ALL_FOUND=false
+  fi
 done
 if $ALL_FOUND; then
-    echo -e "   ${GREEN}✓ All core files present${NC}"
+  echo -e "   ${GREEN}✓ All core files present${NC}"
 fi
 echo ""
 
@@ -110,11 +119,11 @@ echo ""
 echo -e "${BLUE}8. Checking documentation...${NC}"
 DOC_FILES=("docs/AGENTS.md" "docs/KEYMAPS.md" "docs/LSP.md" "docs/PERFORMANCE.md")
 for file in "${DOC_FILES[@]}"; do
-    if [ -f "$file" ]; then
-        echo -e "   ${GREEN}✓${NC} $file"
-    else
-        echo -e "   ${YELLOW}⚠${NC} $file (missing)"
-    fi
+  if [ -f "$file" ]; then
+    echo -e "   ${GREEN}✓${NC} $file"
+  else
+    echo -e "   ${YELLOW}⚠${NC} $file (missing)"
+  fi
 done
 echo ""
 
