@@ -323,17 +323,6 @@ return lazy.setup({
 	},
 
 	{
-		"akinsho/bufferline.nvim",
-		event = "VeryLazy",
-		dependencies = {
-			"nvim-tree/nvim-web-devicons",
-		},
-		config = function()
-			require("plugins.bufferline")
-		end,
-	},
-
-	{
 		"echasnovski/mini.map",
 		version = false,
 		event = {

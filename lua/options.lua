@@ -2,7 +2,7 @@ local options = {
 	encoding = "utf-8",
 	hidden = true,
 	clipboard = "unnamedplus",
-	termguicolors = true, -- required for bufferline
+	termguicolors = true,
 
 	linespace = 8,
 	scrolloff = 2,
