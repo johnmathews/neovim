@@ -323,7 +323,7 @@ return lazy.setup({
 	},
 
 	{
-		"echasnovski/mini.map",
+		"nvim-mini/mini.nvim",
 		version = false,
 		event = {
 			"BufReadPost",

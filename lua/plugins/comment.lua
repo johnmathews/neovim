@@ -1,4 +1,5 @@
 -- Comment: Smart commenting with support for embedded languages
+
 local status_ok, _ = pcall(require, "Comment")
 if not status_ok then
 	return
@@ -56,7 +57,6 @@ local setup = {
 		---Line-comment toggle keymap
 		line = "gcc",
 		---Block-comment toggle keymap
-		-- conflicts with bufferline
 		-- block = 'gbc',
 	},
 
@@ -66,7 +66,6 @@ local setup = {
 		---Line-comment keymap
 		line = "gc",
 		---Block-comment keymap
-		-- conflicts with bufferline
 		-- block = 'gb',
 	},
 

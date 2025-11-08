@@ -1,4 +1,5 @@
 -- Dressing: Improved UI for vim.ui.select and vim.ui.input
+
 local ok, dressing = pcall(require, "dressing")
 if not ok then
 	return

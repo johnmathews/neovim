@@ -1,4 +1,5 @@
 -- Ansible Vim: Syntax highlighting for Ansible YAML files
+
 vim.cmd([[
   "let g:ansible_yamlKeyName = 'yamlKey'
   let g:ansible_attribute_highlight = "ab"

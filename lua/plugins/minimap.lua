@@ -8,10 +8,10 @@ mini_map.setup({
 	integrations = {
 		mini_map.gen_integration.builtin_search(),
 		mini_map.gen_integration.diagnostic({
-			error = " ",
-			warn = " ",
-			info = " ",
-			hint = " ",
+			error = "DiagnosticFloatingError",
+			warn = "DiagnosticFloatingWarn",
+			info = "DiagnosticFloatingInfo",
+			hint = "DiagnosticFloatingHint",
 		}),
 		mini_map.gen_integration.gitsigns(),
 	},
