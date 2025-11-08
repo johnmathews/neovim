@@ -1,3 +1,4 @@
+-- Aerial: Code outline window for navigating symbols and structure
 local aerial = require("aerial")
 
 local keymap = vim.keymap.set

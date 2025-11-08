@@ -1,3 +1,4 @@
+-- Monokai: Monokai Pro color scheme with custom highlights
 local status_ok, monokai = pcall(require, "monokai")
 if not status_ok then
 	return

@@ -1,3 +1,4 @@
+-- Leap: Lightning-fast motion plugin for jumping to any location
 local leap = require("leap")
 leap.add_default_mappings()
 

@@ -1,3 +1,4 @@
+-- Noice: Enhanced UI for messages, cmdline, and popups
 local ok, noice = pcall(require, "noice")
 if not ok then
 	return

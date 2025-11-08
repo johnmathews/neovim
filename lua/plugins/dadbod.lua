@@ -1,3 +1,4 @@
+-- Dadbod: Database UI and completion for SQL workflows
 local M = {}
 
 local function db_completion()

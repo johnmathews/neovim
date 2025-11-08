@@ -1,3 +1,4 @@
+-- ToggleTerm: Terminal manager with lazygit and lazydocker integration
 local toggleterm_status_ok, toggleterm = pcall(require, "toggleterm")
 if not toggleterm_status_ok then
 	print("toggleterm not found")

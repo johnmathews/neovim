@@ -1,3 +1,4 @@
+-- Open Browser: Open URLs and search terms in default browser
 vim.cmd([[
   " gx is default mapped to netrw opening urls in browsers
   " leader-x is mapped to open a file in the systems default app

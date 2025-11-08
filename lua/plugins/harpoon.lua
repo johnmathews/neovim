@@ -1,4 +1,4 @@
--- require("harpoon").setup()
+-- Harpoon: Quick file navigation and marking for frequently used files
 require("harpoon").setup({
 	menu = {
 		width = 100,

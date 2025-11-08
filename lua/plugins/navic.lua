@@ -1,3 +1,4 @@
+-- Navic: LSP-based breadcrumbs showing code context in winbar
 local ok, navic = pcall(require, "nvim-navic")
 if not ok then
 	return

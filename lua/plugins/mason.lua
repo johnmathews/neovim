@@ -1,3 +1,4 @@
+-- Mason: Package manager for LSP servers, formatters, and linters
 local ok_mason, mason = pcall(require, "mason")
 if not ok_mason then
 	return

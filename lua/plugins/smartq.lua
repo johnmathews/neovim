@@ -1,3 +1,4 @@
+-- SmartQ: Intelligent buffer closing that respects splits and special buffers
 local map = vim.api.nvim_set_keymap
 
 -- Exit/Delete buffer while respecting window splits and tabs, and other types of buffer.

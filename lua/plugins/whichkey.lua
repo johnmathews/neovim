@@ -1,3 +1,4 @@
+-- WhichKey: Display available keybindings in popup menu
 -- https://github.com/ChristianChiarulli/nvim/blob/master/lua/user/whichkey.lua
 
 local status_ok, which_key = pcall(require, "which-key")

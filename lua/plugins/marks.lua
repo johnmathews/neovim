@@ -1,3 +1,4 @@
+-- Marks: Enhanced mark visualization and navigation with bookmarks
 require("marks").setup({
 	default_mappings = true,
 

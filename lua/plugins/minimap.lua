@@ -1,3 +1,4 @@
+-- Minimap: Code minimap with git and diagnostic integration
 local ok, mini_map = pcall(require, "mini.map")
 if not ok then
 	return

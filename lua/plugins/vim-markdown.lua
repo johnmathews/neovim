@@ -1,3 +1,4 @@
+-- Vim Markdown: Enhanced markdown support with folding, TOC, and navigation
 -- https://github.com/preservim/vim-markdown#fenced-code-block-languages
 
 -- :HeaderDecrease will decrease the level of all headers in the buffer (h2 ->  h1, h3 -> h2 etc)

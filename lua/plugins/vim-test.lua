@@ -1,3 +1,4 @@
+-- Vim Test: Test runner with AsyncRun integration
 vim.cmd([[
   let test#strategy = "asyncrun_background"
   let test#python#runner = 'pytest'

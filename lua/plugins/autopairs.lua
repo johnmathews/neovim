@@ -1,4 +1,4 @@
--- Setup nvim-cmp.
+-- Autopairs: Automatically insert and delete matching pairs of brackets, quotes, etc.
 local status_ok, autopairs = pcall(require, "nvim-autopairs")
 if not status_ok then
 	return

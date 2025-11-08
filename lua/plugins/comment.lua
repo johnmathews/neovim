@@ -1,3 +1,4 @@
+-- Comment: Smart commenting with support for embedded languages
 local status_ok, _ = pcall(require, "Comment")
 if not status_ok then
 	return

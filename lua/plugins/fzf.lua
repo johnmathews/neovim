@@ -1,3 +1,4 @@
+-- FZF: Fuzzy finder configuration (deprecated in favor of Telescope)
 -- i think this isnt used anywhere
 vim.cmd([[
   set rtp+=/usr/local/opt/fzf

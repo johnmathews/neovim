@@ -1,3 +1,4 @@
+-- Treesitter: Advanced syntax highlighting and text objects
 local status_ok, _ = pcall(require, "nvim-treesitter.config")
 if not status_ok then
 	return

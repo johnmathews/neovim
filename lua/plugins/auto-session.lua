@@ -1,3 +1,4 @@
+-- Auto-Session: Automatic session management for project workspaces
 -- https://dockyard.com/blog/2018/06/01/simple-vim-session-management-part-1
 -- this is a custom variable to be used with a custom command defined in the linked article
 vim.g.session_dir = "~/.config/nvim/sessions/"

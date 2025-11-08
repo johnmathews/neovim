@@ -1,3 +1,4 @@
+-- Vim MatchTag: Highlight matching HTML/XML tags
 vim.cmd([[
   highlight matchTag guibg=green
 

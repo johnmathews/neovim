@@ -1,3 +1,4 @@
+-- LSP Colors: Color definitions for LSP diagnostics
 local status_ok, lsp_colors = pcall(require, "lsp_colors")
 if not status_ok then
 	return
