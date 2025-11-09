@@ -1,7 +1,7 @@
 # AGENTS.md — Neovim Config
 
-This is the configuration directory for my Neovim setup.
-It contains configuration details for plugins, options for Neovim itself, custom functions, keybindings, and colorscheme settings.
+This is the configuration directory for my Neovim setup. It contains configuration details for plugins, options for
+Neovim itself, custom functions, keybindings, and colorscheme settings.
 
 This document is written for OpenCode (Anthropic models, plan mode)
 
@@ -56,10 +56,10 @@ Agents must:
 
 ## Development Flow
 
-All changes should be tested before being accepted.
-A test directory should exist that contains test files of different file types, with a variety of errors in them. These files can be used to verify that nvim and
-its plugins behave as expected. they function like test data to test nvim against.
-LSP features should be tested, but how can things like code actions, or go to definition be tested?
+All changes should be tested before being accepted. A test directory should exist that contains test files of different
+file types, with a variety of errors in them. These files can be used to verify that nvim and its plugins behave as
+expected. they function like test data to test nvim against. LSP features should be tested, but how can things like code
+actions, or go to definition be tested?
 
 ---
 
