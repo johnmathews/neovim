@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # Pre-commit hook for Neovim config
-# Runs 4 validation checks before each commit:
-#   - Luacheck linting (lua/ directory, --quiet mode)
-#   - Stylua formatting validation (--check mode, suggests fix if needed)
-#   - Common issue detection (trailing whitespace in .lua files, print/debug statements)
-#   - Neovim load test (10s timeout, headless mode)
+# Runs quality gate + git-specific checks before each commit:
+#   - Quality gate (stylua, luacheck, Neovim load test)
+#   - Trailing whitespace detection in staged .lua files
+#   - Debug statement detection (warning only)
 # Install: ln -s ../../scripts/pre-commit .git/hooks/pre-commit
 
 set -e
@@ -24,65 +23,45 @@ NC='\033[0m' # No Color
 # Track overall status
 FAILED=0
 
-# Check 1: Luacheck
-echo "📝 Running luacheck..."
-if luacheck lua/ --quiet; then
-  echo -e "${GREEN}✓ Luacheck passed${NC}"
+# Step 1: Run quality gate
+echo "📋 Running quality gate..."
+if ./scripts/quality-gate; then
+  echo -e "${GREEN}✓ Quality gate passed${NC}"
 else
-  echo -e "${RED}✗ Luacheck failed${NC}"
-  echo "  Fix errors with: luacheck lua/"
+  echo -e "${RED}✗ Quality gate failed${NC}"
   FAILED=1
 fi
 echo ""
 
-# Check 2: Stylua (format check only, don't auto-fix in pre-commit)
-echo "🎨 Checking Lua formatting..."
-if stylua --check . 2>&1 | grep -q "Diff"; then
-  echo -e "${YELLOW}⚠ Code needs formatting${NC}"
-  echo "  Run: stylua ."
-  FAILED=1
-else
-  echo -e "${GREEN}✓ Formatting is correct${NC}"
-fi
-echo ""
+# Step 2: Git-specific checks on staged files
+echo "🔎 Checking staged files for common issues..."
 
-# Check 3: Check for common issues
-echo "🔎 Checking for common issues..."
+# Only check Lua files if there are any staged
+LUA_FILES=$(git diff --cached --name-only | grep '\.lua$' || true)
 
-# Check for trailing whitespace in Lua files
-if git diff --cached --name-only | grep '\.lua$' | xargs grep -l '[[:space:]]$' 2>/dev/null; then
-  echo -e "${YELLOW}⚠ Found trailing whitespace in Lua files${NC}"
-  echo "  Fix with: sed -i '' 's/[[:space:]]*$//' <file>"
-  FAILED=1
-fi
+if [ -n "$LUA_FILES" ]; then
+  # Check for trailing whitespace in staged Lua files
+  if echo "$LUA_FILES" | xargs grep -l '[[:space:]]$' 2>/dev/null; then
+    echo -e "${YELLOW}⚠ Found trailing whitespace in staged Lua files${NC}"
+    echo "  Fix with: sed -i '' 's/[[:space:]]*$//' <file>"
+    FAILED=1
+  fi
 
-# Check for debugger statements
-if git diff --cached --name-only | grep '\.lua$' | xargs grep -l 'vim.print\|print(' 2>/dev/null; then
-  echo -e "${YELLOW}⚠ Found print/debug statements${NC}"
-  echo "  Remove debug statements before committing"
-  # Don't fail, just warn
+  # Check for debug statements (warning only, don't block)
+  if echo "$LUA_FILES" | xargs grep -l 'vim.print\|print(' 2>/dev/null; then
+    echo -e "${YELLOW}⚠ Found print/debug statements in staged files${NC}"
+    echo "  Consider removing debug statements before committing"
+  fi
 fi
 
 if [ $FAILED -eq 0 ]; then
-  echo -e "${GREEN}✓ All checks passed${NC}"
-else
-  echo ""
-  echo -e "${GREEN}All checks completed${NC}"
+  echo -e "${GREEN}✓ All git-specific checks passed${NC}"
 fi
 echo ""
 
-# Quick Neovim load test
-echo "🚀 Testing Neovim loads..."
-if timeout 10 nvim --headless "+lua print('Pre-commit: Neovim loads successfully')" +qa 2>&1 | grep -q "successfully"; then
-  echo -e "${GREEN}✓ Neovim loads without errors${NC}"
-else
-  echo -e "${RED}✗ Neovim failed to load${NC}"
-  FAILED=1
-fi
-echo ""
-
+# Summary
 if [ $FAILED -eq 1 ]; then
-  echo -e "${RED}Pre-commit checks failed. Commit aborted.${NC}"
+  echo -e "${RED}❌ Pre-commit checks failed. Commit aborted.${NC}"
   echo "Run checks manually: ./scripts/pre-commit"
   exit 1
 fi

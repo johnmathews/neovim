@@ -112,23 +112,36 @@ Automated quality checks that run before commits and pushes.
 This installs two hooks:
 
 #### Pre-Commit Hook (`./scripts/pre-commit`)
-Runs automatically before every `git commit` (fast, <10 seconds).
+Runs automatically before every `git commit` (fast, ~5 seconds).
 
 **What it checks:**
-- ✓ Luacheck (0 warnings/errors)
-- ✓ Formatting (stylua --check)
-- ⚠ Trailing whitespace (warning)
-- ⚠ Debug print statements (warning)
-- ✓ Neovim loads
+- ✓ Quality gate (stylua, luacheck, Neovim load test)
+- ✓ Trailing whitespace in staged .lua files
+- ⚠ Debug print statements (warning only)
 
 **Behavior:**
-- **Blocks commit** if critical checks fail (luacheck, formatting, load test)
-- **Warns but allows commit** for minor issues (debug statements)
-- **Automatically staged files only** are checked
+- **Blocks commit** if quality gate or trailing whitespace check fails
+- **Warns but allows commit** for debug statements
+- **Staged files only** are checked for git-specific issues
 
 **Bypass (not recommended):**
 ```bash
 git commit --no-verify -m "message"
+```
+
+#### Pre-Push Hook (`./scripts/pre-push`)
+Runs automatically before every `git push` (fast, ~5 seconds).
+
+**What it checks:**
+- ✓ Quality gate (stylua, luacheck, Neovim load test)
+
+**Behavior:**
+- **Blocks push** if any quality gate check fails
+- Ensures only quality code reaches remote repository
+
+**Bypass (not recommended):**
+```bash
+git push --no-verify
 ```
 
 ---
