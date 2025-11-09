@@ -40,12 +40,11 @@ local excluded = {
 }
 
 local function toggle_minimap()
-	if mini_map.is_open() then
-		mini_map.close()
+	-- Only toggle if not in excluded filetype and has enough lines
+	if not excluded[vim.bo.filetype] and vim.api.nvim_buf_line_count(0) >= 80 then
+		mini_map.toggle()
 	else
-		if not excluded[vim.bo.filetype] and vim.api.nvim_buf_line_count(0) >= 80 then
-			mini_map.open()
-		end
+		mini_map.close()
 	end
 end
 
