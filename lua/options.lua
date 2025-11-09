@@ -38,7 +38,7 @@ local options = {
 	mouse = "a",
 	startofline = false,
 	number = true,
-	signcolumn = "auto",
+	signcolumn = "yes",
 
 	shortmess = "filnxtToOFc",
 	completeopt = "menu,menuone,noselect",
