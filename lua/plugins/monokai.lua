@@ -48,46 +48,6 @@ monokai.setup({
 			fg = palette.white,
 			bg = palette.black,
 		},
-		-- background, and normal text
-		-- normal = {
-		--   fg = palette.white,
-		--   bg = palette.black,
-		-- },
-
-		-- nvim-tree
-		-- NvimTreeFolderName = {
-		--   fg = palette.green,
-		-- },
-		-- NvimTreeRootFolder = {
-		--   fg = palette.base8,
-		-- },
-		-- NvimTreeFolderIcon = {
-		--   fg = palette.green,
-		-- },
-		-- NvimTreeOpenedFolderName = {
-		--   fg = palette.aqua,
-		-- },
-		-- NvimTreeFileIcon = {
-		--   fg = palette.aqua,
-		-- },
-		-- NvimTreeSpecialFile = {
-		--   fg = palette.purple,
-		-- },
-		-- NvimTreeSymlink = {
-		--   fg = palette.green,
-		-- },
-		-- CopilotSuggestion = {
-		--   fg = palette.base0,
-		--   bg = palette.green,
-		-- },
-		-- -- hrsh7th/nvim-cmp
-		-- CmpDocumentation = {
-		--   fg = palette.white,
-		--   bg = palette.base1,
-		-- },
-		-- TSInclude = {
-		--   fg = palette.aqua,
-		-- },
 		GitSignsAdd = {
 			fg = palette.green,
 			bg = palette.base2,
@@ -104,7 +64,6 @@ monokai.setup({
 			fg = palette.black,
 			bg = palette.yellow,
 		},
-		-- rainbow colors for matching pairs of parentheses
 		rainbowcol1 = {
 			fg = "red",
 		},
@@ -180,7 +139,6 @@ monokai.setup({
 		dockerfileEnvWithComment = {
 			fg = palette.green,
 		},
-		-- Telescope
 		TelescopeBorder = {
 			-- fg = palette.base7,
 			-- fg = palette.base7,

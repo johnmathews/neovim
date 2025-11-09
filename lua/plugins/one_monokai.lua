@@ -31,40 +31,6 @@ require("one_monokai").setup({
 	},
 	highlights = function(colors)
 		return {
-			-- nvim-tree
-			-- NvimTreeFolderName = {
-			--   fg = colors.green,
-			-- },
-			-- NvimTreeRootFolder = {
-			--   fg = colors.base8,
-			-- },
-			-- NvimTreeFolderIcon = {
-			--   fg = colors.green,
-			-- },
-			-- NvimTreeOpenedFolderName = {
-			--   fg = colors.aqua,
-			-- },
-			-- NvimTreeFileIcon = {
-			--   fg = colors.aqua,
-			-- },
-			-- NvimTreeSpecialFile = {
-			--   fg = colors.purple,
-			-- },
-			-- NvimTreeSymlink = {
-			--   fg = colors.green,
-			-- },
-			-- CopilotSuggestion = {
-			--   fg = colors.base0,
-			--   bg = colors.green,
-			-- },
-			-- -- hrsh7th/nvim-cmp
-			-- CmpDocumentation = {
-			--   fg = colors.white,
-			--   bg = colors.base1,
-			-- },
-			-- TSInclude = {
-			--   fg = colors.aqua,
-			-- },
 			GitSignsAdd = {
 				fg = colors.green,
 				bg = colors.base2,
