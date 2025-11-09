@@ -1,6 +1,7 @@
 # Neovim Configuration
 
-A robust, performant Neovim configuration optimized for Python, JavaScript/TypeScript, Lua, Bash, SQL, YAML, and Markdown development.
+A robust, performant Neovim configuration optimized for Python, JavaScript/TypeScript, Lua, Bash, SQL, YAML, and
+Markdown development.
 
 **Version:** 1.2.0  
 **Last Updated:** 2025-11-08  
@@ -29,10 +30,13 @@ A robust, performant Neovim configuration optimized for Python, JavaScript/TypeS
 - **Neovim:** v0.11.4+
 - **Node.js:** v18+ (for LSP servers)
 - **CLI Tools:**
+
   ```bash
   brew install luacheck stylua ripgrep fd glow
   ```
+
   `glow` powers the in-editor Markdown preview described below.
+
 - **Optional:** `pynvim` for Python support
 
 ### Installation
@@ -67,20 +71,21 @@ nvim
 
 **Prefix:** `<Tab>` (all Telescope commands start with Tab)
 
-| Keymap     | Function                              |
-|------------|---------------------------------------|
-| `<Tab>f`   | Find files (respects .gitignore)      |
-| `<Tab>a`   | Find all files                        |
-| `<Tab>s`   | Search text (ripgrep)                 |
-| `<Tab>x`   | Search with ripgrep args              |
-| `<Tab>r`   | Recent buffers                        |
-| `<Tab>tk`  | Search keymaps                        |
-| `<Tab>tc`  | Command history                       |
-| `<Tab>gc`  | Git commits                           |
-| `<Tab>gb`  | Git branches                          |
-| `<Tab>z`   | Resume last search                    |
+| Keymap    | Function                         |
+| --------- | -------------------------------- |
+| `<Tab>f`  | Find files (respects .gitignore) |
+| `<Tab>a`  | Find all files                   |
+| `<Tab>s`  | Search text (ripgrep)            |
+| `<Tab>x`  | Search with ripgrep args         |
+| `<Tab>r`  | Recent buffers                   |
+| `<Tab>tk` | Search keymaps                   |
+| `<Tab>tc` | Command history                  |
+| `<Tab>gc` | Git commits                      |
+| `<Tab>gb` | Git branches                     |
+| `<Tab>z`  | Resume last search               |
 
 **Telescope Extensions:**
+
 - `fzf-native` - Better performance and FZF syntax support
 - `live_grep_args` - Pass arguments to ripgrep (e.g., `--no-ignore`, `-tpy`)
 - `smart_history` - Persistent search history
@@ -88,37 +93,39 @@ nvim
 
 ### 2. LSP (Language Server Protocol)
 
-**Available via Mason:** Python (pyright), Lua (lua_ls), JavaScript/TypeScript (ts_ls), YAML (yamlls), Bash, JSON, SQL, Markdown, HTML, CSS
+**Available via Mason:** Python (pyright), Lua (lua_ls), JavaScript/TypeScript (ts_ls), YAML (yamlls), Bash, JSON, SQL,
+Markdown, HTML, CSS
 
-| Keymap       | Function                        |
-|--------------|---------------------------------|
-| `K`          | Hover documentation             |
-| `gd`         | Go to definition                |
-| `gD`         | Go to declaration               |
-| `gr`         | Go to references                |
-| `gi`         | Go to implementation            |
-| `<leader>rn` | Rename symbol                   |
-| `<leader>ca` | Code actions                    |
-| `<leader>cf` | Format document                 |
-| `[d`         | Previous diagnostic             |
-| `]d`         | Next diagnostic                 |
-| `<leader>q`  | Diagnostic quickfix list        |
+| Keymap       | Function                 |
+| ------------ | ------------------------ |
+| `K`          | Hover documentation      |
+| `gd`         | Go to definition         |
+| `gD`         | Go to declaration        |
+| `gr`         | Go to references         |
+| `gi`         | Go to implementation     |
+| `<leader>rn` | Rename symbol            |
+| `<leader>ca` | Code actions             |
+| `<leader>cf` | Format document          |
+| `[d`         | Previous diagnostic      |
+| `]d`         | Next diagnostic          |
+| `<leader>q`  | Diagnostic quickfix list |
 
 **LSP Documentation:** See [LSP.md](docs/LSP.md) for detailed server configurations and troubleshooting.
 
 ### 3. Git Integration (Gitsigns)
 
-| Keymap         | Function                      |
-|----------------|-------------------------------|
-| `<leader>sb`   | Blame current line            |
-| `<leader>sS`   | Stage buffer                  |
-| `<leader>su`   | Undo stage hunk               |
-| `<leader>sr`   | Reset hunk                    |
-| `<leader>sp`   | Preview hunk                  |
-| `]c`           | Next git hunk                 |
-| `[c`           | Previous git hunk             |
+| Keymap       | Function           |
+| ------------ | ------------------ |
+| `<leader>sb` | Blame current line |
+| `<leader>sS` | Stage buffer       |
+| `<leader>su` | Undo stage hunk    |
+| `<leader>sr` | Reset hunk         |
+| `<leader>sp` | Preview hunk       |
+| `]c`         | Next git hunk      |
+| `[c`         | Previous git hunk  |
 
 **Visual Indicators:**
+
 - `|` - Added or changed line
 - `_` - Deleted line
 - `~` - Changed line number
@@ -126,16 +133,19 @@ nvim
 ### 4. Navigation & Motion
 
 **Leap Motion:**
+
 - `s` - Jump forward by 2-character search
 - `S` - Jump backward by 2-character search
 - Type 2 characters → see labeled jump points → press label
 
 **Harpoon (Quick Marks):**
+
 - `<leader>ha` - Add file to harpoon
 - `<leader>hh` - Toggle harpoon menu
 - `<leader>h1-4` - Jump to harpooned file 1-4
 
 **Marks:**
+
 - `m,` - Create next available mark
 - `m;` - Toggle mark at current line
 - `dmx` - Delete mark x
@@ -147,24 +157,26 @@ nvim
 
 **Prefix:** `<C-w>` (Control+W, then see which-key options)
 
-| Keymap    | Function                           |
-|-----------|------------------------------------|
-| `<C-w>s`  | Horizontal split                   |
-| `<C-w>v`  | Vertical split                     |
-| `<C-w>H`  | Rotate layout counterclockwise     |
-| `<C-w>J/K/L` | Rotate layout other directions  |
-| `<C-w>q`  | Close window                       |
-| `<C-w>=`  | Equalize window sizes              |
+| Keymap       | Function                       |
+| ------------ | ------------------------------ |
+| `<C-w>s`     | Horizontal split               |
+| `<C-w>v`     | Vertical split                 |
+| `<C-w>H`     | Rotate layout counterclockwise |
+| `<C-w>J/K/L` | Rotate layout other directions |
+| `<C-w>q`     | Close window                   |
+| `<C-w>=`     | Equalize window sizes          |
 
 ### 6. Markdown Authoring
 
-| Keymap/Command | Function |
-|----------------|----------|
+| Keymap/Command | Function                                                 |
+| -------------- | -------------------------------------------------------- |
 | `<leader>mg`   | Open a live Glow preview for the current Markdown buffer |
-| `:Glow`        | Manually trigger the Glow preview command |
+| `:Glow`        | Manually trigger the Glow preview command                |
 
 **Details:**
-- Uses [glow.nvim](https://github.com/ellisonleao/glow.nvim) with a 120-column floating window, rounded border, and 85% screen height.
+
+- Uses [glow.nvim](https://github.com/ellisonleao/glow.nvim) with a 120-column floating window, rounded border, and 85%
+  screen height.
 - Automatically lazy-loads when editing Markdown, running `:Glow`, or pressing `<leader>mg`.
 - Requires the [`glow`](https://github.com/charmbracelet/glow) CLI (install via `brew install glow`).
 - Falls back with a warning if the CLI is missing so you know why the preview did not start.
@@ -173,7 +185,7 @@ nvim
 
 ## 📁 Configuration Structure
 
-```
+```text
 ~/.config/nvim/
 ├── init.lua                    # Entry point
 ├── lua/
@@ -244,11 +256,13 @@ nvim
 ## ⚡ Performance
 
 **Current Performance:**
+
 - Headless startup: ~350ms (average of 5 runs)
 - Real-world startup: ~250-280ms (with lazy-loading)
 - Plugin count: 88 (8 plugins lazy-loaded)
 
 **Lazy-Loaded Plugins:**
+
 - Telescope (loads on `<Tab>` keypress)
 - nvim-cmp (loads on `InsertEnter`)
 - LuaSnip (loads on `InsertEnter`)
@@ -264,17 +278,17 @@ nvim
 
 ## 📚 Documentation
 
-| Document | Purpose |
-|----------|---------|
-| [AGENTS.md](docs/AGENTS.md) | Architecture, design principles, conventions |
-| [CHANGELOG.md](docs/CHANGELOG.md) | Version history and change tracking |
-| [IMPROVEMENTS.md](docs/IMPROVEMENTS.md) | Enhancement implementation details |
-| [KEYMAPS.md](docs/KEYMAPS.md) | Complete keymap reference (searchable via `<Tab>tk`) |
-| [LSP.md](docs/LSP.md) | LSP servers, formatters, linters |
-| [PERFORMANCE.md](docs/PERFORMANCE.md) | Startup analysis and optimization |
-| [TESTING.md](docs/TESTING.md) | Testing infrastructure and CI/CD |
-| [TEST_RESULTS.md](docs/TEST_RESULTS.md) | Latest test execution results |
-| [TESTING_CHANGELOG_GUIDE.md](docs/TESTING_CHANGELOG_GUIDE.md) | Testing & changelog workflows |
+| Document                                                      | Purpose                                              |
+| ------------------------------------------------------------- | ---------------------------------------------------- |
+| [AGENTS.md](docs/AGENTS.md)                                   | Architecture, design principles, conventions         |
+| [CHANGELOG.md](docs/CHANGELOG.md)                             | Version history and change tracking                  |
+| [IMPROVEMENTS.md](docs/IMPROVEMENTS.md)                       | Enhancement implementation details                   |
+| [KEYMAPS.md](docs/KEYMAPS.md)                                 | Complete keymap reference (searchable via `<Tab>tk`) |
+| [LSP.md](docs/LSP.md)                                         | LSP servers, formatters, linters                     |
+| [PERFORMANCE.md](docs/PERFORMANCE.md)                         | Startup analysis and optimization                    |
+| [TESTING.md](docs/TESTING.md)                                 | Testing infrastructure and CI/CD                     |
+| [TEST_RESULTS.md](docs/TEST_RESULTS.md)                       | Latest test execution results                        |
+| [TESTING_CHANGELOG_GUIDE.md](docs/TESTING_CHANGELOG_GUIDE.md) | Testing & changelog workflows                        |
 
 ---
 
@@ -339,18 +353,21 @@ nvim
 ### Git Hooks (Automatic Quality Assurance)
 
 **Pre-commit hook** (runs before each commit):
+
 - Luacheck validation
 - Code formatting check
 - Neovim load test
 - Common issue detection
 
 **Pre-push hook** (runs before push to remote):
+
 - Full quality gate
 - LSP attachment tests
 - Health check
 - Documentation validation
 
 **Bypass hooks** (emergency only):
+
 ```bash
 git commit --no-verify
 git push --no-verify
@@ -403,6 +420,7 @@ This is a personal configuration, but suggestions are welcome!
 ### Commit Messages
 
 Follow conventional commits:
+
 - `feat:` - New feature
 - `fix:` - Bug fix
 - `docs:` - Documentation changes
@@ -421,6 +439,7 @@ MIT License - Feel free to use and modify as needed.
 ## 🙏 Acknowledgments
 
 Built with:
+
 - [lazy.nvim](https://github.com/folke/lazy.nvim) - Plugin manager
 - [nvim-lspconfig](https://github.com/neovim/nvim-lspconfig) - LSP configuration
 - [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) - Fuzzy finder
@@ -439,4 +458,4 @@ And 80+ other amazing plugins. See `lua/plugins.lua` for complete list.
 
 ---
 
-**Enjoy your Neovim experience! 🚀**
+Enjoy your Neovim experience! 🚀
