@@ -1,7 +1,43 @@
 # AGENTS.md — Neovim Config
 
-This is the configuration directory for my Neovim setup.  
+This is the configuration directory for my Neovim setup.
 It contains configuration details for plugins, options for Neovim itself, custom functions, keybindings, and colorscheme settings.
+
+This document is written for OpenCode (Anthropic models, plan mode)
+
+---
+
+## TL;DR for Agents
+
+- Purpose: describe rules, structure, and safe edit scope for this Neovim configuration.
+- Environment: macOS · Neovim v0.11+ · lazy.nvim · Stylua · Luacheck.
+- Safe Actions: fix lint issues, adjust LSP config, improve keymaps, optimize startup.
+- Guardrails: run lint/format before + after; never delete comments; avoid vendor files.
+- Goal: maintain a clean, fast, low-maintenance setup (less than 150 ms cold-boot).
+
+## Common Agent Tasks
+
+- Add or adjust an LSP server with proper defaults and keymaps.
+- Merge duplicate or inconsistent keymaps and generate a cheatsheet.
+- Improve Treesitter textobjects and highlighting definitions.
+- Tune Telescope pickers for better performance.
+- Verify format-on-save and linting consistency.
+- Modernize plugin declarations for Lazy.nvim.
+- Ensure startup time stays under 150 ms cold boot.
+
+### Edit Safety
+
+Agents must:
+
+- Run lint/format before and after edits.
+- Never remove user comments or docstrings.
+- Ask before mass-refactoring keymaps or plugin lists.
+
+### Agent Interaction Summary
+
+- Claude / OpenCode uses this file to guide coding decisions.
+- All examples assume macOS + Neovim v0.11+.
+- Output should follow Stylua + Luacheck rules.
 
 ---
 
@@ -14,6 +50,7 @@ It contains configuration details for plugins, options for Neovim itself, custom
   - Install luacheck: `brew install luacheck` (macOS)
 - **Optional CLIs:** ...
 - **Python:** used for data and scripting; ensure `pynvim` installed if needed.
+- **Preferred shell:** zsh
 
 ---
 
@@ -86,7 +123,7 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 
 - **Formatting:** Stylua, 2-space indents, spaces not tabs.
 - **Files:** plugin configs in `lua/plugins/`, snippets in `lua/snippets/`.
-- **Globals allowed:** `vim`, `P`, `Functions`, `KeymapOptions`, and plugin-specific globals (per `.luacheckrc`).
+- **Globals allowed:** `vim`, `P`, `Functions`, `KeymapOptions`, and plugin-specific globals (see `.luacheckrc`).
 - **Naming:** snake_case for files/functions; PascalCase for modules.
 - **Error handling:** `pcall(require, "module")` for safety.
 - **Keymaps:** define in `lua/mappings.lua` with `desc` for discoverability.
@@ -116,24 +153,8 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 Three automation scripts are provided in `scripts/`:
 
 1. **`health-check`** - Comprehensive configuration health check
-
-   - Verifies Neovim version and CLI tools
-   - Runs luacheck
-   - Tests Neovim loads
-   - Measures startup performance
-   - Checks config structure and documentation
-
 2. **`quality-gate`** - Pre-commit/pre-push validation
-
-   - Checks formatting (stylua)
-   - Runs linter (luacheck)
-   - Tests Neovim loads
-   - Use before committing: `./scripts/quality-gate`
-
 3. **`pre-commit`** - Git pre-commit hook (optional)
-   - Install: `ln -s ../../scripts/pre-commit .git/hooks/pre-commit`
-   - Runs on every commit automatically
-   - Prevents commits with linting/formatting issues
 
 ### Luacheck Configuration
 
@@ -156,21 +177,17 @@ The `.luacheckrc` file configures luacheck behavior:
 - Maintain functional parity across macOS and Linux.
 - Preserve keymap consistency and naming patterns.
 
----
+### For Agents
 
-## Common Agent Tasks
-
-- Add or adjust an LSP server with proper defaults and keymaps.
-- Merge duplicate or inconsistent keymaps and generate a cheatsheet.
-- Improve Treesitter textobjects and highlighting definitions.
-- Tune Telescope pickers for better performance.
-- Verify format-on-save and linting consistency.
-- Modernize plugin declarations for Lazy.nvim.
-- Ensure startup time stays under 150 ms cold boot.
+Do not modify scripts/, .luacheckrc, or vendor plugins without instruction.
 
 ---
 
 ## Performance Benchmarks
+
+This section is informational only, not actionable.
+
+informational only, not actionable
 
 **Target:** less than 150ms cold boot startup  
 **Current:** ~342ms (as of 2025-01-13)  

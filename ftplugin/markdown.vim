@@ -22,9 +22,10 @@ setlocal noautoindent " if previous line is indented, don't make new line also i
 setlocal tabstop=2
 setlocal shiftwidth=2 " this is how many spaces a tab is.
 setlocal expandtab
-setlocal linebreak " Wrap lines at convenient points, avoid wrapping a line in the middle of a word.
 
-setlocal nowrap
+setlocal linebreak " Wrap lines at convenient points, avoid wrapping a line in the middle of a word.
+setlocal wrap
+
 setlocal scrolloff=3 " The number of screen lines to keep above and below the cursor
 
 setlocal whichwrap=hl  " let h and l wrap to previous or next line
