@@ -397,7 +397,7 @@ return lazy.setup({
 		config = function()
 			require("plugins.autopairs")
 		end,
-		event = "VimEnter",
+		event = "InsertEnter",
 	},
 
 	{
@@ -615,7 +615,7 @@ return lazy.setup({
 		config = function()
 			require("plugins.nvim-tree")
 		end,
-		event = "VimEnter",
+		event = "VeryLazy",
 	},
 
 	-- COLORS + colorschemes
