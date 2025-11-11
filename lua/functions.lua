@@ -86,7 +86,7 @@ endfunction
 command! -nargs=1 Mp call s:NewPost(<q-args>)
 ]])
 
-local diagnostic_state = 1
+local diagnostic_state = 2
 function M.cycle_diagnostics()
 	if diagnostic_state == 1 then
 		-- Mode 1: Signs and Underlines
@@ -129,6 +129,33 @@ function M.cycle_diagnostics()
 		vim.notify("Diagnostics: Disabled", vim.log.levels.INFO)
 		diagnostic_state = 1
 	end
+end
+
+-- jump to file in nvim-tree
+-- finds and focuses the current buffer's file in the nvim-tree window
+-- returns the file path if successful, nil otherwise
+M.jump_to_file_in_tree = function()
+	-- Get current buffer's file path (absolute)
+	local filepath = vim.fn.expand("%:p")
+
+	-- Handle case where no file is open
+	if filepath == "" or filepath == "." then
+		vim.notify("No file open in current buffer", vim.log.levels.WARN)
+		return nil
+	end
+
+	-- Safely require nvim-tree API
+	local ok, nvim_tree_api = pcall(require, "nvim-tree.api")
+	if not ok then
+		vim.notify("nvim-tree not available", vim.log.levels.WARN)
+		return nil
+	end
+
+	-- Find the file in the tree
+	-- This opens the tree if closed and navigates to the file
+	nvim_tree_api.tree.find_file({ open = true, focus = true, update_root = false })
+
+	return filepath
 end
 
 return M

@@ -104,6 +104,12 @@ map("n", "<C-L>", "<C-W><C-L>", default_options)
 map("n", "gq", ":call ToggleQuickFix()<CR>", KeymapOptions("Toggle QuickFix window"))
 map("n", "<leader>ta", ":lua Functions.active_tools()<CR>", KeymapOptions("Show active LSP/formatters/linters"))
 map("n", "<Tab>dd", ":lua Functions.cycle_diagnostics()<CR>", KeymapOptions("Cycle diagnostics display"))
+map(
+	"n",
+	"<LocalLeader>f",
+	":lua Functions.jump_to_file_in_tree()<CR>",
+	KeymapOptions("Jump to current file in nvim-tree")
+)
 
 -- Jump List
 map("n", "<C-p>", "<C-i>", default_options)

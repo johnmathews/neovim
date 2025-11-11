@@ -5,7 +5,10 @@ if not status_ok then
 end
 
 hlslens.setup({
-	-- Disable custom virtual text rendering (hlslens has its own built-in counter)
+	-- Disable all virtual text rendering with empty override_lens
+	override_lens = function(_render, _posList, _nearest, _idx, _relIdx)
+		-- Do nothing - suppress all virtual text
+	end,
 })
 
 -- Integrate with search commands
