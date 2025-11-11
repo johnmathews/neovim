@@ -131,19 +131,10 @@ function M.cycle_diagnostics()
 	end
 end
 
--- jump to file in nvim-tree
--- finds and focuses the current buffer's file in the nvim-tree window
--- returns the file path if successful, nil otherwise
-M.jump_to_file_in_tree = function()
-	-- Get current buffer's file path (absolute)
-	local filepath = vim.fn.expand("%:p")
-
-	-- Handle case where no file is open
-	if filepath == "" or filepath == "." then
-		vim.notify("No file open in current buffer", vim.log.levels.WARN)
-		return nil
-	end
-
+-- toggle focus between nvim-tree and buffer window
+-- if cursor is in nvim-tree, jump back to the buffer
+-- if cursor is in buffer, jump to current file in nvim-tree
+M.toggle_tree_focus = function()
 	-- Safely require nvim-tree API
 	local ok, nvim_tree_api = pcall(require, "nvim-tree.api")
 	if not ok then
@@ -151,11 +142,39 @@ M.jump_to_file_in_tree = function()
 		return nil
 	end
 
-	-- Find the file in the tree
-	-- This opens the tree if closed and navigates to the file
-	nvim_tree_api.tree.find_file({ open = true, focus = true, update_root = false })
+	-- Check if current window is nvim-tree
+	local current_buf = vim.api.nvim_get_current_buf()
+	local current_filetype = vim.api.nvim_buf_get_option(current_buf, "filetype")
 
-	return filepath
+	if current_filetype == "NvimTree" then
+		-- We're in nvim-tree, jump back to the previous buffer window
+		-- Find the first non-tree window and focus it
+		local windows = vim.api.nvim_list_wins()
+		for _, win in ipairs(windows) do
+			local buf = vim.api.nvim_win_get_buf(win)
+			local ft = vim.api.nvim_buf_get_option(buf, "filetype")
+			if ft ~= "NvimTree" then
+				vim.api.nvim_set_current_win(win)
+				return "Jumped to buffer"
+			end
+		end
+	else
+		-- We're in a buffer, jump to nvim-tree and focus the current file
+		local filepath = vim.fn.expand("%:p")
+
+		-- Handle case where no file is open
+		if filepath == "" or filepath == "." then
+			vim.notify("No file open in current buffer", vim.log.levels.WARN)
+			return nil
+		end
+
+		-- Find the file in the tree
+		-- This opens the tree if closed and navigates to the file
+		nvim_tree_api.tree.find_file({ open = true, focus = true, update_root = false })
+		return filepath
+	end
+
+	return nil
 end
 
 return M

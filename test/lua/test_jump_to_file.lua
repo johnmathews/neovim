@@ -1,5 +1,5 @@
--- Test suite for jump_to_file_in_tree function
--- Tests the functionality of navigating to the current file in nvim-tree
+-- Test suite for toggle_tree_focus function
+-- Tests the functionality of toggling focus between buffer and nvim-tree
 
 local M = {}
 
@@ -15,8 +15,8 @@ end
 -- Test 1: Function exists and is callable
 function M.test_function_exists()
 	local Functions = load_functions()
-	assert(Functions.jump_to_file_in_tree ~= nil, "jump_to_file_in_tree function does not exist")
-	assert(type(Functions.jump_to_file_in_tree) == "function", "jump_to_file_in_tree is not a function")
+	assert(Functions.toggle_tree_focus ~= nil, "toggle_tree_focus function does not exist")
+	assert(type(Functions.toggle_tree_focus) == "function", "toggle_tree_focus is not a function")
 	print("✓ Test 1 passed: Function exists and is callable")
 end
 
@@ -30,7 +30,7 @@ function M.test_no_file_open()
 	vim.api.nvim_set_current_buf(buf)
 
 	-- Call function and check it returns nil
-	local result = Functions.jump_to_file_in_tree()
+	local result = Functions.toggle_tree_focus()
 	assert(result == nil, "Expected nil when no file is open, got: " .. tostring(result))
 
 	-- Cleanup
@@ -47,7 +47,7 @@ function M.test_file_path_extraction()
 	-- We can test this by checking if the function returns a non-nil value
 	-- when called from a buffer with a file (like this test file itself)
 	-- This requires nvim-tree to be installed and working
-	local filepath = Functions.jump_to_file_in_tree()
+	local filepath = Functions.toggle_tree_focus()
 
 	-- If nvim-tree is available, filepath should be a string
 	if filepath ~= nil then
@@ -68,7 +68,7 @@ function M.test_missing_nvim_tree()
 	-- Since we can't truly uninstall nvim-tree in a test,
 	-- we just verify the function doesn't crash
 	local ok = pcall(function()
-		return Functions.jump_to_file_in_tree()
+		return Functions.toggle_tree_focus()
 	end)
 
 	assert(ok, "Function crashed instead of handling missing nvim-tree gracefully")
@@ -79,8 +79,8 @@ end
 function M.test_repeated_calls()
 	local Functions = load_functions()
 
-	local result1 = Functions.jump_to_file_in_tree()
-	local result2 = Functions.jump_to_file_in_tree()
+	local result1 = Functions.toggle_tree_focus()
+	local result2 = Functions.toggle_tree_focus()
 
 	-- Results should be consistent (same file)
 	if result1 ~= nil and result2 ~= nil then
@@ -94,7 +94,7 @@ end
 -- Test 6: Function returns a string (filepath) on success
 function M.test_return_type_on_success()
 	local Functions = load_functions()
-	local result = Functions.jump_to_file_in_tree()
+	local result = Functions.toggle_tree_focus()
 
 	if result ~= nil then
 		assert(type(result) == "string", "Expected string on success, got: " .. type(result))
@@ -108,7 +108,7 @@ end
 -- Run all tests
 local function run_all_tests()
 	print("\n" .. string.rep("=", 50))
-	print("Running nvim-tree jump_to_file tests")
+	print("Running nvim-tree toggle_tree_focus tests")
 	print(string.rep("=", 50) .. "\n")
 
 	local tests = {
@@ -123,13 +123,13 @@ local function run_all_tests()
 	local passed = 0
 	local failed = 0
 
-	for _, test in ipairs(tests) do
-		local ok, err = pcall(test)
+	for _, test_fn in ipairs(tests) do
+		local ok, err = pcall(test_fn)
 		if ok then
 			passed = passed + 1
 		else
 			failed = failed + 1
-			print("✗ " .. test .. " failed: " .. err)
+			print("✗ Test failed: " .. err)
 		end
 	end
 

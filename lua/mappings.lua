@@ -107,8 +107,8 @@ map("n", "<Tab>dd", ":lua Functions.cycle_diagnostics()<CR>", KeymapOptions("Cyc
 map(
 	"n",
 	"<LocalLeader>f",
-	":lua Functions.jump_to_file_in_tree()<CR>",
-	KeymapOptions("Jump to current file in nvim-tree")
+	":lua Functions.toggle_tree_focus()<CR>",
+	KeymapOptions("Toggle focus between buffer and nvim-tree")
 )
 
 -- Jump List
