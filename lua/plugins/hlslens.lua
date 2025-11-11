@@ -6,7 +6,7 @@ end
 
 hlslens.setup({
 	-- Disable all virtual text rendering with empty override_lens
-	override_lens = function(_render, _posList, _nearest, _idx, _relIdx)
+	override_lens = function(_, _, _, _, _)
 		-- Do nothing - suppress all virtual text
 	end,
 })
