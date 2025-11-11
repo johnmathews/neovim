@@ -3,6 +3,7 @@
 local lint = require("lint")
 lint.linters_by_ft = {
 	python = { "ruff" },
+	lua = { "luacheck" },
 	javascript = { "eslint_d" },
 	typescript = { "eslint_d" },
 	markdown = { "markdownlint-cli2" },
@@ -10,9 +11,9 @@ lint.linters_by_ft = {
 	bash = { "shellcheck" },
 }
 
--- Run linters on save/leave insert
+-- Run linters on keystroke (real-time feedback) and on save
 local group = vim.api.nvim_create_augroup("Linting", { clear = true })
-vim.api.nvim_create_autocmd({ "BufWritePost", "InsertLeave" }, {
+vim.api.nvim_create_autocmd({ "BufWritePost", "TextChanged", "TextChangedI", "InsertLeave" }, {
 	group = group,
 	callback = function()
 		if lint.linters_by_ft[vim.bo.filetype] then
