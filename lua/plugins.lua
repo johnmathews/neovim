@@ -23,7 +23,36 @@ return lazy.setup({
 	{ "nvim-lua/popup.nvim" },
 	{ "dstein64/vim-startuptime" },
 	{ "gioele/vim-autoswap" },
-
+	{
+		dir = "/Users/john/projects/neovim-dashboard",
+		name = "project-dashboard.nvim",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-tree/nvim-web-devicons",
+		},
+		config = function()
+			require("project-dashboard").setup({
+				auto_open = true,
+				show_timing = true,
+				github = {
+					enabled = true,
+					timeout = 5000,
+				},
+				layout = {
+					margin_x = 12, -- more padding from edges
+					margin_y = 2, -- more top/bottom padding
+					max_width = 0.5,
+				},
+				tiles = {
+					gap_x = 4, -- wider gaps between tiles
+					gap_y = 1, -- tight vertical spacing
+					background = true,
+					border_style = "rounded",
+				},
+			})
+		end,
+		event = "VimEnter",
+	},
 	{
 		"NickvanDyke/opencode.nvim",
 		dependencies = {
