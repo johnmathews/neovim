@@ -22,7 +22,7 @@ def validate_number(value: Any) -> bool:
         return False
 
 
-def calculate_average2(numbers: Sequence[int | float]) -> float:
+def calculate_average(numbers: Sequence[int | float]) -> float:
     """Calculate the average of a list of numbers."""
     if not numbers:
         return 0.0

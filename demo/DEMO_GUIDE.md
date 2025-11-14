@@ -1,6 +1,8 @@
 # Neovim LSP Demo Guide
 
-Welcome to the LSP keybinding demo! This directory contains examples to test all the LSP features you've configured.
+Welcome to the LSP keybinding demo! This directory contains examples to test all the **built-in Neovim v0.11+ LSP keybindings** you have configured.
+
+**Note:** These are Neovim's standard LSP keybindings, not custom ones. All keybindings use the `g` prefix or other standard vim motions.
 
 ## Quick Start
 
@@ -15,10 +17,14 @@ nvim demo/python/main.py
 ### 1. Go to Definition (`gd`)
 ```
 Open: demo/python/main.py
-Place cursor on: calculate_total (line 19)
+Place cursor on: calculate_total (line 22)
 Press: gd
-Result: Jumps to calculator.py where calculate_total is defined
+Result: Opens Telescope picker
+  Select: calculator.py:24 (the actual definition)
+  Result: Jumps to calculator.py where calculate_total is defined
 ```
+
+**Note:** `gd` uses Telescope to properly resolve through imports to the actual definition file.
 
 ### 2. Show References (`gr`)
 ```
@@ -97,24 +103,37 @@ main.py
 - Try `:lua vim.lsp.buf.document_symbol()` to see all symbols in the file
 - The import error in main.py is normal - it's a path resolution issue, but LSP navigation still works!
 
-## All LSP Keybindings
+## All LSP Keybindings (Neovim v0.11+ Built-in)
 
-| Keybinding | Action |
-|---|---|
-| `gd` | Go to definition |
-| `gD` | Go to declaration |
-| `gr` | Show references |
-| `grn` | Rename symbol (workspace-wide) |
-| `gra` | Code actions |
-| `gri` | Go to implementation |
-| `grt` | Go to type definition |
-| `K` | Hover documentation |
-| `<leader>li` | Toggle inlay hints |
-| `<F4>` | Restart LSP |
-| `\r` | Telescope: References |
-| `\d` | Telescope: Definitions |
-| `\i` | Telescope: Implementations |
-| `<Tab>b` | Telescope: Workspace symbols |
+### Go-to Commands
+| Keybinding | Action | Type |
+|---|---|---|
+| `gd` | Go to definition | Built-in |
+| `gD` | Go to declaration | Built-in |
+| `gri` | Go to implementation | Built-in |
+| `grt` | Go to type definition | Built-in |
+
+### References & Refactoring
+| Keybinding | Action | Type |
+|---|---|---|
+| `gr` | Show references (quickfix list) | Built-in |
+| `grn` | Rename symbol (workspace-wide) | Built-in |
+| `gra` | Code actions (quick fixes) | Built-in |
+
+### Information & Hints
+| Keybinding | Action | Type |
+|---|---|---|
+| `K` | Hover documentation | Built-in |
+| `<leader>li` | Toggle inlay hints | Custom |
+| `<F4>` | Restart LSP | Custom |
+
+### Telescope LSP Pickers
+| Keybinding | Action | Type |
+|---|---|---|
+| `\r` | Telescope: Find references | Custom |
+| `\d` | Telescope: Find definitions | Custom |
+| `\i` | Telescope: Find implementations | Custom |
+| `<Tab>b` | Telescope: Workspace symbols | Custom |
 
 ## Type System Notes
 

@@ -8,8 +8,8 @@ This file demonstrates LSP features like:
 - gri: Find all implementations of a function
 """
 
-from .calculator import calculate_product, calculate_total
-from .utils import apply_discount, calculate_average, chain_operations
+from calculator import calculate_product, calculate_total
+from utils import apply_discount, calculate_average, chain_operations
 
 
 def main() -> dict[str, int | float]:

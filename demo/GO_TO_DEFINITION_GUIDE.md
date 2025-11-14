@@ -2,7 +2,7 @@
 
 ## What `gd` Does
 
-`gd` is Neovim's built-in LSP keybinding (since v0.11+) that:
+`gd` is Neovim's built-in LSP keybinding (Neovim v0.11+) that:
 1. **Jumps to the definition** of the symbol under the cursor
 2. **Opens the file** where the definition is (in the current window, no split)
 3. **Adds to jump list** so you can press `<C-o>` to go back

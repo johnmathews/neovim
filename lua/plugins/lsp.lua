@@ -36,11 +36,26 @@ if ok_cmp then
 	capabilities = cmp_cap.default_capabilities(capabilities)
 end
 
--- on_attach with inlay-hint toggle
+-- on_attach with inlay-hint toggle and improved go-to keybindings
 local on_attach = function(client, bufnr)
-	local map = function(mode, lhs, rhs)
-		vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true })
+	local map = function(mode, lhs, rhs, opts)
+		opts = opts or { buffer = bufnr, silent = true }
+		opts.buffer = bufnr
+		vim.keymap.set(mode, lhs, rhs, opts)
 	end
+
+	-- Override default go-to keybindings to use Telescope for better file jumping
+	local telescope_builtin = require("telescope.builtin")
+
+	-- Use Telescope for definitions to properly jump to actual file
+	map("n", "gd", function()
+		telescope_builtin.lsp_definitions()
+	end, { desc = "Telescope: LSP Definitions" })
+
+	-- Use Telescope for implementations
+	map("n", "gi", function()
+		telescope_builtin.lsp_implementations()
+	end, { desc = "Telescope: LSP Implementations" })
 
 	if navic_ok and client.server_capabilities.documentSymbolProvider then
 		navic.attach(client, bufnr)
