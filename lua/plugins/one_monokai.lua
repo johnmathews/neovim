@@ -1,4 +1,5 @@
 -- One Monokai: Alternative Monokai color scheme with custom highlights
+
 require("one_monokai").setup({
 	transparent = false,
 	italics = true,
