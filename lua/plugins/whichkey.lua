@@ -53,13 +53,12 @@ which_key.add({
 
 	-- LSP keybindings (Neovim v0.11+ built-in + Telescope overrides)
 	{ "g", group = "Go-to / LSP" },
-	{ "gd", desc = "Go to definition (Telescope picker)" },
+	{ "gd", desc = "Go to definition" },
 	{ "gD", desc = "Go to declaration" },
-	{ "gr", group = "References / Rename" },
+	{ "gr", desc = "Show references (Telescope picker)" },
 	{ "gra", desc = "Code actions" },
 	{ "gi", desc = "Go to implementation (Telescope picker)" },
 	{ "grn", desc = "Rename symbol (workspace-wide)" },
-	{ "grr", desc = "Show references" },
 	{ "grt", desc = "Go to type definition" },
 
 	-- Treesitter text objects
@@ -75,6 +74,9 @@ which_key.add({
 	{ "<leader>cf", desc = "Format" },
 	{ "<leader>cl", desc = "Lint" },
 	{ "<leader>li", desc = "Toggle inlay hints" },
+	{ "<leader>d", group = "Peek definition (Treesitter)" },
+	{ "<leader>df", desc = "Peek function definition" },
+	{ "<leader>dF", desc = "Peek class definition" },
 	{ "<leader>m", group = "Markdown" },
 	{ "<leader>mg", desc = "Preview (Glow)" },
 	{ "<leader>s", group = "Source (Git)" },

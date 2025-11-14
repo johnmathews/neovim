@@ -1,0 +1,154 @@
+---
+# kubernetes.yml: Kubernetes manifest demonstrating LSP features
+#
+# This file is part of the LSP demo. Try these keybindings:
+# - gd: Jump to resource definitions and references
+# - gr: Show all references to a service or deployment
+# - gra: Code actions for Kubernetes schema violations
+# - K: Hover over fields to see documentation
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo
+  labels:
+    app: demo
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: demo
+data:
+  APP_ENV: production
+  LOG_LEVEL: info
+  DATABASE_POOL_SIZE: "10"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+  namespace: demo
+type: Opaque
+stringData:
+  DATABASE_PASSWORD: supersecret
+  API_KEY: demokey123
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-api
+  namespace: demo
+  labels:
+    app: demo
+    tier: api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: demo
+      tier: api
+  template:
+    metadata:
+      labels:
+        app: demo
+        tier: api
+    spec:
+      containers:
+        - name: api
+          image: node:20-alpine
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: PORT
+              value: "3000"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-secrets
+                  key: DATABASE_PASSWORD
+          envFrom:
+            - configMapRef:
+                name: app-config
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-api-service
+  namespace: demo
+  labels:
+    app: demo
+spec:
+  selector:
+    app: demo
+    tier: api
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  type: LoadBalancer
+
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: demo-api-hpa
+  namespace: demo
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: demo-api
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: demo-api-pdb
+  namespace: demo
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: demo
+      tier: api

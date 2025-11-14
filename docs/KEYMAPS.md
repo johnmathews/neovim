@@ -135,16 +135,20 @@ Complete reference of all custom keybindings in this Neovim configuration.
 ### Built-in LSP Navigation (Neovim v0.11+)
 | Key              | Mode   | Description                                   |
 | ---------------- | ------ | --------------------------------------------- |
-| `gd`             | Normal | Go to definition                              |
-| `gD`             | Normal | Go to declaration                             |
-| `gr`             | Normal | Show references (quickfix/location list)      |
-| `grn`            | Normal | Rename symbol (workspace-wide)                |
+| `gd`             | Normal | Go to definition (built-in LSP)               |
+| `gD`             | Normal | Go to declaration (built-in LSP)              |
 | `gra`            | Normal | Code actions (quick fix, refactor, etc.)      |
-| `gri`            | Normal | Go to implementation                          |
+| `grn`            | Normal | Rename symbol (workspace-wide)                |
 | `grt`            | Normal | Go to type definition                         |
 | `K`              | Normal | Hover documentation                           |
 | `<leader>li`     | Normal | Toggle inlay hints                            |
 | `<F4>`           | Normal | Restart LSP server                            |
+
+### Telescope-based LSP Navigation
+| Key              | Mode   | Description                                   |
+| ---------------- | ------ | --------------------------------------------- |
+| `gr`             | Normal | Show references (Telescope picker)            |
+| `gi`             | Normal | Go to implementation (Telescope picker)       |
 
 ### LSP with Telescope (Advanced Searching)
 | Key              | Mode   | Description                                   |
@@ -164,10 +168,11 @@ Complete reference of all custom keybindings in this Neovim configuration.
 
 ## Formatting & Linting
 
-| Key          | Mode          | Description                             |
-| ------------ | ------------- | --------------------------------------- |
-| `<leader>cf` | Normal/Visual | Format file or selection (conform.nvim) |
-| `<leader>cl` | Normal        | Run linter manually (nvim-lint)         |
+| Key          | Mode          | Description                                              |
+| ------------ | ------------- | -------------------------------------------------------- |
+| `<leader>cf` | Normal/Visual | Format file or selection (conform.nvim)                 |
+| `<leader>cl` | Normal        | Run linter manually (nvim-lint)                         |
+| `<LocalLeader>t` | Normal     | Show active LSP servers, formatters, and linters        |
 
 ---
 

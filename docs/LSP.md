@@ -10,7 +10,7 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 
 | Language | LSP Server | Formatter | Linter | Status |
 |----------|-----------|-----------|--------|--------|
-| **Lua** | lua_ls | stylua | - | ✅ Complete |
+| **Lua** | lua_ls | stylua | luacheck | ✅ Complete |
 | **Python** | basedpyright + ruff | ruff_format | ruff | ✅ Optimized |
 | **JavaScript** | ts_ls | biome | eslint_d | ✅ Modern |
 | **TypeScript** | ts_ls | biome | eslint_d | ✅ Modern |
@@ -90,17 +90,22 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 
 **LSP Server:**
 - **lua_ls** - Official Lua language server
-  - Neovim-specific configuration included
-  - Workspace: Neovim runtime + config directory
-  - Configured in: `lua/plugins/lsp.lua:90-120`
+- Neovim-specific configuration included
+- Workspace: Neovim runtime + config directory
+- Configured in: `lua/plugins/lsp.lua:90-120`
 
 **Formatter:**
 - **stylua** - Opinionated Lua formatter
-  - Configured in: `lua/plugins/conform.lua:20`
-  - Settings: `.stylua.toml` or `stylua.toml` in project root
+- Configured in: `lua/plugins/conform.lua:20`
+- Settings: `.stylua.toml` or `stylua.toml` in project root
+
+**Linter:**
+- **luacheck** - Static analyzer for Lua
+- Configured in: `lua/plugins/nvim-lint.lua:6`
+- Runs on: BufEnter, BufWinEnter, BufWritePost, TextChanged, TextChangedI, InsertLeave
 
 **Settings:**
-- Diagnostics: Neovim globals enabled
+- Diagnostics: Neovim globals enabled (via `.luacheckrc`)
 - Workspace: Loads Neovim runtime library
 - Format on save: ✅ Enabled
 
@@ -154,14 +159,13 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 
 ### Markdown 📝
 
-**Formatters:**
-- **prettierd** (fast daemon)
-- **prettier** (fallback)
+**Formatter:**
+- **prettier** - Opinionated Markdown formatter
 - Configured in: `lua/plugins/conform.lua:26`
 
 **Linter:**
 - **markdownlint-cli2** - Markdown style checker
-  - Configured in: `lua/plugins/nvim-lint.lua:8`
+- Configured in: `lua/plugins/nvim-lint.lua:9`
 
 ---
 
@@ -176,10 +180,15 @@ All LSP servers, formatters, and linters are installed via **Mason**.
 :Mason
 ```
 
-**Tools installed automatically on startup:**
-- LSP servers: lua_ls, basedpyright, ruff, ts_ls, bashls, yamlls, jsonls, dockerls
-- Formatters: stylua, shfmt, prettierd, biome, ruff
-- Linters: eslint_d, markdownlint-cli2, shellcheck, mypy
+**Tools installed automatically on startup (via mason-tool-installer):**
+- Formatters: stylua, shfmt, biome, ruff
+- Linters: eslint_d, shellcheck, mypy
+
+**LSP servers installed via mason-lspconfig:**
+- lua_ls, basedpyright, ruff, ts_ls, bashls, yamlls, jsonls, dockerls
+
+**Tools installed manually (not via mason):**
+- Linters: luacheck, markdownlint-cli2
 
 **Configuration:**
 - LSP servers: `lua/plugins/lsp.lua`
@@ -202,28 +211,32 @@ All LSP servers, formatters, and linters are installed via **Mason**.
 
 ## Keybindings
 
-### LSP Navigation (Built-in Neovim v0.11+ defaults)
-These are standard Neovim LSP keybindings using the `gr` prefix (Go-Read):
+### LSP Navigation (Built-in Neovim v0.11+)
 
 | Key | Action |
 |-----|--------|
-| `gd` | Go to definition |
-| `gD` | Go to declaration |
-| `gr` | Show references (in quickfix/location list) |
-| `grn` | Rename symbol (workspace-wide) |
+| `gd` | Go to definition (built-in LSP) |
+| `gD` | Go to declaration (built-in LSP) |
 | `gra` | Code actions (quick fix, refactor, etc.) |
-| `gri` | Go to implementation |
+| `grn` | Rename symbol (workspace-wide) |
 | `grt` | Go to type definition |
 | `K` | Hover documentation |
 | `<leader>li` | Toggle inlay hints |
 | `<F4>` | Restart LSP |
 
+### Telescope-based LSP Navigation
+
+| Key | Action |
+|-----|--------|
+| `gr` | Show references (Telescope picker) |
+| `gi` | Go to implementation (Telescope picker) |
+
 ### LSP with Telescope (for advanced searching)
 | Key | Action |
 |-----|--------|
-| `<Localleader>r` | Telescope: List all references |
-| `<Localleader>d` | Telescope: List all definitions |
-| `<Localleader>i` | Telescope: List all implementations |
+| `<LocalLeader>r` | Telescope: List all references |
+| `<LocalLeader>d` | Telescope: List all definitions |
+| `<LocalLeader>i` | Telescope: List all implementations |
 | `<Tab>b` | Telescope: Workspace symbols (search across project) |
 
 ### Formatting
@@ -306,8 +319,8 @@ These are standard Neovim LSP keybindings using the `gr` prefix (Go-Read):
    - Check output in diagnostics
 
 4. **Check auto-lint events:**
-   - Linters run on: BufWritePost, InsertLeave
-   - Configured in: `lua/plugins/nvim-lint.lua:12-20`
+   - Linters run on: BufEnter, BufWinEnter, BufWritePost, TextChanged, TextChangedI, InsertLeave
+   - Configured in: `lua/plugins/nvim-lint.lua:16-26`
 
 ---
 
