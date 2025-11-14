@@ -13,6 +13,30 @@ if not Functions_ok then
 	return
 end
 
+-- LSP Navigation (defined globally to avoid load-order issues)
+-- These must be set here, early in startup, not in on_attach callbacks
+-- Setting them as global keymaps prevents timing/load-order issues with LSP attachment
+vim.api.nvim_set_keymap("n", "gd", "<cmd>lua vim.lsp.buf.definition()<CR>", {
+	noremap = true,
+	silent = true,
+	desc = "Go to Definition",
+})
+vim.api.nvim_set_keymap("n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", {
+	noremap = true,
+	silent = true,
+	desc = "Go to Declaration",
+})
+vim.api.nvim_set_keymap("n", "gi", "<cmd>Telescope lsp_implementations<CR>", {
+	noremap = true,
+	silent = true,
+	desc = "Go to Implementation (Telescope)",
+})
+vim.api.nvim_set_keymap("n", "gr", "<cmd>Telescope lsp_references<CR>", {
+	noremap = true,
+	silent = true,
+	desc = "Show References (Telescope)",
+})
+
 ----- INSERT MODE ---------------
 map("i", "kj", "<ESC>", KeymapOptions("enter Insert Mode"))
 --jump back one word

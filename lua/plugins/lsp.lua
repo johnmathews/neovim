@@ -44,18 +44,9 @@ local on_attach = function(client, bufnr)
 		vim.keymap.set(mode, lhs, rhs, opts)
 	end
 
-	-- Override default go-to keybindings to use Telescope for better file jumping
-	local telescope_builtin = require("telescope.builtin")
-
-	-- Use Telescope for definitions to properly jump to actual file
-	map("n", "gd", function()
-		telescope_builtin.lsp_definitions()
-	end, { desc = "Telescope: LSP Definitions" })
-
-	-- Use Telescope for implementations
-	map("n", "gi", function()
-		telescope_builtin.lsp_implementations()
-	end, { desc = "Telescope: LSP Implementations" })
+	-- LSP keybindings are now set globally in mappings.lua to avoid load-order issues
+	-- They are set as global keymaps instead of buffer-local to ensure they persist
+	-- and don't get shadowed by other plugins during LSP attachment
 
 	if navic_ok and client.server_capabilities.documentSymbolProvider then
 		navic.attach(client, bufnr)

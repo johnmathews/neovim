@@ -88,9 +88,9 @@ map("n", "<Tab>gr", ":Telescope git_branches<CR>", default_options)
 map("n", "<Tab>gs", ":Telescope git_status<CR>", default_options)
 
 -- LSP pickers (Telescope)
-map("n", "<Localleader>r", ":Telescope lsp_references<CR>", default_options)
-map("n", "<Localleader>d", ":Telescope lsp_definitions<CR>", default_options)
-map("n", "<Localleader>i", ":Telescope lsp_implementations<CR>", default_options)
+map("n", "<localleader>r", ":Telescope lsp_references<CR>", default_options)
+map("n", "<localleader>d", ":Telescope lsp_definitions<CR>", default_options)
+map("n", "<localleader>i", ":Telescope lsp_implementations<CR>", default_options)
 map("n", "<Tab>b", ":Telescope lsp_workspace_symbols<CR>", default_options)
 
 -- register extensions

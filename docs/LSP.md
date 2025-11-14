@@ -27,15 +27,16 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 ### Python 🐍
 
 **LSP Servers:**
-- **basedpyright** - Type checking, hover documentation, completions
+- **basedpyright** (ONLY server) - Type checking, hover documentation, completions
   - Mode: `basic` type checking (can upgrade to `standard` or `strict`)
   - Auto-import completions enabled
-  - Configured in: `lua/plugins/lsp.lua:120-140`
+  - Configured in: `lua/plugins/lsp.lua:144-160`
+  - Note: pyright is explicitly disabled in favor of basedpyright
 
 - **ruff** - Fast linting + quick fixes
   - Hover disabled (delegated to basedpyright)
   - Signature help disabled (delegated to basedpyright)
-  - Configured in: `lua/plugins/lsp.lua:145-155`
+  - Configured in: `lua/plugins/lsp.lua:163-173`
 
 **Formatter:**
 - **ruff_format** - Fast, Black-compatible Python formatter
