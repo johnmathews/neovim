@@ -101,8 +101,7 @@ map("n", "<C-L>", "<C-W><C-L>", default_options)
 
 -- FUNCTIONS
 -- the function should be defined in lua/functions.lua
-map("n", "gq", ":call ToggleQuickFix()<CR>", KeymapOptions("Toggle QuickFix window"))
-map("n", "<leader>ta", ":lua Functions.active_tools()<CR>", KeymapOptions("Show active LSP/formatters/linters"))
+map("n", "<LocalLeader>t", ":lua Functions.active_tools()<CR>", KeymapOptions("Show active LSP/formatters/linters"))
 map("n", "<Tab>dd", ":lua Functions.cycle_diagnostics()<CR>", KeymapOptions("Cycle diagnostics display"))
 map(
 	"n",

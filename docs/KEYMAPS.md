@@ -139,7 +139,7 @@ Complete reference of all custom keybindings in this Neovim configuration.
 | `gr` | Normal | Go to references |
 | `K` | Normal | Hover documentation |
 | `<leader>li` | Normal | Toggle inlay hints |
-| `<leader>ta` | Normal | Show active LSP/formatters/linters for buffer |
+| `<LocalLeader>t` | Normal | Show active LSP/formatters/linters for buffer |
 | `<Tab>dd` | Normal | Cycle diagnostics display modes |
 
 ---

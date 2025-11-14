@@ -6,7 +6,7 @@ end
 
 notify.setup({
 	stages = "fade_in_slide_out",
-	render = "compact",
+	render = "default",
 	timeout = 3000,
 	top_down = false,
 	background_colour = "#000000",

@@ -19,12 +19,11 @@ if ok_mti then
 			-- formatters
 			"stylua", -- Lua
 			"shfmt", -- Shell
-			"prettierd", -- Markdown (fast)
+			-- "prettierd", -- Markdown (fast)
 			"biome", -- JS/TS/JSON (fast, modern)
 			"ruff", -- Python (formatting + linting)
 			-- linters
 			"eslint_d", -- JS/TS
-			"markdownlint-cli2", -- Markdown
 			"shellcheck", -- Shell scripts
 			"mypy", -- Python type checking
 		},

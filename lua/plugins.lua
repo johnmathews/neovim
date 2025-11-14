@@ -32,7 +32,7 @@ return lazy.setup({
 		},
 		config = function()
 			require("project-dashboard").setup({
-				auto_open = true,
+				auto_open = false,
 				show_timing = true,
 				github = {
 					enabled = true,

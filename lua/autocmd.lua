@@ -15,12 +15,12 @@ vim.cmd([[
   augroup end
 ]])
 
-vim.cmd([[
-  augroup RedrawOnFocusGained
-    autocmd!
-    autocmd FocusGained * :redraw!
-  augroup end
-]])
+-- vim.cmd([[
+--   augroup RedrawOnFocusGained
+--     autocmd!
+--     autocmd FocusGained * :redraw!
+--   augroup end
+-- ]])
 
 -- bigquery files should be sql filetype .bq → sql
 vim.cmd([[
@@ -43,10 +43,3 @@ vim.cmd([[
 
 -- set linenumber in telescope previews
 vim.cmd("autocmd User TelescopePreviewerLoaded setlocal number")
-
--- show diagnostics on buffer focus
-vim.api.nvim_create_autocmd("BufEnter", {
-	callback = function()
-		vim.diagnostic.show()
-	end,
-})

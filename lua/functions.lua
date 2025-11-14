@@ -86,47 +86,46 @@ endfunction
 command! -nargs=1 Mp call s:NewPost(<q-args>)
 ]])
 
-local diagnostic_state = 2
+local diagnostic_state = 1
 function M.cycle_diagnostics()
 	if diagnostic_state == 1 then
-		-- Mode 1: Signs and Underlines
-		vim.diagnostic.config({
-			signs = true,
-			underline = true,
-			virtual_text = false,
-			virtual_lines = false,
-		})
-		vim.notify("Diagnostics: Signs and Underlines", vim.log.levels.INFO)
-		diagnostic_state = 2
-	elseif diagnostic_state == 2 then
-		-- Mode 2: Virtual Text (at end of line)
+		-- Mode 1: Virtual Text (at end of line)
+		vim.notify("Diagnostics: Virtual Text", vim.log.levels.INFO)
 		vim.diagnostic.config({
 			signs = true,
 			underline = true,
 			virtual_text = true,
 			virtual_lines = false,
 		})
-		vim.notify("Diagnostics: Virtual Text", vim.log.levels.INFO)
+		diagnostic_state = 2
+	elseif diagnostic_state == 2 then
+		-- Mode 2: Signs and Underlines (no virtual text)
+		vim.notify("Diagnostics: Signs and Underlines", vim.log.levels.INFO)
+		vim.diagnostic.config({
+			signs = true,
+			underline = true,
+			virtual_text = false,
+			virtual_lines = false,
+		})
 		diagnostic_state = 3
 	elseif diagnostic_state == 3 then
 		-- Mode 3: Virtual Lines (new lines below)
+		vim.notify("Diagnostics: Virtual Lines", vim.log.levels.INFO)
 		vim.diagnostic.config({
 			signs = true,
 			underline = true,
 			virtual_text = false,
 			virtual_lines = true,
 		})
-		vim.notify("Diagnostics: Virtual Lines", vim.log.levels.INFO)
 		diagnostic_state = 4
 	else
-		-- Mode 4: Disabled
+		vim.notify("Diagnostics: Disabled", vim.log.levels.INFO)
 		vim.diagnostic.config({
 			signs = false,
 			underline = false,
 			virtual_text = false,
 			virtual_lines = false,
 		})
-		vim.notify("Diagnostics: Disabled", vim.log.levels.INFO)
 		diagnostic_state = 1
 	end
 end

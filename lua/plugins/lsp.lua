@@ -13,7 +13,7 @@ pcall(vim.loader.enable)
 
 -- Diagnostic style (you can toggle virtual_text at runtime elsewhere)
 vim.diagnostic.config({
-	virtual_text = false,
+	virtual_text = true,
 	signs = true,
 	underline = true,
 	update_in_insert = true,
@@ -71,12 +71,11 @@ if not ok_mlc then
 end
 
 mason_lspconfig.setup({
-	-- NOTE: v2 uses the *lspconfig* server names
 	ensure_installed = {
 		"lua_ls",
-		"basedpyright", -- or "pyright" if you prefer
-		"ruff", -- was "ruff_lsp" in older lspconfig
-		"ts_ls", -- was "tsserver" in older lspconfig
+		"basedpyright",
+		"ruff",
+		"ts_ls",
 		"bashls",
 		"yamlls",
 		"jsonls",

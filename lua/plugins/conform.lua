@@ -23,7 +23,7 @@ conform.setup({
 		typescript = { "biome" },
 		json = { "biome", "jq" },
 		yaml = { "yamlfmt", "lsp" },
-		markdown = { "prettierd", "prettier" },
+		markdown = { "prettier" },
 		sh = { "shfmt" },
 	},
 
