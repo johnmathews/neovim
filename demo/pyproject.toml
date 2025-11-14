@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nvim-lsp-demo"
+version = "0.1.0"
+description = "Neovim LSP demo showing cross-file navigation and refactoring"
+requires-python = ">=3.10"
+
+[tool.basedpyright]
+pythonPath = "python"
+pythonVersion = "3.10"
+include = ["python"]
+typeCheckingMode = "basic"
+reportMissingImports = false
+stubPath = "stubs"

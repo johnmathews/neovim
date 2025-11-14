@@ -201,16 +201,29 @@ All LSP servers, formatters, and linters are installed via **Mason**.
 
 ## Keybindings
 
-### LSP
+### LSP Navigation (Built-in Neovim v0.11+ defaults)
+These are standard Neovim LSP keybindings using the `gr` prefix (Go-Read):
+
 | Key | Action |
 |-----|--------|
 | `gd` | Go to definition |
-| `gr` | Go to references |
+| `gD` | Go to declaration |
+| `gr` | Show references (in quickfix/location list) |
+| `grn` | Rename symbol (workspace-wide) |
+| `gra` | Code actions (quick fix, refactor, etc.) |
+| `gri` | Go to implementation |
+| `grt` | Go to type definition |
 | `K` | Hover documentation |
 | `<leader>li` | Toggle inlay hints |
-| `<Localleader>r` | Telescope LSP references |
-| `<Localleader>a` | Telescope LSP code actions |
 | `<F4>` | Restart LSP |
+
+### LSP with Telescope (for advanced searching)
+| Key | Action |
+|-----|--------|
+| `<Localleader>r` | Telescope: List all references |
+| `<Localleader>d` | Telescope: List all definitions |
+| `<Localleader>i` | Telescope: List all implementations |
+| `<Tab>b` | Telescope: Workspace symbols (search across project) |
 
 ### Formatting
 | Key | Action |

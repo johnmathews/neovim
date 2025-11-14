@@ -108,13 +108,6 @@ Complete reference of all custom keybindings in this Neovim configuration.
 | `<Tab>to` | Normal | Vim options                      |
 | `<Tab>tt` | Normal | Treesitter symbols               |
 
-### LSP (via Telescope)
-
-| Key              | Mode   | Description      |
-| ---------------- | ------ | ---------------- |
-| `<Localleader>r` | Normal | LSP references   |
-| `<Localleader>a` | Normal | LSP code actions |
-
 ---
 
 ## Git Operations
@@ -139,12 +132,31 @@ Complete reference of all custom keybindings in this Neovim configuration.
 
 ## LSP & Code Actions
 
+### Built-in LSP Navigation (Neovim v0.11+)
 | Key              | Mode   | Description                                   |
 | ---------------- | ------ | --------------------------------------------- |
 | `gd`             | Normal | Go to definition                              |
-| `gr`             | Normal | Go to references                              |
+| `gD`             | Normal | Go to declaration                             |
+| `gr`             | Normal | Show references (quickfix/location list)      |
+| `grn`            | Normal | Rename symbol (workspace-wide)                |
+| `gra`            | Normal | Code actions (quick fix, refactor, etc.)      |
+| `gri`            | Normal | Go to implementation                          |
+| `grt`            | Normal | Go to type definition                         |
 | `K`              | Normal | Hover documentation                           |
 | `<leader>li`     | Normal | Toggle inlay hints                            |
+| `<F4>`           | Normal | Restart LSP server                            |
+
+### LSP with Telescope (Advanced Searching)
+| Key              | Mode   | Description                                   |
+| ---------------- | ------ | --------------------------------------------- |
+| `<LocalLeader>r` | Normal | Telescope: Find all references                |
+| `<LocalLeader>d` | Normal | Telescope: Find all definitions               |
+| `<LocalLeader>i` | Normal | Telescope: Find all implementations           |
+| `<Tab>b`         | Normal | Telescope: Workspace symbols                  |
+
+### Diagnostics & Configuration
+| Key              | Mode   | Description                                   |
+| ---------------- | ------ | --------------------------------------------- |
 | `<LocalLeader>t` | Normal | Show active LSP/formatters/linters for buffer |
 | `<Tab>dd`        | Normal | Cycle diagnostics display modes               |
 
@@ -187,6 +199,27 @@ Complete reference of all custom keybindings in this Neovim configuration.
 
 ## Treesitter
 
+### Text Objects & Navigation
+| Key          | Mode   | Description                                 |
+| ------------ | ------ | ------------------------------------------- |
+| `af`         | Normal | Select outer function                       |
+| `if`         | Normal | Select inner function                       |
+| `ac`         | Normal | Select outer class                          |
+| `ic`         | Normal | Select inner class                          |
+| `]m`         | Normal | Jump to next function start                 |
+| `[m`         | Normal | Jump to previous function start             |
+| `]]`         | Normal | Jump to next class start                    |
+| `[[`         | Normal | Jump to previous class start                |
+
+### Text Object Operations
+| Key          | Mode   | Description                                 |
+| ------------ | ------ | ------------------------------------------- |
+| `<leader>tsa` | Normal | Swap next parameter                         |
+| `<leader>tsA` | Normal | Swap previous parameter                     |
+| `<leader>df` | Normal | Peek function definition                    |
+| `<leader>dF` | Normal | Peek class definition                       |
+
+### Treesitter Tools
 | Key          | Mode   | Description                                 |
 | ------------ | ------ | ------------------------------------------- |
 | `<leader>tp` | Normal | Treesitter Playground (inspect syntax tree) |

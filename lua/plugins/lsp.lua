@@ -41,9 +41,6 @@ local on_attach = function(client, bufnr)
 	local map = function(mode, lhs, rhs)
 		vim.keymap.set(mode, lhs, rhs, { buffer = bufnr, silent = true })
 	end
-	map("n", "gd", vim.lsp.buf.definition)
-	map("n", "gr", vim.lsp.buf.references)
-	map("n", "K", vim.lsp.buf.hover)
 
 	if navic_ok and client.server_capabilities.documentSymbolProvider then
 		navic.attach(client, bufnr)
