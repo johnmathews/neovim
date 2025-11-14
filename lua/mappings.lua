@@ -105,7 +105,7 @@ map("n", "<LocalLeader>t", ":lua Functions.active_tools()<CR>", KeymapOptions("S
 map("n", "<Tab>dd", ":lua Functions.cycle_diagnostics()<CR>", KeymapOptions("Cycle diagnostics display"))
 map(
 	"n",
-	"<LocalLeader>f",
+	"<Leader>f",
 	":lua Functions.toggle_tree_focus()<CR>",
 	KeymapOptions("Toggle focus between buffer and nvim-tree")
 )
@@ -116,7 +116,7 @@ map("n", "<C-p>", "<C-i>", default_options)
 -- auto session
 local ok = pcall(require, "session-lens")
 if ok then
-	vim.keymap.set("n", "<leader>fs", function()
+	vim.keymap.set("n", "<localleader>fs", function()
 		require("session-lens").search_session()
 	end, KeymapOptions("Sessions: search"))
 end
