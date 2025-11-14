@@ -30,25 +30,25 @@ mini_map.setup({
 vim.keymap.set("n", "<leader>mm", mini_map.toggle, { desc = "MiniMap: toggle" })
 vim.keymap.set("n", "<leader>mr", mini_map.refresh, { desc = "MiniMap: refresh" })
 
-local excluded = {
-	alpha = true,
-	checkhealth = true,
-	dashboard = true,
-	gitcommit = true,
-	help = true,
-	lazy = true,
-	mason = true,
-	NvimTree = true,
-	qf = true,
-	Trouble = true,
-}
+-- local excluded = {
+-- 	alpha = true,
+-- 	checkhealth = true,
+-- 	dashboard = true,
+-- 	gitcommit = true,
+-- 	help = true,
+-- 	lazy = true,
+-- 	mason = true,
+-- 	NvimTree = true,
+-- 	qf = true,
+-- 	Trouble = true,
+-- }
 
-vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
-	callback = function()
-		if excluded[vim.bo.filetype] or vim.api.nvim_buf_line_count(0) < 80 then
-			mini_map.close()
-			return
-		end
-		mini_map.open()
-	end,
-})
+-- vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
+-- 	callback = function()
+-- 		if excluded[vim.bo.filetype] or vim.api.nvim_buf_line_count(0) < 80 then
+-- 			mini_map.close()
+-- 			return
+-- 		end
+-- 		mini_map.open()
+-- 	end,
+-- })

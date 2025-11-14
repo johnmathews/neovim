@@ -59,7 +59,7 @@ return lazy.setup({
 	{
 		"sudo-tee/opencode.nvim",
 		config = function()
-			require("opencode").setup({})
+			require("plugins.opencode").setup()
 		end,
 		dependencies = {
 			"nvim-lua/plenary.nvim",

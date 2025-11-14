@@ -111,26 +111,31 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
   - Config: `.luacheckrc` defines globals, disables line length, ignores unused vars in snippets
   - Run from config root: `cd ~/.config/nvim && luacheck lua/`
 - **Format Lua:** `stylua .` (formats all Lua files)
+  - Check only: `stylua --check .`
+- **Prettier:** `prettier --write .` (for Markdown, YAML, JSON)
+  - Config: `.prettierrc` (120 char print width, 2-space tabs)
 - **Format on save:** Auto via `conform.nvim`
 - **Manual format:** `<leader>cf`
 - **Manual lint:** `<leader>cl`
 - **Run single test:** `t<leader>n` (nearest), `t<leader>f` (file)
 - **Health check:** `:checkhealth` or `nvim --headless "+CheckHealth" +qa`
+- **Full quality gate:** `./scripts/quality-gate` (stylua + luacheck + nvim load test)
 
 ---
 
 ## Code Style & Conventions
 
-- **Formatting:** Stylua, 2-space indents, spaces not tabs.
-- **Files:** plugin configs in `lua/plugins/`, snippets in `lua/snippets/`.
-- **Globals allowed:** `vim`, `P`, `Functions`, `KeymapOptions`, and plugin-specific globals (see `.luacheckrc`).
-- **Naming:** snake_case for files/functions; PascalCase for modules.
-- **Error handling:** `pcall(require, "module")` for safety.
-- **Keymaps:** define in `lua/mappings.lua` with `desc` for discoverability.
-- **Imports:** lazy-load plugins when possible; require locally in functions.
-- **Comments:** use single-line `--`, avoid multi-line comment blocks.
-- **Linting:** All code must pass `luacheck lua/` with 0 warnings before commit.
-- **Commits:** atomic, tested with `:checkhealth` and linted before commit.
+- **Formatting:** Stylua (2-space indents, spaces not tabs), Prettier for non-Lua files.
+- **Files:** plugin configs in `lua/plugins/`, snippets in `lua/snippets/`, autocmds in `lua/autocmd.lua`.
+- **Globals allowed:** `vim`, `P`, `Functions`, `KeymapOptions`, `PrintTable`, and plugin-specific toggles (see `.luacheckrc`).
+- **Naming:** snake_case for files/functions; PascalCase for modules; descriptive, unambiguous names.
+- **Imports:** Use `local module = require("path")` at top of functions for lazy-loading; avoid module-level requires outside of plugin specs.
+- **Error handling:** Wrap risky requires with `pcall(require, "module")` and check return values; use `vim.notify()` for user-facing errors.
+- **Types & Docs:** Add `---@param` and `---@return` annotations for LSP; use `---@class` for table schemas.
+- **Comments:** Use single-line `--` comments; avoid multi-line blocks; prefer self-documenting code over comments.
+- **Keymaps:** Define in `lua/mappings.lua` with `desc` field for discoverability; group related maps by prefix.
+- **Linting:** All code must pass `luacheck lua/` (0 warnings) and `stylua --check .` before commit.
+- **Commits:** Atomic, tested with `./scripts/quality-gate` before commit.
 
 ---
 
@@ -179,7 +184,10 @@ The `.luacheckrc` file configures luacheck behavior:
 
 ### For Agents
 
-Do not modify scripts/, .luacheckrc, or vendor plugins without instruction.
+- Do not modify `scripts/`, `.luacheckrc`, `.prettierrc`, or vendor plugins without instruction.
+- Never delete or modify user comments or docstrings.
+- Always run `./scripts/quality-gate` after making changes to verify nothing broke.
+- Preserve indentation and formatting style consistently across edits.
 
 ---
 
