@@ -56,33 +56,6 @@ return lazy.setup({
 		event = "VimEnter",
 	},
 
-	{
-		"sudo-tee/opencode.nvim",
-		config = function()
-			require("plugins.opencode").setup()
-		end,
-		dependencies = {
-			"nvim-lua/plenary.nvim",
-			{
-				"MeanderingProgrammer/render-markdown.nvim",
-				opts = {
-					anti_conceal = { enabled = false },
-					file_types = { "opencode_output" },
-				},
-				ft = { "opencode_output" },
-			},
-			-- Optional, for file mentions and commands completion, pick only one
-			-- "saghen/blink.cmp",
-			"hrsh7th/nvim-cmp",
-
-			-- Optional, for file mentions picker, pick only one
-			-- "folke/snacks.nvim",
-			"nvim-telescope/telescope.nvim",
-			-- 'ibhagwan/fzf-lua',
-			-- 'nvim_mini/mini.nvim',
-		},
-	},
-
 	-- dont open a file accidentally in the filetree or preview window
 	{ "stevearc/stickybuf.nvim" },
 
