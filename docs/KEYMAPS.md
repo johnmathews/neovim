@@ -133,32 +133,36 @@ Complete reference of all custom keybindings in this Neovim configuration.
 ## LSP & Code Actions
 
 ### Built-in LSP Navigation (Neovim v0.11+)
-| Key              | Mode   | Description                                   |
-| ---------------- | ------ | --------------------------------------------- |
-| `gd`             | Normal | Go to definition (built-in LSP)               |
-| `gD`             | Normal | Go to declaration (built-in LSP)              |
-| `gra`            | Normal | Code actions (quick fix, refactor, etc.)      |
-| `grn`            | Normal | Rename symbol (workspace-wide)                |
-| `grt`            | Normal | Go to type definition                         |
-| `K`              | Normal | Hover documentation                           |
-| `<leader>li`     | Normal | Toggle inlay hints                            |
-| `<F4>`           | Normal | Restart LSP server                            |
+
+| Key          | Mode   | Description                              |
+| ------------ | ------ | ---------------------------------------- |
+| `gd`         | Normal | Go to definition (built-in LSP)          |
+| `gD`         | Normal | Go to declaration (built-in LSP)         |
+| `gra`        | Normal | Code actions (quick fix, refactor, etc.) |
+| `grn`        | Normal | Rename symbol (workspace-wide)           |
+| `grt`        | Normal | Go to type definition                    |
+| `K`          | Normal | Hover documentation                      |
+| `<leader>li` | Normal | Toggle inlay hints                       |
+| `<F4>`       | Normal | Restart LSP server                       |
 
 ### Telescope-based LSP Navigation
-| Key              | Mode   | Description                                   |
-| ---------------- | ------ | --------------------------------------------- |
-| `gr`             | Normal | Show references (Telescope picker)            |
-| `gi`             | Normal | Go to implementation (Telescope picker)       |
+
+| Key  | Mode   | Description                             |
+| ---- | ------ | --------------------------------------- |
+| `gr` | Normal | Show references (Telescope picker)      |
+| `gi` | Normal | Go to implementation (Telescope picker) |
 
 ### LSP with Telescope (Advanced Searching)
-| Key              | Mode   | Description                                   |
-| ---------------- | ------ | --------------------------------------------- |
-| `<LocalLeader>r` | Normal | Telescope: Find all references                |
-| `<LocalLeader>d` | Normal | Telescope: Find all definitions               |
-| `<LocalLeader>i` | Normal | Telescope: Find all implementations           |
-| `<Tab>b`         | Normal | Telescope: Workspace symbols                  |
+
+| Key              | Mode   | Description                         |
+| ---------------- | ------ | ----------------------------------- |
+| `<LocalLeader>r` | Normal | Telescope: Find all references      |
+| `<LocalLeader>d` | Normal | Telescope: Find all definitions     |
+| `<LocalLeader>i` | Normal | Telescope: Find all implementations |
+| `<Tab>b`         | Normal | Telescope: Workspace symbols        |
 
 ### Diagnostics & Configuration
+
 | Key              | Mode   | Description                                   |
 | ---------------- | ------ | --------------------------------------------- |
 | `<LocalLeader>t` | Normal | Show active LSP/formatters/linters for buffer |
@@ -168,11 +172,11 @@ Complete reference of all custom keybindings in this Neovim configuration.
 
 ## Formatting & Linting
 
-| Key          | Mode          | Description                                              |
-| ------------ | ------------- | -------------------------------------------------------- |
-| `<leader>cf` | Normal/Visual | Format file or selection (conform.nvim)                 |
-| `<leader>cl` | Normal        | Run linter manually (nvim-lint)                         |
-| `<LocalLeader>t` | Normal     | Show active LSP servers, formatters, and linters        |
+| Key              | Mode          | Description                                      |
+| ---------------- | ------------- | ------------------------------------------------ |
+| `<leader>cf`     | Normal/Visual | Format file or selection (conform.nvim)          |
+| `<leader>cl`     | Normal        | Run linter manually (nvim-lint)                  |
+| `<LocalLeader>t` | Normal        | Show active LSP servers, formatters, and linters |
 
 ---
 
@@ -205,26 +209,29 @@ Complete reference of all custom keybindings in this Neovim configuration.
 ## Treesitter
 
 ### Text Objects & Navigation
-| Key          | Mode   | Description                                 |
-| ------------ | ------ | ------------------------------------------- |
-| `af`         | Normal | Select outer function                       |
-| `if`         | Normal | Select inner function                       |
-| `ac`         | Normal | Select outer class                          |
-| `ic`         | Normal | Select inner class                          |
-| `]m`         | Normal | Jump to next function start                 |
-| `[m`         | Normal | Jump to previous function start             |
-| `]]`         | Normal | Jump to next class start                    |
-| `[[`         | Normal | Jump to previous class start                |
+
+| Key  | Mode   | Description                     |
+| ---- | ------ | ------------------------------- |
+| `af` | Normal | Select outer function           |
+| `if` | Normal | Select inner function           |
+| `ac` | Normal | Select outer class              |
+| `ic` | Normal | Select inner class              |
+| `]m` | Normal | Jump to next function start     |
+| `[m` | Normal | Jump to previous function start |
+| `]]` | Normal | Jump to next class start        |
+| `[[` | Normal | Jump to previous class start    |
 
 ### Text Object Operations
-| Key          | Mode   | Description                                 |
-| ------------ | ------ | ------------------------------------------- |
-| `<leader>tsa` | Normal | Swap next parameter                         |
-| `<leader>tsA` | Normal | Swap previous parameter                     |
-| `<leader>df` | Normal | Peek function definition                    |
-| `<leader>dF` | Normal | Peek class definition                       |
+
+| Key           | Mode   | Description              |
+| ------------- | ------ | ------------------------ |
+| `<leader>tsa` | Normal | Swap next parameter      |
+| `<leader>tsA` | Normal | Swap previous parameter  |
+| `<leader>df`  | Normal | Peek function definition |
+| `<leader>dF`  | Normal | Peek class definition    |
 
 ### Treesitter Tools
+
 | Key          | Mode   | Description                                 |
 | ------------ | ------ | ------------------------------------------- |
 | `<leader>tp` | Normal | Treesitter Playground (inspect syntax tree) |
