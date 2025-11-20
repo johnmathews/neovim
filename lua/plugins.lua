@@ -380,7 +380,7 @@ return lazy.setup({
 			"lukas-reineke/cmp-under-comparator",
 		},
 		config = function()
-			require("plugins.cmp")
+			require("cmp")
 		end,
 	},
 

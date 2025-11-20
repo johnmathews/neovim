@@ -280,7 +280,7 @@ Markdown, HTML, CSS
 
 | Document                                                      | Purpose                                              |
 | ------------------------------------------------------------- | ---------------------------------------------------- |
-| [AGENTS.md](docs/AGENTS.md)                                   | Architecture, design principles, conventions         |
+| [AGENTS.md](AGENTS.md)                                        | Architecture, design principles, conventions         |
 | [CHANGELOG.md](docs/CHANGELOG.md)                             | Version history and change tracking                  |
 | [IMPROVEMENTS.md](docs/IMPROVEMENTS.md)                       | Enhancement implementation details                   |
 | [KEYMAPS.md](docs/KEYMAPS.md)                                 | Complete keymap reference (searchable via `<Tab>tk`) |

@@ -76,7 +76,7 @@ local function window_for_choiceNode(choiceNode)
 	return { win_id = win, extmark = extmark, buf = buf }
 end
 
-function choice_popup(choiceNode)
+function _G.choice_popup(choiceNode)
 	-- build stack for nested choiceNodes.
 	if current_win then
 		vim.api.nvim_win_close(current_win.win_id, true)
@@ -92,7 +92,10 @@ function choice_popup(choiceNode)
 	}
 end
 
-function update_choice_popup(choiceNode)
+function _G.update_choice_popup(choiceNode)
+	if not current_win then
+		return
+	end
 	vim.api.nvim_win_close(current_win.win_id, true)
 	vim.api.nvim_buf_del_extmark(current_win.buf, current_nsid, current_win.extmark)
 	local create_win = window_for_choiceNode(choiceNode)
@@ -101,13 +104,14 @@ function update_choice_popup(choiceNode)
 	current_win.buf = create_win.buf
 end
 
-function choice_popup_close()
+function _G.choice_popup_close()
+	if not current_win then
+		return
+	end
 	vim.api.nvim_win_close(current_win.win_id, true)
 	vim.api.nvim_buf_del_extmark(current_win.buf, current_nsid, current_win.extmark)
-	-- now we are checking if we still have previous choice we were in after exit nested choice
 	current_win = current_win.prev
 	if current_win then
-		-- reopen window further down in the stack.
 		local create_win = window_for_choiceNode(current_win.node)
 		current_win.win_id = create_win.win_id
 		current_win.extmark = create_win.extmark

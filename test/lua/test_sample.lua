@@ -4,16 +4,16 @@
 local M = {}
 
 -- Intentional unused variable
-local unused_var = 10
+local an_junused_var = 10
 
 -- Function with intentional errors
 function M.calculate_sum(a, b)
 	-- Intentional undefined global
-	return a + b + undefined_global
+	return a + b + an_undefined_global
 end
 
 -- Unused function
-local function unused_function()
+local function an_unused_function()
 	local x = 5
 	-- Missing return
 end

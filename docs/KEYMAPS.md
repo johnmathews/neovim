@@ -2,10 +2,10 @@
 
 Complete reference of all custom keybindings in this Neovim configuration.
 
-**Leader Key:** `<Space>`  
-**Local Leader Key:** `\`
+- \*Leader Key:\*\* `<Space>`
+- Local Leader Key:\*\* `\`
 
----
+--
 
 ## Table of Contents
 
@@ -184,7 +184,7 @@ Complete reference of all custom keybindings in this Neovim configuration.
 
 | Key         | Mode   | Description     |
 | ----------- | ------ | --------------- |
-| `<F6>`      | Normal | Toggle terminal |
+| `<Tab>\`    | Normal | Toggle terminal |
 | `<Leader>g` | Normal | Open lazygit    |
 | `<Leader>d` | Normal | Open lazydocker |
 
@@ -304,12 +304,6 @@ Complete reference of all custom keybindings in this Neovim configuration.
 | `gs` | Normal | Leap from windows |
 
 ### NvimTree
-
-| Key                                                                      | Mode | Description |
-| ------------------------------------------------------------------------ | ---- | ----------- |
-| See `:h nvim-tree-default-mappings` for full list within NvimTree buffer |
-
----
 
 ## Tips
 

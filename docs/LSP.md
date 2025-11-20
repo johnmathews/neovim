@@ -8,17 +8,17 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 
 ## Quick Reference
 
-| Language | LSP Server | Formatter | Linter | Status |
-|----------|-----------|-----------|--------|--------|
-| **Lua** | lua_ls | stylua | luacheck | ✅ Complete |
-| **Python** | basedpyright + ruff | ruff_format | ruff | ✅ Optimized |
-| **JavaScript** | ts_ls | biome | eslint_d | ✅ Modern |
-| **TypeScript** | ts_ls | biome | eslint_d | ✅ Modern |
-| **Shell/Bash** | bashls | shfmt | shellcheck | ✅ Complete |
-| **JSON** | jsonls | biome, jq | - | ✅ Complete |
-| **YAML** | yamlls | yamlfmt, lsp | - | ✅ Complete |
-| **Markdown** | - | prettierd, prettier | markdownlint-cli2 | ✅ Complete |
-| **Docker** | dockerls | - | - | ✅ Basic |
+| Language       | LSP Server          | Formatter           | Linter            | Status       |
+| -------------- | ------------------- | ------------------- | ----------------- | ------------ |
+| **Lua**        | lua_ls              | stylua              | luacheck          | ✅ Complete  |
+| **Python**     | basedpyright + ruff | ruff_format         | ruff              | ✅ Optimized |
+| **JavaScript** | ts_ls               | biome               | eslint_d          | ✅ Modern    |
+| **TypeScript** | ts_ls               | biome               | eslint_d          | ✅ Modern    |
+| **Shell/Bash** | bashls              | shfmt               | shellcheck        | ✅ Complete  |
+| **JSON**       | jsonls              | biome, jq           | -                 | ✅ Complete  |
+| **YAML**       | yamlls              | yamlfmt, lsp        | -                 | ✅ Complete  |
+| **Markdown**   | -                   | prettierd, prettier | markdownlint-cli2 | ✅ Complete  |
+| **Docker**     | dockerls            | -                   | -                 | ✅ Basic     |
 
 ---
 
@@ -27,6 +27,7 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 ### Python 🐍
 
 **LSP Servers:**
+
 - **basedpyright** (ONLY server) - Type checking, hover documentation, completions
   - Mode: `basic` type checking (can upgrade to `standard` or `strict`)
   - Auto-import completions enabled
@@ -39,21 +40,25 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
   - Configured in: `lua/plugins/lsp.lua:163-173`
 
 **Formatter:**
+
 - **ruff_format** - Fast, Black-compatible Python formatter
   - Configured in: `lua/plugins/conform.lua:21`
   - Format on save: ✅ Enabled (timeout: 1000ms)
   - Manual format: `<leader>cf`
 
 **Linter:**
+
 - **ruff** - Fast Python linter (Flake8, isort, pyupgrade, etc.)
   - Configured in: `lua/plugins/nvim-lint.lua:5`
   - Runs on: BufWritePost, InsertLeave
   - Manual lint: `<leader>cl`
 
 **Additional Tools:**
+
 - **mypy** - Static type checker (installed but configured separately per project)
 
 **Why this stack?**
+
 - **ruff** is the modern standard (10-100x faster than Black + Flake8)
 - **basedpyright** is a maintained fork of pyright with better defaults
 - Complementary roles: ruff for linting/formatting, basedpyright for types
@@ -63,22 +68,26 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 ### JavaScript / TypeScript 📜
 
 **LSP Server:**
+
 - **ts_ls** (formerly tsserver) - TypeScript language server
   - Handles .js, .ts, .jsx, .tsx files
   - Configured in: `lua/plugins/lsp.lua:69`
 
 **Formatter:**
+
 - **biome** - Fast, modern formatter and linter
   - All-in-one tool for JS/TS/JSON
   - Configured in: `lua/plugins/conform.lua:22-23`
   - Replaces: prettier, eslint for formatting
 
 **Linter:**
+
 - **eslint_d** - Fast ESLint daemon
   - Configured in: `lua/plugins/nvim-lint.lua:6-7`
   - Runs on: BufWritePost, InsertLeave
 
 **Why biome?**
+
 - 20x faster than Prettier
 - Built-in linting rules
 - Modern, actively maintained
@@ -89,22 +98,26 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 ### Lua 🌙
 
 **LSP Server:**
+
 - **lua_ls** - Official Lua language server
 - Neovim-specific configuration included
 - Workspace: Neovim runtime + config directory
 - Configured in: `lua/plugins/lsp.lua:90-120`
 
 **Formatter:**
+
 - **stylua** - Opinionated Lua formatter
 - Configured in: `lua/plugins/conform.lua:20`
 - Settings: `.stylua.toml` or `stylua.toml` in project root
 
 **Linter:**
+
 - **luacheck** - Static analyzer for Lua
 - Configured in: `lua/plugins/nvim-lint.lua:6`
 - Runs on: BufEnter, BufWinEnter, BufWritePost, TextChanged, TextChangedI, InsertLeave
 
 **Settings:**
+
 - Diagnostics: Neovim globals enabled (via `.luacheckrc`)
 - Workspace: Loads Neovim runtime library
 - Format on save: ✅ Enabled
@@ -114,14 +127,17 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 ### Shell Scripts 🐚
 
 **LSP Server:**
+
 - **bashls** - Bash language server
   - Configured in: `lua/plugins/lsp.lua:69`
 
 **Formatter:**
+
 - **shfmt** - Shell script formatter
   - Configured in: `lua/plugins/conform.lua:27`
 
 **Linter:**
+
 - **shellcheck** - Shell script static analysis
   - Configured in: `lua/plugins/nvim-lint.lua:9-10`
   - Checks: sh, bash files
@@ -132,11 +148,13 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 ### JSON 📄
 
 **LSP Server:**
+
 - **jsonls** - JSON language server
   - Schema validation
   - Configured in: `lua/plugins/lsp.lua:69`
 
 **Formatters:**
+
 - **biome** (first choice) - Fast, modern
 - **jq** (fallback) - Command-line JSON processor
 - Configured in: `lua/plugins/conform.lua:24`
@@ -146,11 +164,13 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 ### YAML 📋
 
 **LSP Server:**
+
 - **yamlls** - YAML language server
   - Schema validation (Kubernetes, GitHub Actions, etc.)
   - Configured in: `lua/plugins/lsp.lua:69`
 
 **Formatters:**
+
 - **yamlfmt** (first choice)
 - **lsp** (fallback) - Use LSP formatting
 - Configured in: `lua/plugins/conform.lua:25`
@@ -160,10 +180,12 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 ### Markdown 📝
 
 **Formatter:**
+
 - **prettier** - Opinionated Markdown formatter
 - Configured in: `lua/plugins/conform.lua:26`
 
 **Linter:**
+
 - **markdownlint-cli2** - Markdown style checker
 - Configured in: `lua/plugins/nvim-lint.lua:9`
 
@@ -176,21 +198,26 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 All LSP servers, formatters, and linters are installed via **Mason**.
 
 **View installed tools:**
+
 ```vim
 :Mason
 ```
 
 **Tools installed automatically on startup (via mason-tool-installer):**
+
 - Formatters: stylua, shfmt, biome, ruff
 - Linters: eslint_d, shellcheck, mypy
 
 **LSP servers installed via mason-lspconfig:**
+
 - lua_ls, basedpyright, ruff, ts_ls, bashls, yamlls, jsonls, dockerls
 
 **Tools installed manually (not via mason):**
+
 - Linters: luacheck, markdownlint-cli2
 
 **Configuration:**
+
 - LSP servers: `lua/plugins/lsp.lua`
 - Mason setup: `lua/plugins/mason.lua`
 - Tool list: `lua/plugins/mason.lua:17-30`
@@ -199,13 +226,13 @@ All LSP servers, formatters, and linters are installed via **Mason**.
 
 ## Configuration Files
 
-| Component | Location | Description |
-|-----------|----------|-------------|
-| LSP setup | `lua/plugins/lsp.lua` | LSP server configurations |
-| Mason | `lua/plugins/mason.lua` | Tool installation |
-| Formatters | `lua/plugins/conform.lua` | conform.nvim setup |
-| Linters | `lua/plugins/nvim-lint.lua` | nvim-lint setup |
-| Keymaps | `lua/mappings.lua` + plugin files | LSP/format/lint keybinds |
+| Component  | Location                          | Description               |
+| ---------- | --------------------------------- | ------------------------- |
+| LSP setup  | `lua/plugins/lsp.lua`             | LSP server configurations |
+| Mason      | `lua/plugins/mason.lua`           | Tool installation         |
+| Formatters | `lua/plugins/conform.lua`         | conform.nvim setup        |
+| Linters    | `lua/plugins/nvim-lint.lua`       | nvim-lint setup           |
+| Keymaps    | `lua/mappings.lua` + plugin files | LSP/format/lint keybinds  |
 
 ---
 
@@ -213,46 +240,50 @@ All LSP servers, formatters, and linters are installed via **Mason**.
 
 ### LSP Navigation (Built-in Neovim v0.11+)
 
-| Key | Action |
-|-----|--------|
-| `gd` | Go to definition (built-in LSP) |
-| `gD` | Go to declaration (built-in LSP) |
-| `gra` | Code actions (quick fix, refactor, etc.) |
-| `grn` | Rename symbol (workspace-wide) |
-| `grt` | Go to type definition |
-| `K` | Hover documentation |
-| `<leader>li` | Toggle inlay hints |
-| `<F4>` | Restart LSP |
+| Key          | Action                                   |
+| ------------ | ---------------------------------------- |
+| `gd`         | Go to definition (built-in LSP)          |
+| `gD`         | Go to declaration (built-in LSP)         |
+| `gra`        | Code actions (quick fix, refactor, etc.) |
+| `grn`        | Rename symbol (workspace-wide)           |
+| `grt`        | Go to type definition                    |
+| `K`          | Hover documentation                      |
+| `<leader>li` | Toggle inlay hints                       |
+| `<F4>`       | Restart LSP                              |
 
 ### Telescope-based LSP Navigation
 
-| Key | Action |
-|-----|--------|
-| `gr` | Show references (Telescope picker) |
+| Key  | Action                                  |
+| ---- | --------------------------------------- |
+| `gr` | Show references (Telescope picker)      |
 | `gi` | Go to implementation (Telescope picker) |
 
 ### LSP with Telescope (for advanced searching)
-| Key | Action |
-|-----|--------|
-| `<LocalLeader>r` | Telescope: List all references |
-| `<LocalLeader>d` | Telescope: List all definitions |
-| `<LocalLeader>i` | Telescope: List all implementations |
-| `<Tab>b` | Telescope: Workspace symbols (search across project) |
+
+| Key              | Action                                               |
+| ---------------- | ---------------------------------------------------- |
+| `<LocalLeader>r` | Telescope: List all references                       |
+| `<LocalLeader>d` | Telescope: List all definitions                      |
+| `<LocalLeader>i` | Telescope: List all implementations                  |
+| `<Tab>b`         | Telescope: Workspace symbols (search across project) |
 
 ### Formatting
-| Key | Action |
-|-----|--------|
+
+| Key          | Action                   |
+| ------------ | ------------------------ |
 | `<leader>cf` | Format file or selection |
 
 ### Linting
-| Key | Action |
-|-----|--------|
+
+| Key          | Action              |
+| ------------ | ------------------- |
 | `<leader>cl` | Run linter manually |
 
 ### Diagnostics
-| Key | Action |
-|-----|--------|
-| `<Tab>dd` | Cycle diagnostics display modes |
+
+| Key          | Action                             |
+| ------------ | ---------------------------------- |
+| `<Tab>dd`    | Cycle diagnostics display modes    |
 | `<leader>ta` | Show active LSP/formatters/linters |
 
 ---
@@ -262,11 +293,13 @@ All LSP servers, formatters, and linters are installed via **Mason**.
 ### LSP not starting
 
 1. **Check LSP is installed:**
+
    ```vim
    :Mason
    ```
 
 2. **Check LSP is attached:**
+
    ```vim
    :LspInfo
    ```
@@ -285,6 +318,7 @@ All LSP servers, formatters, and linters are installed via **Mason**.
 ### Formatter not working
 
 1. **Check formatter is installed:**
+
    ```vim
    :Mason
    ```
@@ -305,11 +339,13 @@ All LSP servers, formatters, and linters are installed via **Mason**.
 ### Linter not running
 
 1. **Check linter is installed:**
+
    ```vim
    :Mason
    ```
 
 2. **Check linter is configured for filetype:**
+
    ```lua
    -- In lua/plugins/nvim-lint.lua, check linters_by_ft
    ```
@@ -327,6 +363,7 @@ All LSP servers, formatters, and linters are installed via **Mason**.
 ## Adding a New Language
 
 ### Step 1: Install LSP Server
+
 ```vim
 :Mason
 " Search for your language server
@@ -334,7 +371,9 @@ All LSP servers, formatters, and linters are installed via **Mason**.
 ```
 
 ### Step 2: Configure LSP
+
 Edit `lua/plugins/lsp.lua`, add to `ensure_installed`:
+
 ```lua
 ensure_installed = {
   "your_lsp_name",
@@ -343,7 +382,9 @@ ensure_installed = {
 ```
 
 ### Step 3: Add Formatter (optional)
+
 Edit `lua/plugins/conform.lua`:
+
 ```lua
 formatters_by_ft = {
   your_filetype = { "your_formatter" },
@@ -351,7 +392,9 @@ formatters_by_ft = {
 ```
 
 ### Step 4: Add Linter (optional)
+
 Edit `lua/plugins/nvim-lint.lua`:
+
 ```lua
 lint.linters_by_ft = {
   your_filetype = { "your_linter" },
@@ -359,7 +402,9 @@ lint.linters_by_ft = {
 ```
 
 ### Step 5: Install Tools
+
 Add to `lua/plugins/mason.lua`:
+
 ```lua
 ensure_installed = {
   "your_formatter",
@@ -368,6 +413,7 @@ ensure_installed = {
 ```
 
 ### Step 6: Restart Neovim
+
 ```bash
 # Tools will auto-install on next startup
 ```

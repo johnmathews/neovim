@@ -125,14 +125,22 @@ map("n", "<C-L>", "<C-W><C-L>", default_options)
 
 -- FUNCTIONS
 -- the function should be defined in lua/functions.lua
-map("n", "<LocalLeader>t", ":lua Functions.active_tools()<CR>", KeymapOptions("Show active LSP/formatters/linters"))
-map("n", "<Tab>dd", ":lua Functions.cycle_diagnostics()<CR>", KeymapOptions("Cycle diagnostics display"))
 map(
 	"n",
 	"<Leader>f",
 	":lua Functions.toggle_tree_focus()<CR>",
 	KeymapOptions("Toggle focus between buffer and nvim-tree")
 )
+map("n", "<LocalLeader>t", ":lua Functions.active_tools()<CR>", KeymapOptions("Show active LSP/formatters/linters"))
+map("n", "<Tab>dd", ":lua Functions.cycle_diagnostics()<CR>", KeymapOptions("Cycle diagnostics display"))
+map("n", "<Tab>dq", ":lua vim.diagnostic.setqflist()<CR>", KeymapOptions("Open all diagnostics in quickfix"))
+map(
+	"n",
+	"<Tab>dl",
+	":lua vim.diagnostic.setloclist()<CR>",
+	KeymapOptions("Open current buffer diagnostics in location list")
+)
+map("n", "<Tab>dc", ":cexpr []<CR>", KeymapOptions("Clear quickfix window"))
 
 -- Jump List
 map("n", "<C-p>", "<C-i>", default_options)

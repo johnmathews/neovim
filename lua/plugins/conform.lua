@@ -1,6 +1,3 @@
--- lua/plugins/conform.lua
--- FORMATTERS
-
 local conform = require("conform")
 conform.setup({
 
