@@ -24,6 +24,7 @@ noice.setup({
 		view = "notify",
 		view_error = "notify",
 		view_warn = "notify",
+		view_search = false,
 	},
 	presets = {
 		bottom_search = true,
