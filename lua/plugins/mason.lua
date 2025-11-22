@@ -19,13 +19,13 @@ if ok_mti then
 			-- formatters
 			"stylua", -- Lua
 			"shfmt", -- Shell
-			-- "prettierd", -- Markdown (fast)
-			"biome", -- JS/TS/JSON (fast, modern)
-			"ruff", -- Python (formatting + linting)
+			"prettierd", -- Markdown
+			"biome", -- JS/TS/JSON
+			"ruff", -- Python
 			-- linters
-			"eslint_d", -- JS/TS
-			"shellcheck", -- Shell scripts
-			"mypy", -- Python type checking
+			"eslint_d",
+			"shellcheck",
+			"mypy",
 		},
 		auto_update = false,
 		run_on_start = false, -- Don't check tools on startup (use :Mason to check manually)

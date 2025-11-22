@@ -25,6 +25,7 @@ function M.asyncGitCommitAndPush(commitMessage)
 	end)
 end
 
+-- use <LocalLeade>t to see LSP, Linter and Formatting tools
 M.active_tools = function()
 	local bufnr = vim.api.nvim_get_current_buf()
 
@@ -66,7 +67,6 @@ M.active_tools = function()
 end
 
 -- toggle the quickfix window
--- in mappings.lua gq is mapped to this
 vim.cmd([[
   function! ToggleQuickFix()
     if empty(filter(getwininfo(), 'v:val.quickfix'))
@@ -86,7 +86,7 @@ endfunction
 command! -nargs=1 Mp call s:NewPost(<q-args>)
 ]])
 
-local diagnostic_state = 1
+local diagnostic_state = 2
 function M.cycle_diagnostics()
 	if diagnostic_state == 1 then
 		-- Mode 1: Virtual Text (at end of line)
@@ -109,16 +109,6 @@ function M.cycle_diagnostics()
 		})
 		diagnostic_state = 3
 	elseif diagnostic_state == 3 then
-		-- Mode 3: Virtual Lines (new lines below)
-		vim.notify("Diagnostics: Virtual Lines", vim.log.levels.INFO)
-		vim.diagnostic.config({
-			signs = true,
-			underline = true,
-			virtual_text = false,
-			virtual_lines = true,
-		})
-		diagnostic_state = 4
-	else
 		vim.notify("Diagnostics: Disabled", vim.log.levels.INFO)
 		vim.diagnostic.config({
 			signs = false,
