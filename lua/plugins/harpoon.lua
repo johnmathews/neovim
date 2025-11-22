@@ -1,9 +1,9 @@
 -- Harpoon: Quick file navigation and marking for frequently used files
 
 require("harpoon").setup({
-	menu = {
-		width = 100,
-	},
+  menu = {
+    width = 100,
+  },
 })
 
 local map = vim.api.nvim_set_keymap

@@ -1,30 +1,30 @@
 -- Minimap: Code minimap with git and diagnostic integration
 local ok, mini_map = pcall(require, "mini.map")
 if not ok then
-	return
+  return
 end
 
 mini_map.setup({
-	integrations = {
-		mini_map.gen_integration.builtin_search(),
-		mini_map.gen_integration.diff(),
-		mini_map.gen_integration.diagnostic({
-			error = "DiagnosticFloatingError",
-			warn = "DiagnosticFloatingWarn",
-			info = "DiagnosticFloatingInfo",
-			hint = "DiagnosticFloatingHint",
-		}),
-		mini_map.gen_integration.gitsigns(),
-	},
-	symbols = {
-		encode = mini_map.gen_encode_symbols.dot("4x2"),
-	},
-	window = {
-		side = "right",
-		width = 12,
-		winblend = 15,
-		show_integration_count = false,
-	},
+  integrations = {
+    mini_map.gen_integration.builtin_search(),
+    mini_map.gen_integration.diff(),
+    mini_map.gen_integration.diagnostic({
+      error = "DiagnosticFloatingError",
+      warn = "DiagnosticFloatingWarn",
+      info = "DiagnosticFloatingInfo",
+      hint = "DiagnosticFloatingHint",
+    }),
+    mini_map.gen_integration.gitsigns(),
+  },
+  symbols = {
+    encode = mini_map.gen_encode_symbols.dot("4x2"),
+  },
+  window = {
+    side = "right",
+    width = 12,
+    winblend = 15,
+    show_integration_count = false,
+  },
 })
 
 vim.keymap.set("n", "<leader>mm", mini_map.toggle, { desc = "MiniMap: toggle" })
