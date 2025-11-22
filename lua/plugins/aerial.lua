@@ -13,7 +13,10 @@ aerial.setup({
   end,
 
   layout = {
-    min_width = 80,
+    -- Dynamically size to content, within sensible bounds
+    resize_to_content = true,
+    max_width = { 60, 0.3 }, -- cap absolute and % of screen
+    min_width = 20,
   },
 
   filter_kind = false, -- all filetypes
