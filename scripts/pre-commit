@@ -48,9 +48,12 @@ if [ -n "$LUA_FILES" ]; then
   fi
 
   # Check for debug statements (warning only, don't block)
-  if echo "$LUA_FILES" | xargs grep -l 'vim.print\|print(' 2>/dev/null; then
-    echo -e "${YELLOW}⚠ Found print/debug statements in staged files${NC}"
-    echo "  Consider removing debug statements before committing"
+  DEBUG_FILES=$(echo "$LUA_FILES" | grep -v '^test/' || true)
+  if [ -n "$DEBUG_FILES" ]; then
+    if echo "$DEBUG_FILES" | xargs grep -l 'vim.print\|print(' 2>/dev/null; then
+      echo -e "${YELLOW}⚠ Found print/debug statements in staged files${NC}"
+      echo "  Consider removing debug statements before committing"
+    fi
   fi
 fi
 
