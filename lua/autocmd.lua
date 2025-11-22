@@ -15,19 +15,12 @@ vim.cmd([[
   augroup end
 ]])
 
--- vim.cmd([[
---   augroup RedrawOnFocusGained
---     autocmd!
---     autocmd FocusGained * :redraw!
---   augroup end
--- ]])
-
 -- bigquery files should be sql filetype .bq → sql
 vim.cmd([[
   autocmd BufEnter,BufNew *.bq setl filetype=sql
 ]])
 
--- tmux
+-- files named tmux*.local use the tmux filetype
 vim.cmd([[
   autocmd BufNewFile,BufRead {.,}tmux*.local nested setf tmux
 ]])
