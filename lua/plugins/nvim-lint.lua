@@ -15,7 +15,7 @@ local function run_lint(bufnr)
 end
 
 local function stop_timer(timer, bufnr, timers)
-  if not timer then
+  if not timer or (uv.is_closing and uv.is_closing(timer)) then
     return
   end
   timer:stop()
@@ -51,7 +51,7 @@ vim.api.nvim_create_autocmd({ "BufEnter", "BufWinEnter" }, {
     local timer = uv.new_timer()
     timer:start(
       0,
-      500,
+      1000,
       vim.schedule_wrap(function()
         if not vim.api.nvim_buf_is_valid(args.buf) or vim.api.nvim_get_current_buf() ~= args.buf then
           stop_timer(timer, args.buf, lint_timers)

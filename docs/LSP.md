@@ -17,7 +17,7 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 | **Shell/Bash** | bashls              | shfmt               | shellcheck        | ✅ Complete  |
 | **JSON**       | jsonls              | biome, jq           | -                 | ✅ Complete  |
 | **YAML**       | yamlls              | yamlfmt, lsp        | -                 | ✅ Complete  |
-| **Markdown**   | -                   | prettierd, prettier | markdownlint-cli2 | ✅ Complete  |
+| **Markdown**   | -                   | prettierd, prettier | markdownlint       | ✅ Complete  |
 | **Docker**     | dockerls            | -                   | -                 | ✅ Basic     |
 
 ---
@@ -186,7 +186,7 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 
 **Linter:**
 
-- **markdownlint-cli2** - Markdown style checker
+- **markdownlint** - Markdown style checker
 - Configured in: `lua/plugins/nvim-lint.lua:9`
 
 ---
@@ -214,7 +214,7 @@ All LSP servers, formatters, and linters are installed via **Mason**.
 
 **Tools installed manually (not via mason):**
 
-- Linters: luacheck, markdownlint-cli2
+- Linters: luacheck, markdownlint
 
 **Configuration:**
 

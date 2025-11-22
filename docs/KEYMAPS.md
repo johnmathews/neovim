@@ -45,6 +45,7 @@ Complete reference of all custom keybindings in this Neovim configuration.
 | `<C-J>`   | Normal | Move to bottom window                                         |
 | `<C-K>`   | Normal | Move to top window                                            |
 | `<C-L>`   | Normal | Move to right window                                          |
+| `<Leader>n` | Normal | Toggle focus between buffer and nvim-tree                    |
 | `<Tab>ww` | Normal | Write all buffers                                             |
 | `<Tab>qq` | Normal | Quit Vim                                                      |
 | `qq`      | Normal | Quit current buffer (vanilla: go to previous, delete current) |
