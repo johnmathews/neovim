@@ -4,6 +4,29 @@ if not status_ok then
   return
 end
 
+local function undo_time()
+  local ok, ut = pcall(vim.fn.undotree)
+  if not ok or not ut or not ut.entries or not ut.seq_cur then
+    return ""
+  end
+
+  local seq_cur = ut.seq_cur
+  local time
+
+  for _, e in ipairs(ut.entries) do
+    if e.seq == seq_cur and e.time then
+      time = e.time
+      break
+    end
+  end
+
+  if not time then
+    return ""
+  end
+
+  return vim.fn.strftime("%y-%m-%d %H:%M:%S", time)
+end
+
 local function symbols_outline()
   local symbols
   local exclude = {
@@ -121,8 +144,10 @@ lualine.setup({
       { symbols_outline, padding = { left = 2, right = 2 } },
       -- { "lsp_progress" },
     },
-    lualine_x = {},
-    lualine_y = { "encoding", "fileformat", "filetype" },
+    lualine_x = {
+      { undo_time, color = { fg = "white", bg = "black" } },
+    },
+    lualine_y = { "filetype", "fileformat", "encoding" },
     lualine_z = {},
   },
   extensions = {

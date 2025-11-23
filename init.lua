@@ -111,3 +111,8 @@ vim.lsp.set_log_level("WARN")
 
 -- use the following to see what highlight group the text under the cursor is part of
 -- :exe 'hi '.synIDattr(synstack(line('.'), col('.'))[-1], 'name')
+
+-- persistent undo. see `undofile` in options.lua
+local undodir = vim.fn.stdpath("state") .. "/undo"
+vim.fn.mkdir(undodir, "p")
+vim.opt.undodir = undodir
