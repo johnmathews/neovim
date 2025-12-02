@@ -26,7 +26,7 @@ return lazy.setup({
 
   -- WIP my plugin to show git stats when you open a project
   {
-    dir = "/Users/john/projects/neovim-dashboard",
+    dir = "/Users/john/projects/neovim/neovim-dashboard",
     name = "project-dashboard.nvim",
     dependencies = {
       "nvim-lua/plenary.nvim",

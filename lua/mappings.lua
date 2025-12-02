@@ -137,6 +137,7 @@ map(
   ":lua Functions.toggle_tree_focus()<CR>",
   KeymapOptions("Toggle focus between buffer and nvim-tree")
 )
+map("n", "<LocalLeader>n", ":NvimTreeToggle<CR>", KeymapOptions("Toggle nvim-tree visibility"))
 map("n", "<LocalLeader>s", ":lua Functions.cycle_diagnostics()<CR>", KeymapOptions("Cycle diagnostics display"))
 map("n", "<LocalLeader>t", ":lua Functions.active_tools()<CR>", KeymapOptions("Show active LSP/formatters/linters"))
 map("n", "<Tab>dq", ":lua vim.diagnostic.setqflist()<CR>", KeymapOptions("Open all diagnostics in quickfix"))

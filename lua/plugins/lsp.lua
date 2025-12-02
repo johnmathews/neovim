@@ -77,7 +77,6 @@ mason_lspconfig.setup({
   ensure_installed = {
     "lua_ls",
     "basedpyright",
-    "ruff",
     "ts_ls",
     "bashls",
     "yamlls",
@@ -116,18 +115,6 @@ mason_lspconfig.setup({
             telemetry = { enable = false },
           },
         },
-      })
-    end,
-
-    -- Ruff (lint + fixes; leave hovers to Pyright/BasedPyright)
-    ["ruff"] = function()
-      lspconfig.ruff.setup({
-        on_attach = function(client, bufnr)
-          client.server_capabilities.hoverProvider = false
-          client.server_capabilities.signatureHelpProvider = nil
-          on_attach(client, bufnr)
-        end,
-        capabilities = capabilities,
       })
     end,
 

@@ -97,7 +97,9 @@ which_key.add({
   { "<LocalLeader>", group = "LocalLeader (Backslash)" },
   { "<LocalLeader>d", desc = "Telescope: Find definitions" },
   { "<LocalLeader>i", desc = "Telescope: Find implementations" },
+  { "<LocalLeader>n", desc = "Toggle nvim-tree visibility" },
   { "<LocalLeader>r", desc = "Telescope: Find references" },
+  { "<LocalLeader>s", desc = "Cycle diagnostics display" },
   { "<LocalLeader>t", desc = "Show active LSP/formatters/linters" },
   { "<LocalLeader>fs", desc = "Search sessions" },
 })

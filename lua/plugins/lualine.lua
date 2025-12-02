@@ -24,7 +24,7 @@ local function undo_time()
     return ""
   end
 
-  return vim.fn.strftime("%y-%m-%d %H:%M:%S", time)
+  return vim.fn.strftime("%b %d %H:%M:%S", time)
 end
 
 local function symbols_outline()
