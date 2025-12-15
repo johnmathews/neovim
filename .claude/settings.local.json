@@ -3,7 +3,10 @@
     "allow": [
       "WebFetch(domain:code.claude.com)",
       "Bash(cat:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(git log:*)",
+      "Bash(ls:*)",
+      "Bash(nvim --headless -c \"lua require(''nvim-tree.api'').config.mappings.default_on_attach = function(b) print(''Test'') end\" -c \"q\")"
     ],
     "deny": [],
     "ask": []

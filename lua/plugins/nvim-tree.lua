@@ -79,6 +79,9 @@ local function on_attach(bufnr)
 
   api.config.mappings.default_on_attach(bufnr)
 
+  -- Remove Tab mapping to allow global Tab-based keybinds (Telescope, etc.)
+  pcall(vim.keymap.del, "n", "<Tab>", { buffer = bufnr })
+
   local function opts(desc)
     return { desc = "nvim-tree: " .. desc, buffer = bufnr, noremap = true, silent = true, nowait = true }
   end

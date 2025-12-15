@@ -39,22 +39,22 @@ Complete reference of all custom keybindings in this Neovim configuration.
 
 ## Window & Buffer Management
 
-| Key             | Mode   | Description                                                   |
-| --------------- | ------ | ------------------------------------------------------------- |
-| `<C-H>`         | Normal | Move to left window                                           |
-| `<C-J>`         | Normal | Move to bottom window                                         |
-| `<C-K>`         | Normal | Move to top window                                            |
-| `<C-L>`         | Normal | Move to right window                                          |
-| `<Leader>n`     | Normal | Toggle focus between buffer and nvim-tree                     |
-| `<LocalLeader>n` | Normal | Toggle nvim-tree visibility (show/hide)                      |
-| `<Tab>ww`       | Normal | Write all buffers                                             |
-| `<Tab>qq`       | Normal | Quit Vim                                                      |
-| `qq`      | Normal | Quit current buffer (vanilla: go to previous, delete current) |
-| `wq`      | Normal | Save and quit buffer (smartQ)                                 |
-| `QE`      | Normal | Wipe empty buffers (smartQ)                                   |
-| `<C-Q>`   | Normal | BDelete menu (choose buffer to delete)                        |
-| `<Tab>qo` | Normal | Close all other buffers                                       |
-| `gq`      | Normal | Toggle QuickFix window                                        |
+| Key              | Mode   | Description                                                   |
+| ---------------- | ------ | ------------------------------------------------------------- |
+| `<C-H>`          | Normal | Move to left window                                           |
+| `<C-J>`          | Normal | Move to bottom window                                         |
+| `<C-K>`          | Normal | Move to top window                                            |
+| `<C-L>`          | Normal | Move to right window                                          |
+| `<Leader>n`      | Normal | Toggle focus between buffer and nvim-tree                     |
+| `<LocalLeader>n` | Normal | Toggle nvim-tree visibility (show/hide)                       |
+| `<Tab>ww`        | Normal | Write all buffers                                             |
+| `<Tab>qq`        | Normal | Quit Vim                                                      |
+| `qq`             | Normal | Quit current buffer (vanilla: go to previous, delete current) |
+| `wq`             | Normal | Save and quit buffer (smartQ)                                 |
+| `QE`             | Normal | Wipe empty buffers (smartQ)                                   |
+| `<C-Q>`          | Normal | BDelete menu (choose buffer to delete)                        |
+| `<Tab>qo`        | Normal | Close all other buffers                                       |
+| `gq`             | Normal | Toggle QuickFix window                                        |
 
 ---
 
