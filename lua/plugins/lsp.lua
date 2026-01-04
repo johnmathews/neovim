@@ -172,7 +172,7 @@ mason_lspconfig.setup({
     ["bashls"] = function()
       local has_shellcheck = (vim.fn.executable("shellcheck") == 1)
 
-      require("lspconfig").bashls.setup({
+      lspconfig.bashls.setup({
         on_attach = on_attach, -- DO NOT override publishDiagnostics here
         capabilities = capabilities,
         filetypes = { "sh", "bash", "zsh" }, -- Attach to sh, bash, and zsh files
@@ -185,6 +185,12 @@ mason_lspconfig.setup({
         },
       })
 
+      -- Debug: verify configuration was applied
+      vim.notify(
+        "[bashls] Configured with filetypes: " .. table.concat(lspconfig.bashls.filetypes or {}, ", "),
+        vim.log.levels.INFO
+      )
+
       if not has_shellcheck then
         vim.schedule(function()
           vim.notify("[bashls] shellcheck not found on PATH; diagnostics will be limited", vim.log.levels.WARN)
@@ -192,21 +198,4 @@ mason_lspconfig.setup({
       end
     end,
   },
-})
-
--- Manually attach bashls to zsh files (workaround for filetypes not being recognized)
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = "zsh",
-  callback = function()
-    vim.lsp.start({
-      name = "bashls",
-      cmd = { "bash-language-server", "start" },
-      root_dir = vim.fs.dirname(vim.fs.find({ ".git" }, { upward = true })[1]),
-      settings = {
-        bashIde = {
-          globPattern = "*@(.sh|.inc|.bash|.command|.zsh)",
-        },
-      },
-    })
-  end,
 })
