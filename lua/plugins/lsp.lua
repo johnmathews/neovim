@@ -177,7 +177,7 @@ mason_lspconfig.setup({
         capabilities = capabilities,
         settings = {
           bashIde = {
-            globPattern = "*@(.sh|.inc|.bash|.command)",
+            globPattern = "*@(.sh|.inc|.bash|.command|.zsh)",
             shellcheckPath = has_shellcheck and "shellcheck" or "", -- enable if present
             shellcheckArguments = { "-x" }, -- follow sourced files (optional)
           },

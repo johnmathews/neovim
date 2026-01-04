@@ -33,6 +33,7 @@ lint.linters_by_ft = {
   python = { "ruff" },
   sh = { "shellcheck" },
   typescript = { "eslint_d" },
+  zsh = { "shellcheck" },
 }
 
 -- Run linters on keystroke (real-time feedback) and on save

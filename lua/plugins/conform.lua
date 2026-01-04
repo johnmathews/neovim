@@ -22,6 +22,7 @@ conform.setup({
     yaml = { "yamlfmt", "lsp" },
     markdown = { "prettierd" },
     sh = { "shfmt" },
+    zsh = { "shfmt" },
   },
 
   -- Prefer project-local binaries where possible
