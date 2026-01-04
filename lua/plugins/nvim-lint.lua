@@ -25,15 +25,12 @@ end
 
 -- Configure shellcheck for zsh files to use bash mode
 -- (shellcheck doesn't natively support zsh, so we treat it as bash)
-lint.linters.shellcheck = require("lint.linters.shellcheck")
-local shellcheck_args = vim.list_extend(vim.deepcopy(lint.linters.shellcheck.args), {})
-
--- Create a custom shellcheck variant for zsh that forces bash shell
-local shellcheck_zsh = vim.deepcopy(lint.linters.shellcheck)
-shellcheck_zsh.args = vim.tbl_filter(function(arg)
-  return not vim.startswith(arg, "--shell")
-end, shellcheck_args)
-table.insert(shellcheck_zsh.args, "--shell=bash")
+local shellcheck_zsh = require("lint").linters.shellcheck
+shellcheck_zsh.args = {
+  "--format=json",
+  "-",
+  "--shell=bash", -- Force bash mode for zsh files
+}
 lint.linters.shellcheck_zsh = shellcheck_zsh
 
 local lint_timers = {}
