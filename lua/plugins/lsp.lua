@@ -175,6 +175,7 @@ mason_lspconfig.setup({
       require("lspconfig").bashls.setup({
         on_attach = on_attach, -- DO NOT override publishDiagnostics here
         capabilities = capabilities,
+        filetypes = { "sh", "bash", "zsh" }, -- Attach to sh, bash, and zsh files
         settings = {
           bashIde = {
             globPattern = "*@(.sh|.inc|.bash|.command|.zsh)",
