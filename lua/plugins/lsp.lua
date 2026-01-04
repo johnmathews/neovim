@@ -193,3 +193,20 @@ mason_lspconfig.setup({
     end,
   },
 })
+
+-- Manually attach bashls to zsh files (workaround for filetypes not being recognized)
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = "zsh",
+  callback = function()
+    vim.lsp.start({
+      name = "bashls",
+      cmd = { "bash-language-server", "start" },
+      root_dir = vim.fs.dirname(vim.fs.find({ ".git" }, { upward = true })[1]),
+      settings = {
+        bashIde = {
+          globPattern = "*@(.sh|.inc|.bash|.command|.zsh)",
+        },
+      },
+    })
+  end,
+})
