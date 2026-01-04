@@ -1,5 +1,6 @@
-#!/usr/bin/env zsh
+#!/bin/bash
 # Test file for zsh LSP, linting, and formatting support
+# Note: Using bash shebang because shellcheck treats zsh as bash
 
 # Test basic zsh syntax
 test_function() {

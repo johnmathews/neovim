@@ -23,6 +23,19 @@ local function stop_timer(timer, bufnr, timers)
   timers[bufnr] = nil
 end
 
+-- Configure shellcheck for zsh files to use bash mode
+-- (shellcheck doesn't natively support zsh, so we treat it as bash)
+lint.linters.shellcheck = require("lint.linters.shellcheck")
+local shellcheck_args = vim.list_extend(vim.deepcopy(lint.linters.shellcheck.args), {})
+
+-- Create a custom shellcheck variant for zsh that forces bash shell
+local shellcheck_zsh = vim.deepcopy(lint.linters.shellcheck)
+shellcheck_zsh.args = vim.tbl_filter(function(arg)
+  return not vim.startswith(arg, "--shell")
+end, shellcheck_args)
+table.insert(shellcheck_zsh.args, "--shell=bash")
+lint.linters.shellcheck_zsh = shellcheck_zsh
+
 local lint_timers = {}
 lint.linters_by_ft = {
   bash = { "shellcheck" },
@@ -33,7 +46,7 @@ lint.linters_by_ft = {
   python = { "ruff" },
   sh = { "shellcheck" },
   typescript = { "eslint_d" },
-  zsh = { "shellcheck" },
+  zsh = { "shellcheck_zsh" },
 }
 
 -- Run linters on keystroke (real-time feedback) and on save
