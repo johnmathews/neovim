@@ -6,7 +6,14 @@
       "Bash(find:*)",
       "Bash(git log:*)",
       "Bash(ls:*)",
-      "Bash(nvim --headless -c \"lua require(''nvim-tree.api'').config.mappings.default_on_attach = function(b) print(''Test'') end\" -c \"q\")"
+      "Bash(nvim --headless -c \"lua require(''nvim-tree.api'').config.mappings.default_on_attach = function(b) print(''Test'') end\" -c \"q\")",
+      "WebSearch",
+      "WebFetch(domain:mason-registry.dev)",
+      "Bash(grep:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(nvim:*)",
+      "Bash(stylua:*)"
     ],
     "deny": [],
     "ask": []

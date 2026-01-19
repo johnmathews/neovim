@@ -24,7 +24,6 @@ if ok_mti then
       "ruff", -- Python
       -- linters
       "eslint_d",
-      "shellcheck",
       "mypy",
       "markdownlint",
     },
