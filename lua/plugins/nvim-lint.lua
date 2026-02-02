@@ -33,6 +33,22 @@ shellcheck_zsh.args = {
 }
 lint.linters.shellcheck_zsh = shellcheck_zsh
 
+-- Configure markdownlint to use project-specific config with global fallback
+require("lint").linters.markdownlint.args = function()
+  -- Get the directory of the current buffer
+  local file_dir = vim.fn.expand("%:p:h")
+
+  -- Find a project-local .markdownlint.json
+  local local_config = vim.fn.findfile(".markdownlint.json", file_dir .. ";")
+
+  if local_config ~= "" and vim.fn.filereadable(local_config) == 1 then
+    return { "--config", local_config }
+  else
+    -- Fall back to the global config
+    return { "--config", vim.fn.stdpath("config") .. "/.markdownlint.json" }
+  end
+end
+
 local lint_timers = {}
 lint.linters_by_ft = {
   bash = { "shellcheck" },
