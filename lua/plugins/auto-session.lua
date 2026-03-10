@@ -8,6 +8,7 @@ vim.o.sessionoptions = "blank,buffers,curdir,folds,help,tabpages,winsize,winpos,
 
 require("auto-session").setup({
   auto_save = true,
+  auto_create = true,
   bypass_save_filetypes = { "NvimTree" },
   pre_save_cmds = { "NvimTreeClose" },
   session_lens = {
