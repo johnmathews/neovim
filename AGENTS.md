@@ -112,8 +112,8 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
   - Run from config root: `cd ~/.config/nvim && luacheck lua/`
 - **Format Lua:** `stylua .` (formats all Lua files)
   - Check only: `stylua --check .`
-- **Prettier:** `prettier --write .` (for Markdown, YAML, JSON)
-  - Config: `.prettierrc` (120 char print width, 2-space tabs)
+- **Prettier:** `prettierd` via conform.nvim (for Markdown)
+  - Config: inline args in `lua/plugins/conform.lua` (121 char print width, prose-wrap always)
 - **Format on save:** Auto via `conform.nvim`
 - **Manual format:** `<leader>cf`
 - **Manual lint:** `<leader>cl`
@@ -184,7 +184,7 @@ The `.luacheckrc` file configures luacheck behavior:
 
 ### For Agents
 
-- Do not modify `scripts/`, `.luacheckrc`, `.prettierrc`, or vendor plugins without instruction.
+- Do not modify `scripts/`, `.luacheckrc`, or vendor plugins without instruction.
 - Never delete or modify user comments or docstrings.
 - Always run `./scripts/quality-gate` after making changes to verify nothing broke.
 - Preserve indentation and formatting style consistently across edits.

@@ -82,6 +82,7 @@ mason_lspconfig.setup({
     "yamlls",
     "jsonls",
     "dockerls",
+    "taplo",
   },
 
   handlers = {

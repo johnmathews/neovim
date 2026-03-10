@@ -181,8 +181,8 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 
 **Formatter:**
 
-- **prettier** - Opinionated Markdown formatter
-- Configured in: `lua/plugins/conform.lua:26`
+- **prettierd** - Opinionated Markdown formatter (prettier daemon)
+- Configured in: `lua/plugins/conform.lua`
 
 **Linter:**
 

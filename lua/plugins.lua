@@ -91,12 +91,10 @@ return lazy.setup({
         },
       },
       {
-        -- Make sure to set this up properly if you have lazy=true
         "MeanderingProgrammer/render-markdown.nvim",
-        opts = {
-          file_types = { "Avante" },
-        },
-        ft = { "Avante" },
+        init = function()
+          vim.g.render_markdown_config = { file_types = { "Avante" } }
+        end,
       },
     },
   },
