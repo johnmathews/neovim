@@ -39,7 +39,7 @@ vim.cmd([[
 
 
   " https://github.com/preservim/vim-markdown#latex-math
-  let g:vim_markdown_math = 1
+  let g:vim_markdown_math = 0
 
   " https://github.com/preservim/vim-markdown#adjust-new-list-item-indent
   let g:vim_markdown_new_list_item_indent = 2
