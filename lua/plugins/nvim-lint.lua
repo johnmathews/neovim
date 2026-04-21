@@ -34,19 +34,24 @@ shellcheck_zsh.args = {
 lint.linters.shellcheck_zsh = shellcheck_zsh
 
 -- Configure markdownlint to use project-specific config with global fallback
+-- Suppresses MD013 (line length) when markdown print mode is active
 require("lint").linters.markdownlint.args = function()
-  -- Get the directory of the current buffer
   local file_dir = vim.fn.expand("%:p:h")
-
-  -- Find a project-local .markdownlint.json
   local local_config = vim.fn.findfile(".markdownlint.json", file_dir .. ";")
 
+  local args
   if local_config ~= "" and vim.fn.filereadable(local_config) == 1 then
-    return { "--config", local_config }
+    args = { "--config", local_config }
   else
-    -- Fall back to the global config
-    return { "--config", vim.fn.stdpath("config") .. "/.markdownlint.json" }
+    args = { "--config", vim.fn.stdpath("config") .. "/.markdownlint.json" }
   end
+
+  if vim.b.markdown_print_mode then
+    table.insert(args, "--disable")
+    table.insert(args, "MD013")
+  end
+
+  return args
 end
 
 local lint_timers = {}

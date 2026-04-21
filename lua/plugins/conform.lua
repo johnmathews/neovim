@@ -28,11 +28,14 @@ conform.setup({
   -- Prefer project-local binaries where possible
   formatters = {
     prettierd = {
-      prepend_args = {
-        "--parser=markdown",
-        "--prose-wrap=always",
-        "--print-width=121",
-      },
+      prepend_args = function(_self, ctx)
+        local prose_wrap = vim.b[ctx.buf].markdown_print_mode and "never" or "always"
+        return {
+          "--parser=markdown",
+          "--prose-wrap=" .. prose_wrap,
+          "--print-width=121",
+        }
+      end,
     },
   },
 })

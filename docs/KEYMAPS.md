@@ -247,6 +247,18 @@ Complete reference of all custom keybindings in this Neovim configuration.
 | Key          | Mode   | Description                                   |
 | ------------ | ------ | --------------------------------------------- |
 | `<leader>mg` | Normal | Preview the current Markdown buffer with Glow |
+| `<leader>mp` | Normal | Toggle Markdown Print Mode (see below)        |
+
+### Markdown Print Mode (`<leader>mp`)
+
+Toggles between two formatting modes for the current buffer:
+
+- **Terminal mode** (default): Prettier hard-wraps prose at 121 characters. Good for editing in Neovim with clean git diffs.
+- **Print mode**: Prettier removes hard wraps (one paragraph per line). Good for opening in Typora or printing, where the app handles word wrap.
+
+When toggled, the buffer is immediately reformatted. The color column is hidden in print mode. MD013 (line length) lint warnings are suppressed in print mode.
+
+Toggle back to terminal mode before committing to keep diffs clean.
 
 ---
 
