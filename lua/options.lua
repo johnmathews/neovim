@@ -82,11 +82,16 @@ for k, v in pairs(options) do
   vim.opt[k] = v
 end
 
--- In a browser Codespace the thin insert-mode beam (ver25) is invisible in
--- the VS Code terminal; use a solid block in insert mode there. Local
--- machines (where CODESPACES is unset) keep the original beam.
 if vim.env.CODESPACES then
-  vim.opt.guicursor = "n-v-c-sm:block-blinkwait50-blinkon50-blinkoff50,i-ci-ve:block-blinkon0,r-cr-o:hor20"
+  -- Browser/VS Code terminal: force a visible white block cursor. The cursor
+  -- colour comes from the `Cursor` highlight group, which the dark colourscheme
+  -- otherwise paints black-on-black. Re-assert it after any colourscheme load.
+  vim.opt.guicursor = "a:block-blinkon0-Cursor"
+  local function fix_cursor_hl()
+    vim.api.nvim_set_hl(0, "Cursor", { fg = "#000000", bg = "#ffffff" })
+  end
+  fix_cursor_hl()
+  vim.api.nvim_create_autocmd("ColorScheme", { callback = fix_cursor_hl })
 end
 
 vim.cmd("set indentkeys-=0#") -- https://vim.fandom.com/wiki/Restoring_indent_after_typing_hash
