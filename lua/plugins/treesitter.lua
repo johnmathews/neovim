@@ -4,6 +4,27 @@ if not status_ok then
   return
 end
 
+-- NOTE: `latex` is intentionally omitted. Its parser is marked
+-- `requires_generate_from_grammar`, so it needs the `tree-sitter` CLI to build
+-- and errors on startup when the CLI is absent (e.g. fresh Linux VMs). LaTeX
+-- highlighting is unused here and no plugin depends on this parser, so we skip it.
+local ensure_installed = {
+  "css",
+  "fish",
+  "html",
+  "javascript",
+  "json",
+  "lua",
+  "markdown",
+  "markdown_inline",
+  "python",
+  "toml",
+  "query",
+  "tsx",
+  "typescript",
+  "yaml",
+}
+
 require("nvim-treesitter.configs").setup({
   sync_install = false,
   ignore_install = {},
@@ -100,23 +121,7 @@ require("nvim-treesitter.configs").setup({
     enable = true, -- experimental
     disable = { "yaml" },
   },
-  ensure_installed = {
-    "css",
-    "fish",
-    "html",
-    "javascript",
-    "json",
-    "latex",
-    "lua",
-    "markdown",
-    "markdown_inline",
-    "python",
-    "toml",
-    "query",
-    "tsx",
-    "typescript",
-    "yaml",
-  },
+  ensure_installed = ensure_installed,
   auto_install = true,
   query_linter = {
     enable = true,
