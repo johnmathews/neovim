@@ -99,38 +99,6 @@ return lazy.setup({
     },
   },
 
-  -- WIP my plugin to show git stats when you open a project
-  {
-    dir = "/Users/john/projects/neovim/neovim-dashboard",
-    name = "project-dashboard.nvim",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "nvim-tree/nvim-web-devicons",
-    },
-    config = function()
-      require("project-dashboard").setup({
-        auto_open = false,
-        show_timing = true,
-        github = {
-          enabled = true,
-          timeout = 5000,
-        },
-        layout = {
-          margin_x = 12, -- more padding from edges
-          margin_y = 2, -- more top/bottom padding
-          max_width = 0.5,
-        },
-        tiles = {
-          gap_x = 4, -- wider gaps between tiles
-          gap_y = 1, -- tight vertical spacing
-          background = true,
-          border_style = "rounded",
-        },
-      })
-    end,
-    event = "VimEnter",
-  },
-
   -- dont open a file accidentally in the filetree or preview window
   { "stevearc/stickybuf.nvim" },
 
@@ -277,14 +245,8 @@ return lazy.setup({
   -- lsp status indicator, because maybe the lualine one is broken?
   {
     "j-hui/fidget.nvim",
-    tag = "legacy",
     config = function()
-      require("fidget").setup({
-        align = {
-          bottom = false, -- align fidgets along bottom edge of buffer
-          right = true, -- align fidgets along right edge of buffer
-        },
-      })
+      require("fidget").setup({})
     end,
   },
 
@@ -327,6 +289,12 @@ return lazy.setup({
     dependencies = {
       "williamboman/mason.nvim",
       "neovim/nvim-lspconfig",
+    },
+  },
+  {
+    "WhoIsSethDaniel/mason-tool-installer.nvim",
+    dependencies = {
+      "williamboman/mason.nvim",
     },
   },
   {
@@ -399,6 +367,7 @@ return lazy.setup({
   -- use instead of LSPSaga outline
   {
     "stevearc/aerial.nvim",
+    enabled = vim.fn.has("nvim-0.12") == 1,
     opts = {},
     config = function()
       require("plugins.aerial")
@@ -452,10 +421,9 @@ return lazy.setup({
       "hrsh7th/cmp-path",
       "hrsh7th/cmp-cmdline",
       "saadparwaiz1/cmp_luasnip",
-      "lukas-reineke/cmp-under-comparator",
     },
     config = function()
-      require("cmp")
+      require("plugins.cmp")
     end,
   },
 
@@ -475,7 +443,6 @@ return lazy.setup({
       require("plugins.treesitter")
     end,
     dependencies = {
-      "nvim-treesitter/playground",
       -- https://github.com/nvim-treesitter/nvim-treesitter-textobjects
       "nvim-treesitter/nvim-treesitter-textobjects",
       -- this is an (unmaintained) treesitter plugin.
@@ -483,7 +450,7 @@ return lazy.setup({
       "HiPhish/rainbow-delimiters.nvim",
       -- "p00f/nvim-ts-rainbow",
     },
-    event = "bufread",
+    event = "BufReadPre",
   },
   {
     "nvim-treesitter/nvim-treesitter-context",
@@ -651,7 +618,7 @@ return lazy.setup({
 
   -- movement, like sneak
   {
-    "ggandor/leap.nvim",
+    url = "https://codeberg.org/andyg/leap.nvim",
     config = function()
       require("plugins.leap")
     end,

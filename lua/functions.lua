@@ -133,7 +133,7 @@ M.toggle_tree_focus = function()
 
   -- Check if current window is nvim-tree
   local current_buf = vim.api.nvim_get_current_buf()
-  local current_filetype = vim.api.nvim_buf_get_option(current_buf, "filetype")
+  local current_filetype = vim.api.nvim_get_option_value("filetype", { buf = current_buf })
 
   if current_filetype == "NvimTree" then
     -- We're in nvim-tree, jump back to the previous buffer window
@@ -141,7 +141,7 @@ M.toggle_tree_focus = function()
     local windows = vim.api.nvim_list_wins()
     for _, win in ipairs(windows) do
       local buf = vim.api.nvim_win_get_buf(win)
-      local ft = vim.api.nvim_buf_get_option(buf, "filetype")
+      local ft = vim.api.nvim_get_option_value("filetype", { buf = buf })
       if ft ~= "NvimTree" then
         vim.api.nvim_set_current_win(win)
         return "Jumped to buffer"

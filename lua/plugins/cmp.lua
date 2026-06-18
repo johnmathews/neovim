@@ -17,7 +17,7 @@ local check_backspace = function()
 end
 
 local has_words_before = function()
-  if vim.api.nvim_buf_get_option(0, "buftype") == "prompt" then
+  if vim.api.nvim_get_option_value("buftype", { buf = 0 }) == "prompt" then
     return false
   end
   local line, col = unpack(vim.api.nvim_win_get_cursor(0))
@@ -59,7 +59,7 @@ local kind_icons = {
 cmp.setup({
   enabled = function()
     local context = require("cmp.config.context")
-    local buftype = vim.api.nvim_buf_get_option(0, "buftype")
+    local buftype = vim.api.nvim_get_option_value("buftype", { buf = 0 })
 
     if vim.api.nvim_get_mode().mode == "c" then -- keep command mode completion enabled when cursor is in a comment
       return true
