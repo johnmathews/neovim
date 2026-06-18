@@ -16,6 +16,20 @@ map("v", "gci", ":normal gcc<cr>", { noremap = true, silent = true })
 local ft = require("Comment.ft")
 ft.Dockerfile = { "#%s", "#%s" }
 
+local function build_context_pre_hook()
+  local ok_old, old = pcall(require, "ts_context_commentstring.integrations.comment_nvim")
+  if ok_old and old and old.create_pre_hook then
+    return old.create_pre_hook()
+  end
+
+  local ok_new, new = pcall(require, "ts_context_commentstring.integrations.comment")
+  if ok_new and new and new.create_pre_hook then
+    return new.create_pre_hook()
+  end
+
+  return nil
+end
+
 local setup = {
 
   context_commentstring = {
@@ -96,7 +110,7 @@ local setup = {
     extended = false,
   },
 
-  pre_hook = require("ts_context_commentstring.integrations.comment_nvim").create_pre_hook(),
+  pre_hook = build_context_pre_hook(),
 }
 
 require("Comment").setup(setup)
