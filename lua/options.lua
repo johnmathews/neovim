@@ -82,6 +82,13 @@ for k, v in pairs(options) do
   vim.opt[k] = v
 end
 
+-- In a browser Codespace the thin insert-mode beam (ver25) is invisible in
+-- the VS Code terminal; use a solid block in insert mode there. Local
+-- machines (where CODESPACES is unset) keep the original beam.
+if vim.env.CODESPACES then
+  vim.opt.guicursor = "n-v-c-sm:block-blinkwait50-blinkon50-blinkoff50,i-ci-ve:block-blinkon0,r-cr-o:hor20"
+end
+
 vim.cmd("set indentkeys-=0#") -- https://vim.fandom.com/wiki/Restoring_indent_after_typing_hash
 
 -- this is for the cursorhold plugin https://github.com/antoinemadec/FixCursorHold.nvim
