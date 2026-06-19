@@ -16,6 +16,30 @@ map("v", "gci", ":normal gcc<cr>", { noremap = true, silent = true })
 local ft = require("Comment.ft")
 ft.Dockerfile = { "#%s", "#%s" }
 
+-- Skip the deprecated nvim-treesitter context_commentstring module (it errors
+-- on attach) and configure ts_context_commentstring the modern way instead.
+vim.g.skip_ts_context_commentstring_module = true
+
+local ok_ctx, ctx = pcall(require, "ts_context_commentstring")
+if ok_ctx and ctx.setup then
+  ctx.setup({
+    enable_autocmd = false,
+    languages = {
+      -- You can specify the commentstring for various types of text objects.
+      -- For example, for JavaScript inside TSX:
+      typescript = "// %s",
+      tsx = {
+        __default = "// %s",
+        jsx_element = "{/* %s */}",
+        jsx_fragment = "{/* %s */}",
+        jsx_attribute = "{/* %s */}",
+        comment = "// %s",
+      },
+      html = "<!-- %s -->",
+    },
+  })
+end
+
 local function build_context_pre_hook()
   local ok_old, old = pcall(require, "ts_context_commentstring.integrations.comment_nvim")
   if ok_old and old and old.create_pre_hook then
@@ -31,24 +55,6 @@ local function build_context_pre_hook()
 end
 
 local setup = {
-
-  context_commentstring = {
-    enable = true,
-    enable_autocmd = false,
-    config = {
-      -- You can specify the commentstring for various types of text objects
-      -- For example, for JavaScript inside TSX:
-      typescript = "// %s",
-      tsx = {
-        __default = "// %s",
-        jsx_element = "{/* %s */}",
-        jsx_fragment = "{/* %s */}",
-        jsx_attribute = "{/* %s */}",
-        comment = "// %s",
-      },
-      html = "<!-- %s -->",
-    },
-  },
 
   ---Add a space b/w comment and the line
   ---@type boolean|fun():boolean

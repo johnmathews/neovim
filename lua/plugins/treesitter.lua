@@ -1,4 +1,10 @@
 -- Treesitter: Advanced syntax highlighting and text objects
+
+-- Skip the deprecated context_commentstring treesitter module so it never
+-- attaches (it errors on startup). ts_context_commentstring is configured
+-- directly in plugins/comment.lua instead. Must be set before setup/attach.
+vim.g.skip_ts_context_commentstring_module = true
+
 local status_ok, _ = pcall(require, "nvim-treesitter.configs")
 if not status_ok then
   return
@@ -31,10 +37,11 @@ require("nvim-treesitter.configs").setup({
   autopairs = {
     enable = true,
   },
-  context_commentstring = {
-    enable = true,
-    enable_autocmd = false,
-  },
+  -- NOTE: `context_commentstring` is intentionally NOT configured here. The
+  -- old nvim-treesitter module is deprecated and errors on attach. It is now
+  -- configured via `require("ts_context_commentstring").setup {}` in
+  -- plugins/comment.lua, with `vim.g.skip_ts_context_commentstring_module`
+  -- set to skip the legacy module entirely.
   fold = {
     enable = true,
   },
