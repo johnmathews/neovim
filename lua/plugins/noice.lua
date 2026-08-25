@@ -46,7 +46,9 @@ noice.setup({
         height = "auto",
       },
       win_options = {
-        winblend = 10,
+        -- Keep the cmdline popup fully opaque so buffer text does not bleed through
+        winblend = 0,
+        winhighlight = "Normal:NoiceCmdlinePopup,FloatBorder:NoiceCmdlinePopupBorder",
       },
     },
     popupmenu = {
@@ -78,3 +80,27 @@ noice.setup({
     },
   },
 })
+
+-- Ensure the cmdline popup has a solid, opaque background so buffer text does
+-- not bleed through. Applied on ColorScheme so it survives theme reloads.
+local function set_noice_cmdline_hl()
+  local normal = vim.api.nvim_get_hl(0, { name = "Normal", link = false })
+  local bg = normal and normal.bg
+  if not bg then
+    return
+  end
+  local border = vim.api.nvim_get_hl(0, { name = "FloatBorder", link = false })
+  local border_fg = (border and border.fg) or normal.fg
+  vim.api.nvim_set_hl(0, "NoiceCmdlinePopup", { bg = bg, fg = normal.fg })
+  vim.api.nvim_set_hl(0, "NoiceCmdlinePopupBorder", { bg = bg, fg = border_fg })
+  vim.api.nvim_set_hl(0, "NormalFloat", { bg = bg, fg = normal.fg })
+  vim.api.nvim_set_hl(0, "FloatBorder", { bg = bg, fg = border_fg })
+end
+
+vim.api.nvim_create_autocmd("ColorScheme", {
+  group = vim.api.nvim_create_augroup("NoiceCmdlineOpaque", { clear = true }),
+  callback = set_noice_cmdline_hl,
+})
+
+-- Apply immediately in case the colorscheme is already loaded.
+set_noice_cmdline_hl()
