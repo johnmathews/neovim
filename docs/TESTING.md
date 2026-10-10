@@ -241,6 +241,7 @@ and checks each produces its expected failure. It passes `--home` and `--nvim` t
 | `config-deprecated` | calling `vim.lsp.get_active_clients()` | `startup:deprecated` |
 | `extra-client` | enabling sqls for python | `python:clients` |
 | `silent-linter` | a luacheck that prints nothing | `lua:diags` |
+| `double-linter` | nvim-lint running shellcheck on bash, which bashls already runs | `bash:diags` |
 | `hang` | a busy loop | exit code `3` |
 
 **Adding a language:** put a sample with deliberate errors under `test/<language>/`, add a row to

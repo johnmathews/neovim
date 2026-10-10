@@ -11,20 +11,6 @@
 --   finding  finding ID, and the unit planned to fix it
 --   nvim     only on these versions ("0.12" matches 0.12.x); omit for every version
 return {
-  -- F13: ruff reports twice, once from its LSP server and once from nvim-lint (W4)
-  { id = "python:diags", match = "ruff=4, want 0", finding = "F13 (W4)" },
-  { id = "python:duplicates", match = "from lsp:ruff and ruff", finding = "F13 (W4)" },
-
-  -- F5: the shellcheck override aliases the shared linter and asks for the wrong JSON (W4)
-  { id = "zsh:diags", match = "shellcheck_zsh=0, want 3", finding = "F5 (W4)" },
-
-  -- F6: markdownlint `args` is a function, so every markdown lint run errors (W4)
-  { id = "markdown:diags", match = "markdownlint=0, want 3", finding = "F6 (W4)" },
-  { id = "markdown:notify", match = "t: expected table, got function", finding = "F6 (W4)" },
-
-  -- F25: conform lists an unknown formatter "lsp" for yaml (W4)
-  { id = "tools:formatters", match = "conform formatter lsp (yaml)", finding = "F25 (W4)" },
-
   -- F30: zsh gets no treesitter parser (W12)
   { id = "zsh:treesitter", match = "highlighter not active (want parser bash)", finding = "F30 (W12)" },
   { id = "zsh:textobjects", match = "is not mapped in mode", finding = "F30 (W12)" },
@@ -37,11 +23,7 @@ return {
     nvim = "0.12",
   },
 
-  -- F15 and F25: deprecated or private APIs in the config's own files (the text scan)
-  { id = "scan:deprecated", match = "lua/plugins/conform.lua: vim.loop", finding = "F15 (W4)" },
-  { id = "scan:deprecated", match = "lua/plugins/nvim-lint.lua: vim.loop", finding = "F15 (W4)" },
-  { id = "scan:deprecated", match = "lua/plugins/conform.lua: conform lsp_fallback", finding = "F25 (W4)" },
-  { id = "scan:deprecated", match = "ftplugin/markdown.vim: conform lsp_fallback", finding = "F25 (W4)" },
+  -- F15: deprecated or private APIs in the config's own files (the text scan)
   { id = "scan:deprecated", match = "init.lua: vim.lsp.set_log_level", finding = "F15 (W5)" },
   { id = "scan:deprecated", match = "lua/plugins.lua: vim.loop", finding = "F15 (W5)" },
   { id = "scan:deprecated", match = "lua/functions.lua: vim.loop", finding = "F15 (W5)" },
@@ -78,4 +60,6 @@ return {
     nvim = "0.12",
   },
   { id = "zsh:open", match = "rainbow-delimiters/lib.lua:200", finding = "F4 (W13)", nvim = "0.12" },
+  -- with that error zsh gets no lint diagnostics on 0.12; F5 itself is fixed (0.11 passes)
+  { id = "zsh:diags", match = "shellcheck_zsh=0, want 3", finding = "F4 (W13)", nvim = "0.12" },
 }

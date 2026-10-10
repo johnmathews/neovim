@@ -85,9 +85,9 @@ twice.
 | **Docker**     | dockerls            | -                   | dockerls          |
 | **SQL**        | -                   | sqlfluff            | -                 |
 
-Some rows describe the target set by the lint and format ownership change that follows this one; until it lands,
-nvim-lint still also runs ruff on Python and shellcheck on sh and bash, conform lists `lsp` for YAML, and SQL has no
-formatter. `test/smoke/xfail.lua` lists those gaps as known failures.
+Python lint comes from the ruff LSP server and sh/bash lint from bashls, so nvim-lint runs neither. Zsh is the one
+shell nvim-lint covers, because bashls does not shellcheck it. The smoke gate (`test/smoke/cases.lua`) asserts each
+row's diagnostic sources, so a second owner turns it red.
 
 ---
 
@@ -114,14 +114,28 @@ formatter. `test/smoke/xfail.lua` lists those gaps as known failures.
 
 ### Shell
 
-- **bashls**: attaches to sh, bash and zsh (`after/lsp/bashls.lua`) and runs shellcheck itself when it is on `PATH`.
+- **bashls**: attaches to sh, bash and zsh (`after/lsp/bashls.lua`) and runs shellcheck itself when it is on `PATH`, for
+  sh and bash only. Its findings come with code actions.
+- **shellcheck_zsh** (nvim-lint): shellcheck in bash mode (`--shell=bash`) for zsh, which bashls does not shellcheck. It
+  is a copy of nvim-lint's shellcheck linter, so sh and bash keep the stock arguments.
 - **shfmt** (conform): formatting for sh and zsh.
+
+### SQL
+
+- No LSP server, on purpose: vim-dadbod completes against a live connection.
+- **sqlfluff** (conform): formatting on `<leader>cf` only. It is too slow for the 1000 ms format-on-save timeout, so
+  saving a `.sql` file never formats it. A `.sqlfluff` file at or above the buffer's directory sets the dialect; without
+  one the dialect is `postgres`, or `bigquery` for `.bq` files. sqlfluff exits 1 when it fixed some violations but not
+  all, and conform treats that as success.
 
 ### JSON, YAML, TOML, Docker, Markdown
 
 - **jsonls**, **yamlls** (formatting off), **taplo**, **dockerls** and **marksman** run with nvim-lspconfig's defaults
   apart from the yamlls override.
 - Formatting comes from conform (`lua/plugins/conform.lua`), linting from nvim-lint (`lua/plugins/nvim-lint.lua`).
+- YAML formats with yamlfmt only. yamlls has formatting off, so there is no LSP formatter to fall back to.
+- **markdownlint** reads the nearest `.markdownlint.json` above the file, else the config's own. In markdown print mode
+  (`<leader>mp`, `docs/MARKDOWN-FORMATTING.md`) it also disables MD013, the line-length rule.
 
 ---
 
@@ -176,6 +190,10 @@ All LSP servers, formatters and linters are installed by **Mason** (`:Mason`).
 | ------------ | ------------------------ |
 | `<leader>cf` | Format file or selection |
 | `<leader>cl` | Run linter manually      |
+
+Format on save runs every formatter in the Quick Reference except sqlfluff, and skips files over 200 KB. When a
+filetype has no conform formatter, both `<leader>cf` and format on save fall back to the LSP server
+(`default_format_opts = { lsp_format = "fallback" }`).
 
 The full keymap reference is `docs/KEYMAPS.md`.
 

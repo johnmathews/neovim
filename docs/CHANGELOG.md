@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`SMOKE_HOME`, never `~/.local/share/nvim`) and asserts on LSP clients and settings, diagnostics per owner,
   treesitter, textobjects, folds, keymaps, lint, LSP requests and every message. Known failures live in
   `test/smoke/xfail.lua` with their finding IDs. See `docs/TESTING.md`.
-- **Gate self-test** (`scripts/gate-selftest`, `test/smoke/fixtures/`): nine known-bad configs that must each fail the
+- **Gate self-test** (`scripts/gate-selftest`, `test/smoke/fixtures/`): ten known-bad configs that must each fail the
   gate with a specific check ID.
 - Test samples for TypeScript, SQL, JSON and TOML. The zsh sample moved to `test/zsh/test_sample.zsh`.
 
@@ -23,6 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   basedpyright runs in `basic` mode again (18 diagnostics on the sample become 4).
 - **Only the listed servers start** (F13): `automatic_enable = false` plus an explicit `vim.lsp.enable` list of 10
   servers. sqls, stylua, eslint, biome and the other Mason servers no longer start.
+- **zsh is shellchecked again** (F5): `shellcheck_zsh` is now a copy of nvim-lint's shellcheck linter, so it no longer
+  rewrites the shared linter's args, and it asks for `json1`, the format nvim-lint parses.
+- **markdownlint runs again** (F6): every markdown lint run had failed with "expected table, got function". The linter
+  is now a function that returns a copy with list `args`, `--stdin` restored, and print mode's `--disable MD013` kept.
+- **One owner per lint finding** (F13): nvim-lint no longer runs ruff (the ruff LSP server reports it) or shellcheck on
+  sh and bash (bashls runs it).
+- **conform options** (F25): `default_format_opts = { lsp_format = "fallback" }` replaces the deprecated
+  `lsp_fallback`, and YAML no longer lists the unknown formatter `lsp`.
 
 ### Changed
 - **Floating window borders**: `winborder = "rounded"` replaces the `open_floating_preview` override. The cmp menu and
@@ -33,6 +41,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   median of five startups, runs `:checkhealth vim.deprecated vim.lsp`, and has an `--isolated` mode.
 - **Hooks per worktree**: `install-hooks` sets `core.hooksPath` to `scripts/`, so a worktree commit runs that
   worktree's gate. pre-push runs the full smoke gate after `quality-gate`.
+
+- **SQL formats with sqlfluff** on `<leader>cf` only, never on save. Without a `.sqlfluff` file the dialect is
+  postgres (bigquery for `.bq`).
+- Mason also installs sqlfluff, yamlfmt, jq, shellcheck and jsonlint, which the format and lint config already used.
 
 ### Removed
 - `test/test_lsp.sh`: it ran bare `nvim` against the real data directory and passed when a server name appeared

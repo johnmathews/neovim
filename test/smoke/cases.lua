@@ -164,6 +164,29 @@ local cases = {
     -- SQL has no LSP on purpose: dadbod completes, sqlfluff formats
     clients = {},
     lang = "sql",
+    check = function(buf, t)
+      local function text()
+        return table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), "\n")
+      end
+      local before = text()
+      -- sqlfluff is too slow for the save timeout, so saving must not format SQL
+      local wok, werr = pcall(vim.cmd, "silent write")
+      if not wok then
+        t.fail("sql:format", ":write raised: " .. tostring(werr))
+      elseif text() ~= before then
+        t.fail("sql:format", ":write formatted the SQL buffer; SQL formats on <leader>cf only")
+      end
+      -- the sample has no .sqlfluff, so conform must pass a default dialect
+      local fok, attempted = pcall(require("conform").format, { bufnr = buf, async = false, timeout_ms = 30000 })
+      if not fok then
+        t.fail("sql:format", "conform.format() raised: " .. tostring(attempted))
+      elseif not attempted then
+        t.fail("sql:format", "conform.format() ran no formatter on the SQL buffer")
+      elseif text() == before then
+        t.fail("sql:format", "conform.format() left the SQL buffer unchanged")
+      end
+      vim.cmd("silent edit!")
+    end,
   },
 }
 

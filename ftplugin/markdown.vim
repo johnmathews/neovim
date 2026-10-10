@@ -79,7 +79,7 @@ lua << EOF
       vim.wo.colorcolumn = "121"
       vim.notify("Markdown Print Mode: OFF (hard wraps at 121)", vim.log.levels.INFO)
     end
-    require("conform").format({ async = false, lsp_fallback = true })
+    require("conform").format({ async = false, lsp_format = "fallback" })
     require("lint").try_lint()
   end, { buffer = true, desc = "Toggle Markdown Print Mode" })
 EOF
