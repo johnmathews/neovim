@@ -42,6 +42,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Hooks per worktree**: `install-hooks` sets `core.hooksPath` to `scripts/`, so a worktree commit runs that
   worktree's gate. pre-push runs the full smoke gate after `quality-gate`.
 
+- **Startup is about 140 ms, down from about 400 ms** (F11): `init.lua` no longer shells out to `poetry` and
+  `neovim-node-host` on every launch. `vim.loader.enable()` moved to its first line.
+- **Python provider** (F22): `g:python3_host_prog` is the `pynvim` tool from `uv tool install pynvim` when it exists,
+  instead of `poetry` or a hard-coded pyenv 3.10.12 path. The Node provider is disabled; no remote plugin uses it.
+- **`<leader>x`** opens the current file with `vim.ui.open`, which works on macOS (`xdg-open` does not exist there).
+- **Deprecated and private APIs** (F15): `vim.lsp.log.set_level`, `vim.uv`, `nvim_echo`, and a choice-popup size the
+  config computes instead of the private `_make_floating_popup_size`.
 - **SQL formats with sqlfluff** on `<leader>cf` only, never on save. Without a `.sqlfluff` file the dialect is
   postgres (bigquery for `.bq`).
 - Mason also installs sqlfluff, yamlfmt, jq, shellcheck and jsonlint, which the format and lint config already used.

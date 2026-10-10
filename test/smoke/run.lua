@@ -528,6 +528,11 @@ local T = {
   fail = fail,
   map_info = map_info,
   diag_summary = diag_summary,
+  -- mark a scope as run, for a check that only runs on some machines: xfail entries
+  -- for that scope are judged stale only when it ran
+  scope = function(name)
+    R.scopes[name] = true
+  end,
 }
 
 local function run_case(c)

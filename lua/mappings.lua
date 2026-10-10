@@ -115,7 +115,9 @@ map(
 
 -- open the current file in the default app
 -- gx is mapped to open a url using the open-browser plugin
-map("n", "<leader>x", ":!xdg-open %<CR><CR>", KeymapOptions("Open current file in default app"))
+vim.keymap.set("n", "<leader>x", function()
+  vim.ui.open(vim.fn.expand("%:p"))
+end, KeymapOptions("Open current file in default app"))
 
 -- open the current file in Typora (macOS) - sibling to <leader>x (default app)
 map("n", "<leader>X", ":lua Functions.open_in_typora()<CR>", KeymapOptions("Open current file in Typora"))

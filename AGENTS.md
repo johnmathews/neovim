@@ -49,7 +49,8 @@ Agents must:
 - **Required CLIs:** `stylua`, `luacheck`, `ripgrep`, `fd`, `node` > v18
   - Install luacheck: `brew install luacheck` (macOS)
 - **Optional CLIs:** ...
-- **Python:** used for data and scripting; ensure `pynvim` installed if needed.
+- **Python:** used for data and scripting. The Python provider is the `pynvim` tool from `uv tool install pynvim`
+  (`$UV_TOOL_DIR/pynvim`, default `~/.local/share/uv/tools/pynvim`), set in `init.lua`. The Node provider is disabled.
 - **Preferred shell:** zsh
 
 ---
@@ -207,8 +208,8 @@ This section is informational only, not actionable.
 informational only, not actionable
 
 **Target:** less than 150ms cold boot startup  
-**Current:** ~342ms (as of 2025-01-13)  
-**Status:** 2.3x slower than target
+**Current:** ~140ms headless median (as of 2026-10-10, Neovim 0.11.6 and 0.12.6)  
+**Status:** under target. Removing the `poetry` and `neovim-node-host` shell-outs from `init.lua` cut about 280ms
 
 ### Startup Profiling
 
@@ -226,11 +227,11 @@ nvim +StartupTime
 
 ### Top Contributors to Startup Time
 
-1. **Lazy.nvim plugin loading** (~108ms) - Plugin manager overhead
-2. **LSP configuration** (~15ms) - Mason + multiple servers
-3. **Telescope setup** (~16ms) - Fuzzy finder + extensions
-4. **Completion stack** (~10ms) - nvim-cmp + LuaSnip
-5. **Treesitter** (~11ms) - Core + plugins
+1. **`require('plugins')`** (~113ms inclusive) - lazy.nvim and every non-lazy plugin's config
+2. **Mason** (~18ms) - mason, mason-tool-installer and mason-lspconfig setup
+3. **Telescope setup** (~16ms) - Fuzzy finder + extensions (the projects extension alone ~10ms)
+4. **Custom snippets** (~9ms) - `luasnip.loaders.from_lua`
+5. **LSP configuration** (~7ms) - `lua/plugins/lsp.lua`
 
 **See `PERFORMANCE.md` for detailed analysis and optimization recommendations.**
 

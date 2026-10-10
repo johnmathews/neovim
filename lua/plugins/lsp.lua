@@ -4,9 +4,6 @@
 -- after/lsp/<server>.lua, merged in this order: vim.lsp.config("*"), then lspconfig's
 -- lsp/<server>.lua, then after/lsp/<server>.lua. See docs/LSP.md.
 
--- Faster Lua module loading (Nvim ≥ 0.9)
-pcall(vim.loader.enable)
-
 -- Diagnostic style (you can toggle virtual_text at runtime elsewhere)
 vim.diagnostic.config({
   virtual_text = true,

@@ -17,7 +17,7 @@ Markdown development.
 - **Smart Completion** - nvim-cmp with LuaSnip snippets
 - **Syntax Highlighting** - Treesitter with custom text objects
 - **Fast Navigation** - Leap motion, Harpoon marks, and project management
-- **Performance** - Lazy-loaded plugins, ~350ms startup time
+- **Performance** - Lazy-loaded plugins, ~140ms startup time
 - **Testing** - Automated LSP testing and comprehensive test suite
 - **Documentation** - Detailed guides for LSP, keymaps, and performance
 
@@ -37,7 +37,8 @@ Markdown development.
 
   `glow` powers the in-editor Markdown preview described below.
 
-- **Optional:** `pynvim` for Python support
+- **Optional:** the Python provider, for Python remote plugins such as vim-mundo. Install it with
+  `uv tool install pynvim`; `init.lua` uses that interpreter when it exists. The Node provider is disabled.
 
 ### Installation
 

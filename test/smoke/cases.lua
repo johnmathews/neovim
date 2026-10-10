@@ -14,7 +14,9 @@
 --   diags        { key = n | true | false }: exact count, at least one, or none.
 --                Keys: "lsp:<client>" for LSP diagnostics, the linter name for nvim-lint.
 --   requests     LSP requests that must return a result (lines 1-based, columns 0-based)
---   check        function(buf, t) for anything else; report with t.fail(id, msg)
+--   check        function(buf, t) for anything else; report with t.fail(id, msg). A check
+--                that only runs on some machines reports under its own scope and calls
+--                t.scope(name) when it runs, so xfail entries for it are judged only then.
 --
 -- Every case also gets the generic checks in run.lua: no duplicate diagnostic from
 -- two owners, cmp capabilities on every client, a buffer-local <leader>li where a
@@ -51,7 +53,7 @@ local cases = {
       { method = "textDocument/prepareRename", line = 35, col = 13 },
       { method = "textDocument/codeAction", line = 6, col = 7 },
     },
-    check = function(_, t)
+    check = function(buf, t)
       -- vaf on the comment inside calculate_sum selects the whole function
       vim.api.nvim_win_set_cursor(0, { 12, 4 })
       local ok, err = pcall(vim.cmd, "normal vaf")
@@ -77,6 +79,35 @@ local cases = {
         elseif mode ~= "basic" then
           t.fail("python:restart", ("after :LspRestart typeCheckingMode=%s, want basic"):format(tostring(mode)))
         end
+      end
+
+      -- providers: uv's pynvim tool when it is installed, never a guessed path, and no node host (F22)
+      local data = vim.env.XDG_DATA_HOME or (vim.env.HOME .. "/.local/share")
+      local uv_python = (vim.env.UV_TOOL_DIR or (data .. "/uv/tools")) .. "/pynvim/bin/python"
+      local host = vim.g.python3_host_prog
+      if vim.fn.executable(uv_python) == 1 then
+        if host ~= uv_python then
+          t.fail("python:provider", ("python3_host_prog=%s, want %s"):format(tostring(host), uv_python))
+        elseif vim.fn.has("python3") ~= 1 then
+          t.fail("python:provider", "has('python3') is 0 with " .. uv_python)
+        else
+          -- vim-mundo is a python3 plugin; this only runs where uv's pynvim is installed
+          t.scope("mundo")
+          local mok, merr = pcall(vim.cmd, "MundoToggle")
+          if not mok or vim.bo.filetype ~= "Mundo" then
+            -- a nested autocmd error's first line ends with its cause, after a long call chain
+            local cause = tostring(merr):match("^[^\n]*")
+            cause = #cause > 200 and ("..." .. cause:sub(-200)) or cause
+            t.fail("mundo:open", ":MundoToggle did not open the Mundo window: " .. cause)
+          end
+          pcall(vim.cmd, "MundoHide")
+          vim.cmd("silent buffer " .. buf)
+        end
+      elseif host ~= nil then
+        t.fail("python:provider", ("python3_host_prog=%s, but %s does not exist"):format(host, uv_python))
+      end
+      if vim.g.loaded_node_provider ~= 0 then
+        t.fail("python:provider", "the node provider is enabled; no node remote plugin needs it")
       end
     end,
   },
@@ -157,6 +188,23 @@ local cases = {
     clients = { "marksman" },
     lang = "markdown",
     diags = { markdownlint = 3 },
+    check = function(buf, t)
+      -- <leader>x opens the file in the default app through vim.ui.open (stubbed here)
+      local opened
+      local real_open = vim.ui.open
+      vim.ui.open = function(path)
+        opened = path
+        return nil, nil
+      end
+      local ok, err = pcall(vim.api.nvim_feedkeys, vim.keycode("<leader>x"), "mx", false)
+      vim.ui.open = real_open
+      local want = vim.api.nvim_buf_get_name(buf)
+      if not ok then
+        t.fail("markdown:open", "<leader>x raised: " .. tostring(err))
+      elseif opened == nil or vim.fn.resolve(opened) ~= vim.fn.resolve(want) then
+        t.fail("markdown:open", ("<leader>x called vim.ui.open(%s), want %s"):format(tostring(opened), want))
+      end
+    end,
   },
   {
     name = "sql",

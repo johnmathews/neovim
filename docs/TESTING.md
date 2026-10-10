@@ -207,6 +207,8 @@ An environment with neither exits 2 with these instructions instead of installin
 | Dashboard | Rendering the alpha dashboard prints nothing unexplained |
 | Tools | Every conform formatter is known and available, every nvim-lint linter is defined and executable |
 | Each case | The exact LSP client set, pinned server settings, diagnostic counts per owner (`lsp:<client>` or the linter name), no finding reported by two owners, cmp-nvim-lsp capabilities on every client, a buffer-local `<leader>li` where a client supports inlay hints, navic where a client supports document symbols, the treesitter parser in use, `af`/`if` textobjects, folds, and real LSP requests (definition, hover, prepareRename, codeAction) for Python and Lua |
+| Case checks | Per-case `check` functions in `cases.lua`: Python textobjects, `:LspRestart` keeping settings, the Python host (uv's `pynvim` or none) and the disabled Node host; `<leader>x` calling `vim.ui.open` (markdown); SQL formatting on `<leader>cf` but not on save |
+| Mundo | Only where uv's `pynvim` is installed (`$UV_TOOL_DIR`, else `$XDG_DATA_HOME/uv/tools`): `:MundoToggle` opens its window. Inside the gate `XDG_DATA_HOME` is `SMOKE_HOME/data`, so set `UV_TOOL_DIR` to run it |
 
 Headless Neovim never fires `UIEnter`, so lazy never fires `VeryLazy`. The gate fires `UIEnter` itself, so noice,
 nvim-notify, lualine, navic and the other `VeryLazy` plugins load as they do in a terminal.
@@ -223,7 +225,9 @@ deprecated API called from the config fails. One called from a plugin warns, and
 **Known failures.** `test/smoke/xfail.lua` lists today's failures, each with its finding ID and an optional Neovim
 version. A matching failure prints as `XFAIL` and does not fail the run. The list is strict: an entry that no longer
 fails, or that only matches failures another entry also matches, fails the run. So the change that fixes a finding
-must delete its entries, and deleting any entry while its failure remains turns the run red.
+must delete its entries, and deleting any entry while its failure remains turns the run red. An entry is judged stale
+only when its scope ran: a check that runs on some machines only (Mundo) reports under its own scope and calls
+`t.scope(name)` when it runs.
 
 **Exit codes and report.** `0` pass, `1` assertion failed, `2` environment error, `3` timeout (a bash watchdog
 enforces `--timeout`, default 300 s). Results go to `SMOKE_HOME/summary.txt` (printed) and `SMOKE_HOME/report.json`.
