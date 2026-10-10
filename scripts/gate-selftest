@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Proves the smoke gate can fail: runs scripts/smoke once per fixture in
+# test/smoke/fixtures/ and checks that each one produces its expected failure.
+# A gate that stays green on these known-bad configs cannot be trusted.
+#
+# Usage: scripts/gate-selftest [--only NAME[,NAME]] [scripts/smoke options...]
+#   Options other than --only are passed to every scripts/smoke run
+#   (for example --home DIR or --nvim PATH).
+# Exit codes: 0 every fixture failed as expected, 1 a fixture was not caught.
+
+set -uo pipefail
+
+REPO="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)" || exit 2
+SMOKE="$REPO/scripts/smoke"
+NVIM_BIN="${NVIM:-nvim}"
+ONLY=""
+PASS_ARGS=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --only) ONLY="$2"; shift 2 ;;
+    --nvim) NVIM_BIN="$2"; PASS_ARGS+=("$1" "$2"); shift 2 ;;
+    *) PASS_ARGS+=("$1"); shift ;;
+  esac
+done
+
+# Where scripts/smoke writes its report: ask it the same way it decides.
+smoke_home() {
+  local args=("${PASS_ARGS[@]}")
+  local i
+  for ((i = 0; i < ${#args[@]}; i++)); do
+    if [ "${args[$i]}" = "--home" ]; then
+      echo "${args[$((i + 1))]}"
+      return
+    fi
+  done
+  local version
+  version="$("$NVIM_BIN" --version | head -1 | sed -n 's/^NVIM v\([0-9][0-9.]*\).*/\1/p')"
+  echo "${SMOKE_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}/nvim-smoke/$version}"
+}
+
+HOME_DIR="$(smoke_home)"
+FAILED=0
+for fixture in "$REPO"/test/smoke/fixtures/*.lua; do
+  name="$(basename "$fixture" .lua)"
+  if [ -n "$ONLY" ] && [[ ",$ONLY," != *",$name,"* ]]; then
+    continue
+  fi
+  IFS=$'\t' read -r expect_id expect_exit extra < <("$NVIM_BIN" --clean -l "$REPO/test/smoke/fixture.lua" info "$fixture")
+  [ "$expect_id" = "-" ] && expect_id=""
+  # shellcheck disable=SC2086 # extra holds the fixture's own smoke arguments
+  "$SMOKE" --fixture "$name" "${PASS_ARGS[@]}" $extra >"$HOME_DIR.selftest-$name.log" 2>&1
+  rc=$?
+  if [ "$rc" -ne "$expect_exit" ]; then
+    echo "FAIL  $name: exit $rc, want $expect_exit (log: $HOME_DIR.selftest-$name.log)"
+    FAILED=1
+    continue
+  fi
+  if [ -n "$expect_id" ] &&
+    ! "$NVIM_BIN" --clean -l "$REPO/test/smoke/fixture.lua" check "$HOME_DIR/report.json" "$expect_id"; then
+    echo "FAIL  $name: exit $rc but no $expect_id failure (log: $HOME_DIR.selftest-$name.log)"
+    FAILED=1
+    continue
+  fi
+  echo "ok    $name: exit $rc${expect_id:+, $expect_id}"
+done
+
+if [ "$FAILED" -eq 0 ]; then
+  echo "gate-selftest: every fixture was caught"
+else
+  echo "gate-selftest: FAILED"
+fi
+exit "$FAILED"

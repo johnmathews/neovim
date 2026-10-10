@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Smoke gate** (`scripts/smoke`, `test/smoke/`): opens one real buffer per daily language in an isolated Neovim
+  (`SMOKE_HOME`, never `~/.local/share/nvim`) and asserts on LSP clients and settings, diagnostics per owner,
+  treesitter, textobjects, folds, keymaps, lint, LSP requests and every message. Known failures live in
+  `test/smoke/xfail.lua` with their finding IDs. See `docs/TESTING.md`.
+- **Gate self-test** (`scripts/gate-selftest`, `test/smoke/fixtures/`): nine known-bad configs that must each fail the
+  gate with a specific check ID.
+- Test samples for TypeScript, SQL, JSON and TOML. The zsh sample moved to `test/zsh/test_sample.zsh`.
+
+### Removed
+- `test/test_lsp.sh`: it ran bare `nvim` against the real data directory and passed when a server name appeared
+  anywhere in the output. The smoke gate covers everything it checked.
+
 ## [1.2.0] - 2025-11-08
 
 ### Added

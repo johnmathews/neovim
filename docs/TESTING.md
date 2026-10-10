@@ -2,7 +2,7 @@
 
 This document describes the testing infrastructure and quality gates for the Neovim configuration.
 
-**Last updated:** 2025-01-13
+**Last updated:** 2026-10-10
 
 ---
 
@@ -14,6 +14,10 @@ This document describes the testing infrastructure and quality gates for the Neo
 
 # Run quality gate (before commits)
 ./scripts/quality-gate
+
+# Open a real buffer per language and assert on what Neovim does
+./scripts/smoke --seed-from ~/.local/share/nvim   # first run per Neovim version
+./scripts/smoke
 
 # Install pre-commit hook (optional)
 ln -s ../../scripts/pre-commit .git/hooks/pre-commit
@@ -146,6 +150,87 @@ git push --no-verify
 
 ---
 
+### 4. Smoke Gate (`./scripts/smoke`)
+
+The only check that opens real buffers. It starts this config in an isolated environment, opens one sample file
+per daily language from `test/`, and asserts on runtime state: which LSP clients attached and with which settings,
+which tool reported which diagnostics, treesitter, keymaps, lint, and every message printed on the way. Headless
+startup alone hides almost every failure this config has had, so the gate drives buffers instead.
+
+**Isolation.** Each run uses `SMOKE_HOME` (default `~/.cache/nvim-smoke/<nvim version>/`) with its own config, data,
+state and cache directories. The working tree is copied into `SMOKE_HOME/config/nvim` on every run, without `.git`
+(a fresh `git init` keeps root markers working), because lazy rewrites `lazy-lock.json` and fixtures break the copy.
+The gate never writes to `~/.local/share/nvim` and refuses a `SMOKE_HOME` that resolves to it.
+
+**First run, once per Neovim version:**
+
+```bash
+./scripts/smoke --seed-from ~/.local/share/nvim   # APFS/reflink clone of this machine's lazy/ and mason/
+./scripts/smoke --bootstrap                       # or: install from lazy-lock.json and Mason (network, for CI)
+```
+
+An environment with neither exits 2 with these instructions instead of installing plugins at startup.
+
+**Everyday use:**
+
+```bash
+./scripts/smoke                          # every case
+./scripts/smoke --only python,lua        # selected cases (names from test/smoke/cases.lua)
+./scripts/smoke --startup-only           # startup, dashboard and tool checks only
+./scripts/smoke --nvim /path/to/nvim     # another Neovim binary (or NVIM=...)
+./scripts/smoke --no-xfail               # show known failures as failures
+./scripts/smoke --strict                 # plugin deprecations fail instead of warn
+```
+
+**What it checks:**
+
+| Scope | Check |
+| --- | --- |
+| Startup | Every module `init.lua` requires is loaded. Every message is explained (below). No WARN or ERROR notify. No deprecated API called from the config. `lazy-lock.json` unchanged by the run |
+| Dashboard | Rendering the alpha dashboard prints nothing unexplained |
+| Tools | Every conform formatter is known and available, every nvim-lint linter is defined and executable |
+| Each case | The exact LSP client set, pinned server settings, diagnostic counts per owner (`lsp:<client>` or the linter name), no finding reported by two owners, cmp-nvim-lsp capabilities on every client, a buffer-local `<leader>li` where a client supports inlay hints, navic where a client supports document symbols, the treesitter parser in use, `af`/`if` textobjects, folds, and real LSP requests (definition, hover, prepareRename, codeAction) for Python and Lua |
+
+Headless Neovim never fires `UIEnter`, so lazy never fires `VeryLazy`. The gate fires `UIEnter` itself, so noice,
+nvim-notify, lualine, navic and the other `VeryLazy` plugins load as they do in a terminal.
+
+**Messages fail closed.** Messages land in `:messages`, in stderr, or only in noice's history, depending on the
+Neovim version and on whether noice has attached. The gate reads all three. Each line must be a notify the gate
+recorded (judged by level), an Nvim deprecation notice it recorded (judged by caller), or an entry in
+`test/smoke/allow.lua`. Anything else fails, attributed to the case that was running.
+
+`test/smoke/preinit.lua` records notifies and deprecations. It loads with `--cmd`, before `init.lua`, and serves
+`vim.notify` through the `vim` metatable, so the replacements nvim-notify and noice install are recorded too. A
+deprecated API called from the config fails. One called from a plugin warns, and fails with `--strict`.
+
+**Known failures.** `test/smoke/xfail.lua` lists today's failures, each with its finding ID and an optional Neovim
+version. A matching failure prints as `XFAIL` and does not fail the run. The list is strict: an entry that no longer
+fails, or that only matches failures another entry also matches, fails the run. So the change that fixes a finding
+must delete its entries, and deleting any entry while its failure remains turns the run red.
+
+**Exit codes and report.** `0` pass, `1` assertion failed, `2` environment error, `3` timeout (a bash watchdog
+enforces `--timeout`, default 300 s). Results go to `SMOKE_HOME/summary.txt` (printed) and `SMOKE_HOME/report.json`.
+
+**Proving the gate can fail.** `./scripts/gate-selftest` runs the gate once per fixture in `test/smoke/fixtures/`
+and checks each produces its expected failure. It passes `--home` and `--nvim` through to every run.
+
+| Fixture | Breaks the copied config by | Expected failure |
+| --- | --- | --- |
+| `init-error` | `error()` in `lua/options.lua` | `startup:modules` |
+| `late-init-error` | `error()` at the end of `init.lua` | `startup:messages` |
+| `broken-lsp-setting` | `after/lsp/basedpyright.lua` with `strict` | `python:settings` |
+| `removed-parser` | mapping python to a parser that does not exist | `python:treesitter` |
+| `notify-error` | an ERROR notify after noice replaced `vim.notify` | `startup:notify` |
+| `config-deprecated` | calling `vim.lsp.get_active_clients()` | `startup:deprecated` |
+| `extra-client` | enabling sqls for python | `python:clients` |
+| `silent-linter` | a luacheck that prints nothing | `lua:diags` |
+| `hang` | a busy loop | exit code `3` |
+
+**Adding a language:** put a sample with deliberate errors under `test/<language>/`, add a row to
+`test/smoke/cases.lua` with the expected clients, parser and diagnostics, and run `./scripts/smoke --only <name>`.
+
+---
+
 ## Manual Testing Commands
 
 ### Formatting
@@ -174,15 +259,14 @@ luacheck lua/plugins/telescope.lua
 ### Neovim Load Testing
 
 ```bash
-# Quick load test (headless)
-nvim --headless "+lua print('Load test OK')" +qa
-
-# Load test with timeout
-timeout 10 nvim --headless +qa
+# Startup in the isolated smoke environment: init errors, messages, tools
+./scripts/smoke --startup-only
 
 # Full health check (interactive)
 nvim +checkhealth
 ```
+
+A bare `nvim --headless +qa` exits 0 even when `init.lua` raises an error, so it is not a load test.
 
 ### Startup Performance
 
@@ -241,6 +325,7 @@ The following must **always pass**:
 - ✅ `luacheck lua/` → 0 warnings, 0 errors
 - ✅ `stylua --check .` → no formatting needed
 - ✅ Neovim loads without errors
+- ✅ `./scripts/smoke` → `SMOKE PASS` (known failures only in `test/smoke/xfail.lua`)
 
 ### Performance Targets
 

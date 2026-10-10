@@ -61,7 +61,7 @@ nvim
 2. **Check health:** `:checkhealth` or run `./scripts/health-check`
 3. **View keymaps:** `<Tab>tk` or see [KEYMAPS.md](docs/KEYMAPS.md)
 4. **Configure LSP:** See [LSP.md](docs/LSP.md) for language server setup
-5. **Test LSP:** Run `./test/test_lsp.sh` to verify LSP attachment
+5. **Run the smoke gate:** `./scripts/smoke --seed-from ~/.local/share/nvim` opens a buffer per language in an isolated Neovim
 
 ---
 
@@ -206,9 +206,11 @@ Markdown, HTML, CSS
 ├── scripts/
 │   ├── health-check            # Configuration health check
 │   ├── quality-gate            # Pre-commit validation
+│   ├── smoke                   # Buffer-opening smoke gate (isolated Neovim)
+│   ├── gate-selftest           # Proves the smoke gate fails on known-bad configs
 │   └── pre-commit              # Git pre-commit hook
 ├── test/                       # Test files for LSP/linter validation
-│   ├── test_lsp.sh             # Automated LSP testing
+│   ├── smoke/                  # Smoke gate engine, cases, xfail list, fixtures
 │   ├── python/                 # Python test files
 │   ├── lua/                    # Lua test files
 │   ├── javascript/             # JavaScript test files
@@ -232,8 +234,8 @@ Markdown, HTML, CSS
 ### Automated Tests
 
 ```bash
-# Test LSP attachment (4 languages)
-./test/test_lsp.sh
+# Open a buffer per language and check LSP, lint, treesitter and messages
+./scripts/smoke
 
 # Run health check
 ./scripts/health-check
@@ -340,8 +342,8 @@ Markdown, HTML, CSS
 # Install git hooks (one-time setup)
 ./scripts/install-hooks
 
-# Test LSP stack
-./test/test_lsp.sh
+# Smoke gate: real buffers in an isolated Neovim
+./scripts/smoke
 
 # Full health check
 ./scripts/health-check
@@ -382,7 +384,7 @@ git push --no-verify
 1. Check LSP status: `:LspInfo`
 2. Verify server installed: `:Mason`
 3. Check logs: `:LspLog`
-4. Run LSP test: `./test/test_lsp.sh`
+4. Run the smoke gate for that language: `./scripts/smoke --only python`
 5. See [LSP.md](docs/LSP.md) for detailed troubleshooting
 
 ### Slow Startup

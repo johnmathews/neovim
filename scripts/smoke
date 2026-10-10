@@ -1,0 +1,213 @@
+#!/usr/bin/env bash
+# Buffer-opening smoke gate for this Neovim config.
+#
+# Runs the config in an isolated environment (its own XDG_* directories under
+# SMOKE_HOME), opens one real buffer per daily language, and asserts on runtime
+# state: LSP clients and settings, diagnostics, treesitter, keymaps, lint, and
+# every message printed along the way. It never touches ~/.local/share/nvim.
+#
+# Usage: scripts/smoke [options]
+#   --seed-from DIR   clone DIR/lazy and DIR/mason into SMOKE_HOME (e.g. ~/.local/share/nvim)
+#   --bootstrap       restore plugins from lazy-lock.json, install Mason tools and parsers (network)
+#   --startup-only    check startup only (init, messages, tools); open no buffers
+#   --only LIST       comma-separated case names from test/smoke/cases.lua (e.g. python,lua)
+#   --fixture NAME    apply test/smoke/fixtures/NAME.lua to the copied config first
+#   --fresh           delete SMOKE_HOME before running
+#   --strict          plugin deprecations fail instead of warn
+#   --no-xfail        ignore test/smoke/xfail.lua (shows every known failure)
+#   --home DIR        same as SMOKE_HOME=DIR
+#   --nvim PATH       same as NVIM=PATH
+#   --timeout SECS    watchdog timeout (default 300, or SMOKE_TIMEOUT)
+#
+# Environment: SMOKE_HOME (default ${XDG_CACHE_HOME:-~/.cache}/nvim-smoke/<nvim version>),
+#              NVIM (default: nvim on PATH), SMOKE_TIMEOUT.
+# Exit codes:  0 pass, 1 assertion failed, 2 environment error, 3 timeout.
+# Report:      $SMOKE_HOME/report.json (machine-readable), $SMOKE_HOME/summary.txt (printed).
+
+set -euo pipefail
+
+die() {
+  echo "smoke: $*" >&2
+  exit 2
+}
+
+usage() {
+  sed -n '2,/^# Report:/p' "$0" | sed 's/^# \{0,1\}//'
+}
+
+SEED_FROM=""
+BOOTSTRAP=0
+STARTUP_ONLY=0
+ONLY=""
+FIXTURE=""
+FRESH=0
+STRICT=0
+NO_XFAIL=0
+TIMEOUT="${SMOKE_TIMEOUT:-300}"
+NVIM="${NVIM:-nvim}"
+HOME_ARG=""
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --seed-from) SEED_FROM="${2:?--seed-from needs a directory}"; shift 2 ;;
+    --bootstrap) BOOTSTRAP=1; shift ;;
+    --startup-only) STARTUP_ONLY=1; shift ;;
+    --only) ONLY="${2:?--only needs a list}"; shift 2 ;;
+    --fixture) FIXTURE="${2:?--fixture needs a name}"; shift 2 ;;
+    --fresh) FRESH=1; shift ;;
+    --strict) STRICT=1; shift ;;
+    --no-xfail) NO_XFAIL=1; shift ;;
+    --home) HOME_ARG="${2:?--home needs a directory}"; shift 2 ;;
+    --nvim) NVIM="${2:?--nvim needs a path}"; shift 2 ;;
+    --timeout) TIMEOUT="${2:?--timeout needs seconds}"; shift 2 ;;
+    -h | --help) usage; exit 0 ;;
+    *) die "unknown option: $1 (see --help)" ;;
+  esac
+done
+
+REPO="$(git -C "$(dirname "$0")" rev-parse --show-toplevel 2>/dev/null)" || die "not inside a git checkout"
+command -v "$NVIM" >/dev/null 2>&1 || die "nvim not found: $NVIM"
+NVIM="$(command -v "$NVIM")"
+NVIM_VERSION="$("$NVIM" --version | head -1 | sed -n 's/^NVIM v\([0-9][0-9.]*\).*/\1/p')"
+[ -n "$NVIM_VERSION" ] || die "cannot read the version of $NVIM"
+
+SMOKE_HOME="${HOME_ARG:-${SMOKE_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}/nvim-smoke/$NVIM_VERSION}}"
+mkdir -p "$SMOKE_HOME"
+SMOKE_HOME="$(cd "$SMOKE_HOME" && pwd -P)"
+
+# Never run against the real data directory: that is the whole point of the gate.
+REAL_DATA="${XDG_DATA_HOME:-$HOME/.local/share}/nvim"
+if [ -d "$REAL_DATA" ] && [ "$(cd "$REAL_DATA" && pwd -P)" = "$SMOKE_HOME/data/nvim" ]; then
+  die "SMOKE_HOME resolves to the real data directory $REAL_DATA"
+fi
+
+if [ "$FRESH" -eq 1 ]; then
+  rm -rf "$SMOKE_HOME"
+  mkdir -p "$SMOKE_HOME"
+fi
+
+CFG="$SMOKE_HOME/config/nvim"
+DATA="$SMOKE_HOME/data/nvim"
+mkdir -p "$SMOKE_HOME/config" "$DATA" "$SMOKE_HOME/state" "$SMOKE_HOME/cache"
+
+# clone_tree SRC DST: copy-on-write where the filesystem supports it.
+clone_tree() {
+  if [ "$(uname -s)" = "Darwin" ]; then
+    cp -Rc "$1" "$2"
+  else
+    cp -R --reflink=auto "$1" "$2"
+  fi
+}
+
+if [ -n "$SEED_FROM" ]; then
+  [ -d "$SEED_FROM/lazy" ] || die "--seed-from: $SEED_FROM/lazy does not exist"
+  for dir in lazy mason; do
+    if [ -d "$SEED_FROM/$dir" ] && [ ! -d "$DATA/$dir" ]; then
+      echo "smoke: seeding $DATA/$dir from $SEED_FROM/$dir"
+      clone_tree "$SEED_FROM/$dir" "$DATA/$dir"
+    fi
+  done
+  # Parser binaries built by the old nvim-treesitter master branch stay behind in
+  # parser/ after a checkout of main and load ahead of the bundled parsers (F17).
+  # They are only stale when the checkout is no longer master.
+  ts="$DATA/lazy/nvim-treesitter"
+  if [ -d "$ts" ] && [ ! -f "$ts/lua/nvim-treesitter/configs.lua" ]; then
+    rm -rf "$ts/parser" "$ts/parser-info"
+  fi
+fi
+
+# A fresh copy of the working tree on every run: lazy rewrites lazy-lock.json, and
+# fixtures break the copy, never the repository.
+rm -rf "$CFG"
+mkdir -p "$CFG"
+tar -C "$REPO" --exclude=./.git --exclude=./.claude --exclude=./.engineering-team --exclude=./node_modules -cf - . |
+  tar -C "$CFG" -xf -
+# Root markers such as .git must exist in the copy, as they do in a real checkout.
+git -C "$CFG" init -q
+
+export XDG_CONFIG_HOME="$SMOKE_HOME/config"
+export XDG_DATA_HOME="$SMOKE_HOME/data"
+export XDG_STATE_HOME="$SMOKE_HOME/state"
+export XDG_CACHE_HOME="$SMOKE_HOME/cache"
+export SMOKE_HOME SMOKE_REPO="$REPO" SMOKE_STRICT="$STRICT" SMOKE_NO_XFAIL="$NO_XFAIL"
+export SMOKE_ONLY="$ONLY" SMOKE_STARTUP_ONLY="$STARTUP_ONLY" SMOKE_FIXTURE="$FIXTURE"
+export SMOKE_REPORT="$SMOKE_HOME/report.json" SMOKE_SUMMARY="$SMOKE_HOME/summary.txt"
+export SMOKE_STDERR="$SMOKE_HOME/stderr.log"
+export SMOKE_TIMEOUT_MS=$((TIMEOUT * 1000))
+
+if [ -n "$FIXTURE" ]; then
+  fx="$CFG/test/smoke/fixtures/$FIXTURE.lua"
+  [ -f "$fx" ] || die "no fixture $FIXTURE (looked for test/smoke/fixtures/$FIXTURE.lua)"
+  "$NVIM" --clean -l "$CFG/test/smoke/fixture.lua" apply "$fx" "$CFG" || die "fixture $FIXTURE failed to apply"
+fi
+
+# run_nvim LOG ARGS...: run nvim under a watchdog. Returns nvim's exit code, or 3 on timeout.
+run_nvim() {
+  local log="$1"
+  shift
+  local marker="$SMOKE_HOME/.timed-out"
+  rm -f "$marker"
+  (cd "$CFG" && exec "$NVIM" "$@" </dev/null 2>"$log") &
+  local pid=$!
+  (
+    sleep "$TIMEOUT"
+    if kill -0 "$pid" 2>/dev/null; then
+      touch "$marker"
+      kill -TERM "$pid" 2>/dev/null || true
+      sleep 5
+      kill -KILL "$pid" 2>/dev/null || true
+    fi
+  ) &
+  local watchdog=$!
+  local rc=0
+  wait "$pid" || rc=$?
+  kill "$watchdog" 2>/dev/null || true
+  wait "$watchdog" 2>/dev/null || true
+  if [ -f "$marker" ]; then
+    rm -f "$marker"
+    return 3
+  fi
+  return "$rc"
+}
+
+if [ "$BOOTSTRAP" -eq 1 ]; then
+  echo "smoke: bootstrapping $SMOKE_HOME with $NVIM (v$NVIM_VERSION)"
+  # Two processes: a restore swaps plugin code that the first process already loaded.
+  for phase in plugins tools; do
+    rc=0
+    export SMOKE_BOOTSTRAP_PHASE="$phase"
+    run_nvim "$SMOKE_HOME/bootstrap-$phase.log" --headless -c "luafile $CFG/test/smoke/bootstrap.lua" || rc=$?
+    cat "$SMOKE_HOME/bootstrap-$phase.log" >&2 || true
+    [ "$rc" -eq 3 ] && { echo "smoke: bootstrap ($phase) timed out after ${TIMEOUT}s" >&2; exit 3; }
+    [ "$rc" -eq 0 ] || { echo "smoke: bootstrap ($phase) failed (exit $rc)" >&2; exit 2; }
+  done
+fi
+
+if [ ! -f "$DATA/lazy/lazy.nvim/lua/lazy/init.lua" ]; then
+  cat >&2 <<EOF
+smoke: $SMOKE_HOME is not bootstrapped (no lazy.nvim in $DATA/lazy).
+  Seed it from this machine's plugins:  scripts/smoke --seed-from ~/.local/share/nvim
+  Or install everything from the lockfile (network):  scripts/smoke --bootstrap
+EOF
+  exit 2
+fi
+
+rm -f "$SMOKE_REPORT" "$SMOKE_SUMMARY"
+rc=0
+run_nvim "$SMOKE_STDERR" --headless --cmd "luafile $CFG/test/smoke/preinit.lua" -c "luafile $CFG/test/smoke/run.lua" || rc=$?
+
+if [ "$rc" -eq 3 ]; then
+  echo "smoke: TIMEOUT after ${TIMEOUT}s (nvim v$NVIM_VERSION, SMOKE_HOME=$SMOKE_HOME)" >&2
+  [ -s "$SMOKE_STDERR" ] && { echo "--- stderr (last 20 lines)" >&2; tail -20 "$SMOKE_STDERR" >&2; }
+  exit 3
+fi
+if [ ! -f "$SMOKE_SUMMARY" ]; then
+  echo "smoke: nvim exited $rc without writing a report (init crashed before the engine ran?)" >&2
+  [ -s "$SMOKE_STDERR" ] && { echo "--- stderr (last 40 lines)" >&2; tail -40 "$SMOKE_STDERR" >&2; }
+  exit 2
+fi
+cat "$SMOKE_SUMMARY"
+case "$rc" in
+  0 | 1 | 2) exit "$rc" ;;
+  *) echo "smoke: unexpected nvim exit code $rc" >&2; exit 2 ;;
+esac
