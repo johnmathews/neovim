@@ -81,6 +81,14 @@ local cases = {
     check = function(buf, t)
       project_checks(buf, t)
 
+      -- basedpyright must push diagnostics. Pulled, on 0.12 it registers twice and can answer
+      -- a pull with an empty report, so a buffer opens with none of its diagnostics.
+      for _, ns in pairs(vim.diagnostic.get_namespaces()) do
+        if ns.name:match("lsp%.basedpyright%.%d+%.") then
+          t.fail("python:pull", ("basedpyright diagnostics are pulled (namespace %s), want pushed"):format(ns.name))
+        end
+      end
+
       -- vaf on the comment inside calculate_sum selects the whole function
       vim.api.nvim_win_set_cursor(0, { 12, 4 })
       local ok, err = pcall(vim.cmd, "normal vaf")

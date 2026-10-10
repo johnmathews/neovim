@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   basedpyright runs in `basic` mode again (18 diagnostics on the sample become 4).
 - **Only the listed servers start** (F13): `automatic_enable = false` plus an explicit `vim.lsp.enable` list of 10
   servers. sqls, stylua, eslint, biome and the other Mason servers no longer start.
+- **basedpyright diagnostics on 0.12** (F31): on 0.12 basedpyright switched to pull diagnostics, and about one buffer
+  in four opened without them. `after/lsp/basedpyright.lua` keeps it on push, as on 0.11.
 - **zsh is shellchecked again** (F5): `shellcheck_zsh` is now a copy of nvim-lint's shellcheck linter, so it no longer
   rewrites the shared linter's args, and it asks for `json1`, the format nvim-lint parses.
 - **markdownlint runs again** (F6): every markdown lint run had failed with "expected table, got function". The linter

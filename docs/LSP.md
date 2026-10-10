@@ -96,7 +96,9 @@ row's diagnostic sources, so a second owner turns it red.
 ### Python
 
 - **basedpyright**: types, hover, completions, go to definition and rename. Mode `basic` (`after/lsp/basedpyright.lua`).
-  basedpyright reads `basedpyright.*` settings only; `python.*` analysis settings do nothing.
+  basedpyright reads `basedpyright.*` settings only; `python.*` analysis settings do nothing. It also pushes its
+  diagnostics: the override turns off dynamic registration of pull diagnostics, which Neovim 0.12 would otherwise
+  accept and which sometimes left a buffer with none of basedpyright's diagnostics.
 - **ruff** (LSP): lint diagnostics and quick fixes.
 - **ruff_format** (conform): formatting, on save.
 - **mypy** is installed by Mason for per-project use and is not wired in.
