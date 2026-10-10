@@ -244,10 +244,9 @@ Complete reference of all custom keybindings in this Neovim configuration.
 
 ## Markdown
 
-| Key          | Mode   | Description                                   |
-| ------------ | ------ | --------------------------------------------- |
-| `<leader>mg` | Normal | Preview the current Markdown buffer with Glow |
-| `<leader>mp` | Normal | Toggle Markdown Print Mode (see below)        |
+| Key          | Mode   | Description                            |
+| ------------ | ------ | -------------------------------------- |
+| `<leader>mp` | Normal | Toggle Markdown Print Mode (see below) |
 
 ### Markdown Print Mode (`<leader>mp`)
 
@@ -302,13 +301,19 @@ Toggle back to terminal mode before committing to keep diffs clean.
 
 ## Plugin-Specific Keymaps
 
-### Comment.nvim
+### Commenting (native `gc`)
 
-| Key   | Mode   | Description                    |
-| ----- | ------ | ------------------------------ |
-| `gcc` | Normal | Toggle comment on current line |
-| `gc`  | Visual | Toggle comment on selection    |
-| `gci` | Visual | Invert comment on selection    |
+Neovim's built-in commenting. The comment style follows the treesitter node under the cursor, so JSX in a `.tsx` file
+gets `{/* ... */}` and the TypeScript around it `// ...`.
+
+| Key          | Mode   | Description                                      |
+| ------------ | ------ | ------------------------------------------------ |
+| `gcc`        | Normal | Toggle comment on current line                   |
+| `gc{motion}` | Normal | Toggle comment over a motion                     |
+| `gc`         | Visual | Toggle comment on selection                      |
+| `gci`        | Visual | Invert comment on each selected line             |
+| `gco`        | Normal | Add a comment line below and enter insert mode   |
+| `gcO`        | Normal | Add a comment line above and enter insert mode   |
 
 ### Leap.nvim (Motion)
 

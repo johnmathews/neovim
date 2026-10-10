@@ -32,10 +32,8 @@ Markdown development.
 - **CLI Tools:**
 
   ```bash
-  brew install luacheck stylua ripgrep fd glow
+  brew install luacheck stylua ripgrep fd
   ```
-
-  `glow` powers the in-editor Markdown preview described below.
 
 - **Optional:** the Python provider, for Python remote plugins such as vim-mundo. Install it with
   `uv tool install pynvim`; `init.lua` uses that interpreter when it exists. The Node provider is disabled.
@@ -171,18 +169,13 @@ Markdown, HTML, CSS
 
 ### 6. Markdown Authoring
 
-| Keymap/Command | Function                                                 |
-| -------------- | -------------------------------------------------------- |
-| `<leader>mg`   | Open a live Glow preview for the current Markdown buffer |
-| `:Glow`        | Manually trigger the Glow preview command                |
+| Keymap       | Function                                                         |
+| ------------ | ---------------------------------------------------------------- |
+| `<leader>mp` | Toggle Markdown Print Mode (no hard wraps, for Typora and print) |
+| `<leader>X`  | Open the current file in Typora (macOS)                          |
 
-**Details:**
-
-- Uses [glow.nvim](https://github.com/ellisonleao/glow.nvim) with a 120-column floating window, rounded border, and 85%
-  screen height.
-- Automatically lazy-loads when editing Markdown, running `:Glow`, or pressing `<leader>mg`.
-- Requires the [`glow`](https://github.com/charmbracelet/glow) CLI (install via `brew install glow`).
-- Falls back with a warning if the CLI is missing so you know why the preview did not start.
+Print Mode is described in `docs/MARKDOWN-FORMATTING.md`. The in-editor Glow preview was removed with glow.nvim, which
+is archived.
 
 ---
 

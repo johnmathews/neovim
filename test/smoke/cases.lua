@@ -60,6 +60,37 @@ local function project_checks(buf, t)
   end
 end
 
+-- Native commenting (F18): `gcc` on line `lnum` must turn it into `want`, a Lua pattern
+-- matched against the trimmed line. The change is undone afterwards.
+local function comment_check(t, lnum, want)
+  vim.api.nvim_win_set_cursor(0, { lnum, 0 })
+  local ok, err = pcall(vim.cmd, "normal gcc")
+  local got = vim.trim(vim.api.nvim_get_current_line())
+  vim.cmd("silent! undo")
+  if not ok then
+    t.fail(t.case .. ":comment", ("gcc on line %d raised: %s"):format(lnum, tostring(err)))
+  elseif not got:match(want) then
+    t.fail(t.case .. ":comment", ("gcc on line %d gave %q, want %s"):format(lnum, got, want))
+  end
+end
+
+-- The built-in comment and selection mappings, with Comment.nvim and vim-numbers gone.
+local function builtin_map_checks(t)
+  local gcc = vim.fn.maparg("gcc", "n", false, true)
+  if gcc.desc ~= "Toggle comment line" then
+    t.fail("comment:builtin", ("gcc is %s, want the built-in 'Toggle comment line'"):format(vim.inspect(gcc.desc)))
+  end
+  if package.loaded["Comment"] then
+    t.fail("comment:builtin", "Comment.nvim is loaded; native gc replaces it")
+  end
+  -- 0.12 maps visual and operator-pending an/in to treesitter node selection
+  local an = vim.fn.maparg("an", "x", false, true)
+  local want = vim.fn.has("nvim-0.12") == 1 and "Select parent (outer) node" or nil
+  if an.desc ~= want then
+    t.fail("comment:builtin", ("visual an is %s, want %s"):format(vim.inspect(an.desc), vim.inspect(want)))
+  end
+end
+
 ---@type SmokeCase[]
 local cases = {
   {
@@ -177,6 +208,39 @@ local cases = {
     lang = "typescript",
     textobjects = true,
     diags = { ["lsp:ts_ls"] = true },
+    check = function(_, t)
+      comment_check(t, 11, "^// const label")
+      builtin_map_checks(t)
+      -- gco and gcO open a commented line below and above
+      for _, c in ipairs({ { keys = "gco", lnum = 12 }, { keys = "gcO", lnum = 11 } }) do
+        vim.api.nvim_win_set_cursor(0, { 11, 0 })
+        local ok, err = pcall(vim.api.nvim_feedkeys, vim.keycode(c.keys .. "added<Esc>"), "mx", false)
+        local got = vim.trim(vim.api.nvim_buf_get_lines(0, c.lnum - 1, c.lnum, false)[1] or "")
+        vim.cmd("silent! undo")
+        if not ok or got ~= "// added" then
+          t.fail(
+            "typescript:comment",
+            ("%s gave line %d %q, want '// added' (%s)"):format(c.keys, c.lnum, got, tostring(err))
+          )
+        end
+      end
+      vim.cmd("silent edit!")
+    end,
+  },
+  {
+    name = "tsx",
+    file = "test/typescript/test_sample.tsx",
+    clients = { "ts_ls" },
+    lang = "tsx",
+    textobjects = true,
+    diags = { ["lsp:ts_ls"] = true },
+    check = function(_, t)
+      -- the comment style follows the node under the cursor: nvim-treesitter's jsx query sets
+      -- bo.commentstring metadata, which native gc reads before 'commentstring'
+      comment_check(t, 10, "^{/%* <span>{upper}</span> %*/}$")
+      comment_check(t, 7, "^// const upper")
+      vim.cmd("silent edit!")
+    end,
   },
   {
     name = "bash",
@@ -238,6 +302,14 @@ local cases = {
         t.fail("markdown:open", "<leader>x raised: " .. tostring(err))
       elseif opened == nil or vim.fn.resolve(opened) ~= vim.fn.resolve(want) then
         t.fail("markdown:open", ("<leader>x called vim.ui.open(%s), want %s"):format(tostring(opened), want))
+      end
+      -- glow.nvim is gone, with its :Glow command and preview keys
+      if
+        vim.fn.exists(":Glow") == 2
+        or vim.fn.maparg("<leader>mg", "n") ~= ""
+        or vim.fn.maparg("<Leader>p", "n") ~= ""
+      then
+        t.fail("markdown:glow", ":Glow, <leader>mg or <Leader>p still exists; glow.nvim was removed")
       end
     end,
   },

@@ -42,7 +42,6 @@ which_key.add({
   { "<leader>df", desc = "Peek function definition" },
   { "<leader>dF", desc = "Peek class definition" },
   { "<leader>m", group = "Markdown" },
-  { "<leader>mg", desc = "Preview (Glow)" },
   { "<leader>s", group = "Source (Git)" },
   { "<leader>sh", group = "Hunk" },
   { "<leader>t", group = "Treesitter" },

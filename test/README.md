@@ -75,6 +75,11 @@ Each test file contains **intentional errors and edge cases** to verify that:
   - Type errors (ts_ls)
   - Missing object property
 
+- **File:** `test_sample.tsx`
+- **Tests:**
+  - Commenting: `gcc` on a JSX line gives `{/* ... */}`, on a TypeScript line `// ...`
+  - Missing required prop (ts_ls)
+
 ### JSON (`test/json/`)
 - **File:** `test_sample.json`
 - **Tests:**

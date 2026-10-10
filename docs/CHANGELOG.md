@@ -62,6 +62,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - **project.nvim** (F14, F18): unmaintained since 2023, and it calls `vim.lsp.buf_get_clients()`, which 0.12 removed
   apart from a shim. **session-lens** (F18): merged into auto-session.
+- **Comment.nvim** (F18): Neovim's native `gc` replaces it, with the same keys. `gci` moved to `lua/mappings.lua`, `gco`
+  and `gcO` are re-implemented on top of `gcc`, and `gcA` is gone. nvim-ts-context-commentstring stays, loaded on the
+  first commentstring lookup. The Dockerfile override went too: the runtime ftplugin sets `# %s`.
+- **glow.nvim** (F18, archived): `<leader>mg`, `:Glow` and the non-buffer-local `<Leader>p` from
+  `ftplugin/markdown.vim`. The `glow` CLI is no longer a requirement.
+- **vim-numbers** (F18, F16): its visual and operator-pending `an`/`in` hid 0.12's built-in treesitter node selection.
+- **lualine-lsp-progress** (F18): archived, and only referenced by a commented-out component.
 - `test/test_lsp.sh`: it ran bare `nvim` against the real data directory and passed when a server name appeared
   anywhere in the output. The smoke gate covers everything it checked.
 

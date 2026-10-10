@@ -137,7 +137,6 @@ return lazy.setup({
     "nvim-lualine/lualine.nvim",
     dependencies = {
       "nvim-tree/nvim-web-devicons",
-      "WhoIsSethDaniel/lualine-lsp-progress.nvim",
     },
     event = "VeryLazy", -- Defer statusline to after UI is ready
     config = function()
@@ -145,13 +144,22 @@ return lazy.setup({
     end,
   },
 
-  -- comments
+  -- comments: Neovim's native gc, with the commentstring of the treesitter node under the cursor
   {
-    "numToStr/Comment.nvim",
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter",
-      "JoosepAlviste/nvim-ts-context-commentstring",
-    },
+    "JoosepAlviste/nvim-ts-context-commentstring",
+    lazy = true, -- loaded by the first commentstring lookup below
+    init = function()
+      -- Skip the deprecated nvim-treesitter context_commentstring module (it errors
+      -- on attach) and configure ts_context_commentstring the modern way instead.
+      vim.g.skip_ts_context_commentstring_module = true
+      -- https://github.com/JoosepAlviste/nvim-ts-context-commentstring/wiki/Integrations
+      local get_option = vim.filetype.get_option
+      ---@diagnostic disable-next-line: duplicate-set-field
+      vim.filetype.get_option = function(filetype, option)
+        return option == "commentstring" and require("ts_context_commentstring.internal").calculate_commentstring()
+          or get_option(filetype, option)
+      end
+    end,
     config = function()
       require("plugins.comment")
     end,
@@ -485,33 +493,12 @@ return lazy.setup({
     end,
   },
 
-  -- Beautiful markdown preview in terminal
-  {
-    "ellisonleao/glow.nvim",
-    ft = { "markdown" }, -- Only load for markdown buffers
-    cmd = "Glow", -- Also load on :Glow command
-    keys = {
-      {
-        "<leader>mg",
-        function()
-          vim.cmd("Glow")
-        end,
-        desc = "Markdown: preview with Glow",
-      },
-    },
-    config = function()
-      require("plugins.glow")
-    end,
-  },
-
   {
     "simnalamburt/vim-mundo",
     config = function()
       require("plugins.mundo")
     end,
   },
-
-  { "MisanthropicBit/vim-numbers" },
 
   {
     "tyru/open-browser.vim",

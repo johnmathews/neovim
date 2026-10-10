@@ -157,6 +157,14 @@ map("n", "<Tab>dc", ":cexpr []<CR>", KeymapOptions("Clear quickfix window"))
 -- Jump List
 map("n", "<C-p>", "<C-i>", default_options)
 
+-- comments (native gc)
+-- invert commenting of visually selected lines
+-- https://github.com/numToStr/Comment.nvim/issues/17#issuecomment-939410954
+vim.keymap.set("v", "gci", ":normal gcc<CR>", { silent = true, desc = "Comment: invert each selected line" })
+-- open a commented line below or above, in insert mode
+vim.keymap.set("n", "gco", "o<Esc>Vcx<Esc><Cmd>normal gcc<CR>fxa<BS>", { desc = "Comment: add line below" })
+vim.keymap.set("n", "gcO", "O<Esc>Vcx<Esc><Cmd>normal gcc<CR>fxa<BS>", { desc = "Comment: add line above" })
+
 -- auto session
 map("n", "<localleader>fs", "<Cmd>AutoSession search<CR>", KeymapOptions("Sessions: search"))
 
