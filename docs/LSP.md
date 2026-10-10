@@ -179,8 +179,8 @@ All LSP servers, formatters and linters are installed by **Mason** (`:Mason`).
 
 | Key              | Action                                               |
 | ---------------- | ---------------------------------------------------- |
-| `gr`             | Show references (Telescope picker)                   |
-| `gi`             | Go to implementation (Telescope picker)              |
+| `grr`            | Show references (Telescope picker)                   |
+| `gri`            | Go to implementation (Telescope picker)              |
 | `<LocalLeader>r` | Telescope: List all references                       |
 | `<LocalLeader>d` | Telescope: List all definitions                      |
 | `<LocalLeader>i` | Telescope: List all implementations                  |
@@ -192,6 +192,7 @@ All LSP servers, formatters and linters are installed by **Mason** (`:Mason`).
 | ------------ | ------------------------ |
 | `<leader>cf` | Format file or selection |
 | `<leader>cl` | Run linter manually      |
+| `<leader>cL` | LSP panel (Trouble)      |
 
 Format on save runs every formatter in the Quick Reference except sqlfluff, and skips files over 200 KB. When a
 filetype has no conform formatter, both `<leader>cf` and format on save fall back to the LSP server

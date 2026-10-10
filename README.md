@@ -94,22 +94,24 @@ Entering a file buffer moves the working directory to its project root (the near
 
 ### 2. LSP (Language Server Protocol)
 
-**Available via Mason:** Python (pyright), Lua (lua_ls), JavaScript/TypeScript (ts_ls), YAML (yamlls), Bash, JSON, SQL,
-Markdown, HTML, CSS
+**Enabled servers** (installed by Mason, listed in `lua/plugins/lsp.lua`): Python (basedpyright, ruff), Lua (lua_ls),
+JavaScript/TypeScript (ts_ls), Bash and zsh (bashls), YAML (yamlls), JSON (jsonls), Docker (dockerls), TOML (taplo),
+Markdown (marksman). SQL has no server on purpose. See `docs/LSP.md`.
 
 | Keymap       | Function                 |
 | ------------ | ------------------------ |
 | `K`          | Hover documentation      |
 | `gd`         | Go to definition         |
 | `gD`         | Go to declaration        |
-| `gr`         | Go to references         |
-| `gi`         | Go to implementation     |
-| `<leader>rn` | Rename symbol            |
-| `<leader>ca` | Code actions             |
+| `grr`        | References (Telescope)   |
+| `gri`        | Implementation (Telescope) |
+| `grn`        | Rename symbol            |
+| `gra`        | Code actions             |
 | `<leader>cf` | Format document          |
+| `<leader>cl` | Run linter               |
+| `<leader>cL` | LSP panel (Trouble)      |
 | `[d`         | Previous diagnostic      |
 | `]d`         | Next diagnostic          |
-| `<leader>q`  | Diagnostic quickfix list |
 
 **LSP Documentation:** See [LSP.md](docs/LSP.md) for detailed server configurations and troubleshooting.
 

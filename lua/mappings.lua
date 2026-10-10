@@ -26,12 +26,14 @@ vim.api.nvim_set_keymap("n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", {
   silent = true,
   desc = "Go to Declaration",
 })
-vim.api.nvim_set_keymap("n", "gi", "<cmd>Telescope lsp_implementations<CR>", {
+-- grr and gri override Neovim's default LSP keys with Telescope pickers; gr and gi stay
+-- free, so the other gr* defaults and Vim's gi (insert at the last insert position) work
+vim.api.nvim_set_keymap("n", "gri", "<cmd>Telescope lsp_implementations<CR>", {
   noremap = true,
   silent = true,
   desc = "Go to Implementation (Telescope)",
 })
-vim.api.nvim_set_keymap("n", "gr", "<cmd>Telescope lsp_references<CR>", {
+vim.api.nvim_set_keymap("n", "grr", "<cmd>Telescope lsp_references<CR>", {
   noremap = true,
   silent = true,
   desc = "Show References (Telescope)",

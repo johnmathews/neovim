@@ -91,6 +91,29 @@ local function builtin_map_checks(t)
   end
 end
 
+-- Keys that used to shadow Neovim's defaults (F16): gr and gi are the built-ins again,
+-- grr and gri open the Telescope pickers, and <leader>cl stays "Run lint".
+local function keymap_checks(t)
+  for _, lhs in ipairs({ "gr", "gi" }) do
+    local rhs = vim.fn.maparg(lhs, "n")
+    if rhs ~= "" then
+      t.fail("keymaps:defaults", ("%s is mapped to %q; it must stay Vim's default"):format(lhs, rhs))
+    end
+  end
+  for lhs, want in pairs({ grr = "Telescope lsp_references", gri = "Telescope lsp_implementations" }) do
+    local rhs = vim.fn.maparg(lhs, "n")
+    if not rhs:find(want, 1, true) then
+      t.fail("keymaps:defaults", ("%s maps to %q, want %s"):format(lhs, rhs, want))
+    end
+  end
+  for lhs, want in pairs({ ["<leader>cl"] = "Run lint", ["<leader>cL"] = "Trouble" }) do
+    local desc = vim.fn.maparg(lhs, "n", false, true).desc or ""
+    if not desc:find(want, 1, true) then
+      t.fail("keymaps:defaults", ("%s is %q, want %s"):format(lhs, desc, want))
+    end
+  end
+end
+
 ---@type SmokeCase[]
 local cases = {
   {
@@ -111,6 +134,25 @@ local cases = {
     },
     check = function(buf, t)
       project_checks(buf, t)
+
+      -- grr runs Telescope lsp_references. calculate_sum has two references; Telescope drops
+      -- the one on the cursor line and jumps to the other (line 10) instead of opening a
+      -- picker. The built-in grr would open the quickfix list.
+      vim.api.nvim_win_set_cursor(0, { 35, 13 })
+      pcall(vim.api.nvim_feedkeys, "grr", "mx", false)
+      vim.wait(10000, function()
+        return vim.api.nvim_win_get_cursor(0)[1] == 10 or vim.bo.filetype ~= "python"
+      end, 100)
+      local ft, lnum = vim.bo.filetype, vim.api.nvim_win_get_cursor(0)[1]
+      if ft ~= "python" then
+        vim.cmd("stopinsert")
+        vim.cmd("silent! close")
+        vim.cmd("silent buffer " .. buf)
+      end
+      if ft ~= "python" or lnum ~= 10 then
+        t.fail("python:grr", ("grr left filetype %q at line %d, want Telescope's jump to line 10"):format(ft, lnum))
+      end
+      vim.api.nvim_win_set_cursor(0, { 1, 0 })
 
       -- basedpyright must push diagnostics. Pulled, on 0.12 it registers twice and can answer
       -- a pull with an empty report, so a buffer opens with none of its diagnostics.
@@ -192,6 +234,9 @@ local cases = {
       { method = "textDocument/prepareRename", line = 10, col = 9 },
       { method = "textDocument/codeAction", line = 7, col = 6 },
     },
+    check = function(_, t)
+      keymap_checks(t)
+    end,
   },
   {
     name = "javascript",

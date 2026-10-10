@@ -19,9 +19,9 @@ which_key.add({
   { "g", group = "Go-to / LSP" },
   { "gd", desc = "Go to definition" },
   { "gD", desc = "Go to declaration" },
-  { "gr", desc = "Show references (Telescope picker)" },
+  { "grr", desc = "Show references (Telescope picker)" },
   { "gra", desc = "Code actions" },
-  { "gi", desc = "Go to implementation (Telescope picker)" },
+  { "gri", desc = "Go to implementation (Telescope picker)" },
   { "grn", desc = "Rename symbol (workspace-wide)" },
   { "grt", desc = "Go to type definition" },
 

@@ -51,6 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`<leader>x`** opens the current file with `vim.ui.open`, which works on macOS (`xdg-open` does not exist there).
 - **Deprecated and private APIs** (F15): `vim.lsp.log.set_level`, `vim.uv`, `nvim_echo`, and a choice-popup size the
   config computes instead of the private `_make_floating_popup_size`.
+- **`grr` and `gri`** (F16) open the Telescope references and implementations pickers. They replace the global `gr`
+  and `gi`, which made Neovim wait for the other `gr*` defaults (`gra`, `grn`, `grt`) and hid Vim's `gi`. The Trouble
+  LSP panel moves from `<leader>cl`, which it shared with "Run lint", to `<leader>cL`.
 - **SQL formats with sqlfluff** on `<leader>cf` only, never on save. Without a `.sqlfluff` file the dialect is
   postgres (bigquery for `.bq`).
 - Mason also installs sqlfluff, yamlfmt, jq, shellcheck and jsonlint, which the format and lint config already used.

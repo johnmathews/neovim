@@ -149,10 +149,13 @@ Complete reference of all custom keybindings in this Neovim configuration.
 
 ### Telescope-based LSP Navigation
 
-| Key  | Mode   | Description                             |
-| ---- | ------ | --------------------------------------- |
-| `gr` | Normal | Show references (Telescope picker)      |
-| `gi` | Normal | Go to implementation (Telescope picker) |
+`grr` and `gri` replace Neovim's default LSP keys of the same name. `gr` and `gi` themselves are not mapped, so the
+other `gr*` defaults work and `gi` is Vim's "insert where insert mode last stopped".
+
+| Key   | Mode   | Description                             |
+| ----- | ------ | --------------------------------------- |
+| `grr` | Normal | Show references (Telescope picker)      |
+| `gri` | Normal | Go to implementation (Telescope picker) |
 
 ### LSP with Telescope (Advanced Searching)
 
@@ -179,6 +182,7 @@ Complete reference of all custom keybindings in this Neovim configuration.
 | ---------------- | ------------- | ------------------------------------------------ |
 | `<leader>cf`     | Normal/Visual | Format file or selection (conform.nvim)          |
 | `<leader>cl`     | Normal        | Run linter manually (nvim-lint)                  |
+| `<leader>cL`     | Normal        | LSP definitions, references and more (Trouble)   |
 | `<LocalLeader>t` | Normal        | Show active LSP servers, formatters, and linters |
 
 ---

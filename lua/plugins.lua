@@ -270,7 +270,7 @@ return lazy.setup({
         desc = "Symbols (Trouble)",
       },
       {
-        "<leader>cl",
+        "<leader>cL", -- <leader>cl is "Run lint" (lua/plugins/nvim-lint.lua)
         "<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
         desc = "LSP Definitions / references / ... (Trouble)",
       },
