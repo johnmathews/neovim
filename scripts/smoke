@@ -65,7 +65,12 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-REPO="$(git -C "$(dirname "$0")" rev-parse --show-toplevel 2>/dev/null)" || die "not inside a git checkout"
+# Git exports GIT_DIR and GIT_INDEX_FILE to hooks; with them set, git commands here
+# would act on the committing repository instead of the paths they are given.
+# shellcheck disable=SC2046 # word splitting is intended: one variable name per word
+unset $(git rev-parse --local-env-vars 2>/dev/null)
+REPO="$(cd "$(dirname "$0")/.." && pwd -P)"
+[ -f "$REPO/init.lua" ] || die "cannot find the config root above $0"
 command -v "$NVIM" >/dev/null 2>&1 || die "nvim not found: $NVIM"
 NVIM="$(command -v "$NVIM")"
 NVIM_VERSION="$("$NVIM" --version | head -1 | sed -n 's/^NVIM v\([0-9][0-9.]*\).*/\1/p')"

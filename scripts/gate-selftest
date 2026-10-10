@@ -1,16 +1,25 @@
 #!/usr/bin/env bash
-# Proves the smoke gate can fail: runs scripts/smoke once per fixture in
-# test/smoke/fixtures/ and checks that each one produces its expected failure.
-# A gate that stays green on these known-bad configs cannot be trusted.
+# Proves the gates can fail. Two groups of cases:
+#   fixtures  scripts/smoke once per fixture in test/smoke/fixtures/; each must
+#             produce its expected failure ID
+#   gates     quality-gate and health-check against known-false preconditions
+#             (a tool missing from PATH, a broken config copy, version shims);
+#             each must exit 1 with the matching message
+# A gate that stays green on these known-bad inputs cannot be trusted.
 #
 # Usage: scripts/gate-selftest [--only NAME[,NAME]] [scripts/smoke options...]
+#   NAME is a fixture name, a gate case name, or the group "fixtures" or "gates".
 #   Options other than --only are passed to every scripts/smoke run
-#   (for example --home DIR or --nvim PATH).
-# Exit codes: 0 every fixture failed as expected, 1 a fixture was not caught.
+#   (for example --home DIR or --nvim PATH); gate cases use the same SMOKE_HOME.
+# Exit codes: 0 every case failed as expected, 1 a case was not caught.
 
 set -uo pipefail
 
-REPO="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)" || exit 2
+# Git exports GIT_DIR and GIT_INDEX_FILE to hooks; with them set, git commands here
+# would act on the committing repository instead of the paths they are given.
+# shellcheck disable=SC2046 # word splitting is intended: one variable name per word
+unset $(git rev-parse --local-env-vars 2>/dev/null)
+REPO="$(cd "$(dirname "$0")/.." && pwd -P)" || exit 2
 SMOKE="$REPO/scripts/smoke"
 NVIM_BIN="${NVIM:-nvim}"
 ONLY=""
@@ -40,11 +49,15 @@ smoke_home() {
 
 HOME_DIR="$(smoke_home)"
 FAILED=0
+
+# selected GROUP NAME: true when --only is empty or names the case or its group
+selected() {
+  [ -z "$ONLY" ] || [[ ",$ONLY," == *",$2,"* ]] || [[ ",$ONLY," == *",$1,"* ]]
+}
+
 for fixture in "$REPO"/test/smoke/fixtures/*.lua; do
   name="$(basename "$fixture" .lua)"
-  if [ -n "$ONLY" ] && [[ ",$ONLY," != *",$name,"* ]]; then
-    continue
-  fi
+  selected fixtures "$name" || continue
   IFS=$'\t' read -r expect_id expect_exit extra < <("$NVIM_BIN" --clean -l "$REPO/test/smoke/fixture.lua" info "$fixture")
   [ "$expect_id" = "-" ] && expect_id=""
   # shellcheck disable=SC2086 # extra holds the fixture's own smoke arguments
@@ -64,8 +77,118 @@ for fixture in "$REPO"/test/smoke/fixtures/*.lua; do
   echo "ok    $name: exit $rc${expect_id:+, $expect_id}"
 done
 
+# --- gate scripts -------------------------------------------------------------
+
+WORK="$(mktemp -d)"
+trap 'rm -rf "$WORK"' EXIT
+NVIM_REAL="$(command -v "$NVIM_BIN")"
+# quality-gate and health-check call scripts/smoke without arguments
+export SMOKE_HOME="$HOME_DIR" NVIM="$NVIM_REAL"
+
+# path_without TOOL: PATH with each directory that holds TOOL replaced by a mirror
+# of that directory without it
+path_without() {
+  local tool="$1" out="" dir mirror entry
+  local IFS=:
+  for dir in $PATH; do
+    if [ -n "$dir" ] && [ -e "$dir/$tool" ]; then
+      mirror="$WORK/without-$tool/$(printf '%s' "$dir" | tr '/' '_')"
+      if [ ! -d "$mirror" ]; then
+        mkdir -p "$mirror"
+        for entry in "$dir"/*; do
+          [ "$(basename "$entry")" = "$tool" ] || ln -s "$entry" "$mirror/"
+        done
+      fi
+      out="$out:$mirror"
+    else
+      out="$out:$dir"
+    fi
+  done
+  printf '%s' "${out#:}"
+}
+
+# shim DIR NAME VERSION_LINE [REAL]: a NAME that reports VERSION_LINE for --version
+# and otherwise runs REAL (default: NAME on PATH, if there is one)
+shim() {
+  local real="${4:-$(command -v "$2" || true)}"
+  mkdir -p "$1"
+  {
+    echo '#!/bin/sh'
+    echo "if [ \"\$1\" = \"--version\" ]; then echo \"$3\"; exit 0; fi"
+    [ -n "$real" ] && echo "exec \"$real\" \"\$@\""
+    echo 'exit 0'
+  } >"$1/$2"
+  chmod +x "$1/$2"
+}
+
+# versions_file NAME KEY=VALUE...: scripts/versions.env with overrides
+versions_file() {
+  local file="$WORK/$1.env" kv
+  cp "$REPO/scripts/versions.env" "$file"
+  shift
+  for kv in "$@"; do
+    echo "$kv" >>"$file"
+  done
+  echo "$file"
+}
+
+# gate_case NAME EXPECTED_TEXT COMMAND...: COMMAND must exit 1 and print EXPECTED_TEXT
+gate_case() {
+  local name="$1" text="$2" log rc=0
+  shift 2
+  selected gates "$name" || return 0
+  log="$HOME_DIR.selftest-$name.log"
+  "$@" >"$log" 2>&1 || rc=$?
+  if [ "$rc" -ne 1 ]; then
+    echo "FAIL  $name: exit $rc, want 1 (log: $log)"
+    FAILED=1
+  elif ! grep -qF -- "$text" "$log"; then
+    echo "FAIL  $name: exit 1 but no '$text' in the output (log: $log)"
+    FAILED=1
+  else
+    echo "ok    $name: exit 1, '$text'"
+  fi
+}
+
+gate_case qg-no-stylua "stylua is not installed" \
+  env PATH="$(path_without stylua)" "$REPO/scripts/quality-gate"
+gate_case qg-no-luacheck "luacheck is not installed" \
+  env PATH="$(path_without luacheck)" "$REPO/scripts/quality-gate"
+
+# copy_repo NAME: a copy of the working tree in $WORK/NAME, as its own git repository
+copy_repo() {
+  mkdir -p "$WORK/$1"
+  tar -C "$REPO" --exclude=./.git --exclude=./.claude --exclude=./.engineering-team -cf - . | tar -C "$WORK/$1" -xf -
+  git -C "$WORK/$1" init -q
+}
+
+# A copy with an error() early in init's require chain.
+if selected gates qg-init-error; then
+  copy_repo broken
+  printf '\nerror("SMOKE_SELFTEST_INIT_ERROR")\n' >>"$WORK/broken/lua/options.lua"
+fi
+gate_case qg-init-error "Startup check failed" "$WORK/broken/scripts/quality-gate"
+
+# Git exports GIT_DIR to hooks. The gate must still check the files of its own checkout.
+if selected gates qg-hook-env; then
+  copy_repo badfmt
+  printf '\nlocal   badly_formatted   =1\n' >>"$WORK/badfmt/lua/options.lua"
+fi
+gate_case qg-hook-env "Formatting check failed" \
+  env GIT_DIR="$WORK/badfmt/.git" "$WORK/badfmt/scripts/quality-gate"
+
+shim "$WORK/old-nvim" nvim "NVIM v0.11.6" "$NVIM_REAL"
+gate_case hc-old-nvim "older than the required 0.12.0" \
+  env VERSIONS_ENV="$(versions_file nvim-min NVIM_MIN=0.12.0)" NVIM=nvim PATH="$WORK/old-nvim:$PATH" \
+  "$REPO/scripts/health-check" --isolated
+
+shim "$WORK/old-tree-sitter" tree-sitter "tree-sitter 0.25.0 (0000000000000000000000000000000000000000)"
+gate_case hc-old-tree-sitter "tree-sitter 0.25.0 is older than the required 0.26.1" \
+  env VERSIONS_ENV="$(versions_file ts-min TREE_SITTER_MIN=0.26.1)" PATH="$WORK/old-tree-sitter:$PATH" \
+  "$REPO/scripts/health-check" --isolated
+
 if [ "$FAILED" -eq 0 ]; then
-  echo "gate-selftest: every fixture was caught"
+  echo "gate-selftest: every case was caught"
 else
   echo "gate-selftest: FAILED"
 fi

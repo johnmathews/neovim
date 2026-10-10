@@ -19,8 +19,8 @@ This document describes the testing infrastructure and quality gates for the Neo
 ./scripts/smoke --seed-from ~/.local/share/nvim   # first run per Neovim version
 ./scripts/smoke
 
-# Install pre-commit hook (optional)
-ln -s ../../scripts/pre-commit .git/hooks/pre-commit
+# Install the git hooks (sets core.hooksPath, so each worktree runs its own scripts)
+./scripts/install-hooks
 ```
 
 ---
@@ -29,17 +29,23 @@ ln -s ../../scripts/pre-commit .git/hooks/pre-commit
 
 ### 1. Health Check (`./scripts/health-check`)
 
-Comprehensive health check of the entire configuration.
+Comprehensive health check of the entire configuration. It exits 1 when any check fails, so it can gate a script.
 
 **What it checks:**
-- ✓ Neovim version
-- ✓ Required CLI tools (luacheck, stylua, rg, fd, node)
-- ✓ Luacheck (0 warnings/errors)
-- ✓ Neovim loads successfully
-- ✓ Startup performance (<150ms target)
+- ✓ Neovim version: fails below `NVIM_MIN`, warns when it differs from `NVIM_PIN` (both in `scripts/versions.env`)
+- ✓ Required CLI tools: `cc`, `curl`, `tar`, `git`, `luacheck`, `stylua`, `rg`, `fd`, `node` (at least `NODE_MIN`),
+  and the `tree-sitter` CLI once `TREE_SITTER_MIN` is set
+- ✓ Luacheck (0 warnings/errors in `lua/`, `after/`, `test/smoke/`)
+- ✓ Neovim starts cleanly (`scripts/smoke --startup-only`)
+- ✓ Startup performance: median of 5 runs after a warm-up, fails above 500ms, warns above the 150ms target
+- ✓ `:checkhealth vim.deprecated vim.lsp` has no ERROR line
 - ✓ Plugin directory exists
 - ✓ Config file structure
 - ✓ Documentation files
+
+By default the startup and `:checkhealth` checks run against this machine's real config and data directories, which
+is what you start every day. `--isolated` runs them in the smoke environment (`SMOKE_HOME`) instead, for agents and
+CI. `VERSIONS_ENV=<file>` reads another versions file, and `NVIM=<path>` selects the binary.
 
 **When to run:**
 - After making significant changes
@@ -53,28 +59,28 @@ Comprehensive health check of the entire configuration.
 ====================================
 
 1. Checking Neovim version...
-   NVIM v0.11.4
-   ✓ Neovim is installed
+   NVIM v0.11.6
+   ✓ Neovim 0.11.6 (pinned 0.11.6)
 
 2. Checking required CLI tools...
-   ✓ luacheck: Luacheck 1.2.0
-   ✓ stylua: stylua 0.20.0
-   ✓ rg: ripgrep 14.1.0
+   ✓ cc: Apple clang version 17.0.0
+   ✓ luacheck: Luacheck: 1.2.0
    ...
 
-🎉 Health check complete!
+🎉 Health check passed!
 ```
 
 ---
 
 ### 2. Quality Gate (`./scripts/quality-gate`)
 
-Fast quality gate for pre-commit/pre-push checks.
+Fast quality gate for pre-commit/pre-push checks. A missing tool fails the gate instead of passing it.
 
 **What it checks:**
-- ✓ Formatting (stylua --check)
-- ✓ Linting (luacheck)
-- ✓ Neovim loads
+- ✓ Formatting (`stylua --check .`, by exit code)
+- ✓ Linting (`luacheck` on `lua/`, `after/` and `test/smoke/`)
+- ✓ Startup in the isolated smoke environment (`scripts/smoke --startup-only`): every module loads, no unexplained
+  message, every configured formatter and linter is available, and no deprecated API in the config's own files
 
 **When to run:**
 - **Before every commit** (recommended)
@@ -96,8 +102,8 @@ Fast quality gate for pre-commit/pre-push checks.
 2️⃣  Running linter (luacheck)...
    ✓ Luacheck passed
 
-3️⃣  Testing Neovim loads...
-   ✓ Neovim loads successfully
+3️⃣  Testing Neovim starts cleanly (scripts/smoke --startup-only)...
+   ✓ Neovim starts cleanly
 
 🎉 Quality gate passed!
 ```
@@ -111,15 +117,18 @@ Automated quality checks that run before commits and pushes.
 **Installation (one-time setup):**
 ```bash
 ./scripts/install-hooks
+./scripts/smoke --seed-from ~/.local/share/nvim   # once per Neovim version, for the smoke gate
 ```
 
-This installs two hooks:
+`install-hooks` sets `git config core.hooksPath scripts`. Git then runs `scripts/pre-commit` and `scripts/pre-push`
+from the checkout being committed, so a worktree gates its own files rather than the main checkout's. Uninstall with
+`git config --unset core.hooksPath`.
 
 #### Pre-Commit Hook (`./scripts/pre-commit`)
-Runs automatically before every `git commit` (fast, ~5 seconds).
+Runs automatically before every `git commit` (about 20 seconds).
 
 **What it checks:**
-- ✓ Quality gate (stylua, luacheck, Neovim load test)
+- ✓ Quality gate (stylua, luacheck, smoke startup check)
 - ✓ Trailing whitespace in staged .lua files
 - ⚠ Debug print statements (warning only)
 
@@ -134,19 +143,27 @@ git commit --no-verify -m "message"
 ```
 
 #### Pre-Push Hook (`./scripts/pre-push`)
-Runs automatically before every `git push` (fast, ~5 seconds).
+Runs automatically before every `git push` (about 1 to 1.5 minutes).
 
 **What it checks:**
-- ✓ Quality gate (stylua, luacheck, Neovim load test)
+- ✓ Quality gate (stylua, luacheck, smoke startup check)
+- ✓ The full smoke gate (`scripts/smoke`): a real buffer per language
 
 **Behavior:**
-- **Blocks push** if any quality gate check fails
+- **Blocks push** if the quality gate or the smoke gate fails
+- An environment the smoke gate cannot run in (exit 2, not bootstrapped) blocks the push too; it is never skipped
 - Ensures only quality code reaches remote repository
 
 **Bypass (not recommended):**
 ```bash
 git push --no-verify
 ```
+
+**Testing the gates themselves:** `./scripts/gate-selftest` also runs the gate scripts against known-false
+preconditions: `quality-gate` with stylua or luacheck missing from `PATH`, `quality-gate` on a copy with an `error()`
+in `lua/options.lua`, `quality-gate` with `GIT_DIR` exported (as git does for hooks) on a copy with a formatting break,
+and `health-check` with an `nvim` shim reporting 0.11.6 or a `tree-sitter` shim reporting
+0.25.0 against a stricter `versions.env`. Each must exit 1 with the matching message.
 
 ---
 

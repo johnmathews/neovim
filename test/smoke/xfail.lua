@@ -50,6 +50,21 @@ return {
     nvim = "0.12",
   },
 
+  -- F15 and F25: deprecated or private APIs in the config's own files (the text scan)
+  { id = "scan:deprecated", match = 'lua/plugins/lsp.lua: require("lspconfig")', finding = "F15 (W3)" },
+  { id = "scan:deprecated", match = "lua/plugins/lsp.lua: lspconfig.util", finding = "F15 (W3)" },
+  { id = "scan:deprecated", match = "lua/plugins/lsp.lua: open_floating_preview override", finding = "F15 (W3)" },
+  { id = "scan:deprecated", match = "lua/plugins/lsp.lua: find_git_ancestor", finding = "F15 (W3)" },
+  { id = "scan:deprecated", match = "lua/plugins/conform.lua: vim.loop", finding = "F15 (W4)" },
+  { id = "scan:deprecated", match = "lua/plugins/nvim-lint.lua: vim.loop", finding = "F15 (W4)" },
+  { id = "scan:deprecated", match = "lua/plugins/conform.lua: conform lsp_fallback", finding = "F25 (W4)" },
+  { id = "scan:deprecated", match = "ftplugin/markdown.vim: conform lsp_fallback", finding = "F25 (W4)" },
+  { id = "scan:deprecated", match = "init.lua: vim.lsp.set_log_level", finding = "F15 (W5)" },
+  { id = "scan:deprecated", match = "lua/plugins.lua: vim.loop", finding = "F15 (W5)" },
+  { id = "scan:deprecated", match = "lua/functions.lua: vim.loop", finding = "F15 (W5)" },
+  { id = "scan:deprecated", match = "lua/functions.lua: nvim_out_write", finding = "F15 (W5)" },
+  { id = "scan:deprecated", match = "lua/plugins/luasnip.lua: _make_floating_popup_size", finding = "F15 (W5)" },
+
   -- F3: the installed nvim-treesitter master branch breaks on 0.12 (W12)
   { id = "*:folds", match = "no folds computed", finding = "F3 (W12)", nvim = "0.12" },
   { id = "python:textobjects", match = "vaf from line 12 selected 12-12", finding = "F3 (W12)", nvim = "0.12" },

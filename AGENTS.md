@@ -118,8 +118,11 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 - **Manual format:** `<leader>cf`
 - **Manual lint:** `<leader>cl`
 - **Run single test:** `t<leader>n` (nearest), `t<leader>f` (file)
-- **Health check:** `:checkhealth` or `nvim --headless "+CheckHealth" +qa`
-- **Full quality gate:** `./scripts/quality-gate` (stylua + luacheck + nvim load test)
+- **Health check:** `:checkhealth` or `./scripts/health-check` (`--isolated` runs in the smoke environment, never the
+  real data dir)
+- **Full quality gate:** `./scripts/quality-gate` (stylua + luacheck + `scripts/smoke --startup-only`)
+- **Smoke gate:** `./scripts/smoke` opens a real buffer per language in an isolated Neovim; first run per Neovim
+  version: `./scripts/smoke --seed-from ~/.local/share/nvim`. `./scripts/gate-selftest` proves the gates can fail.
 
 ---
 
@@ -148,18 +151,24 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 | Lint single file  | `luacheck lua/plugins/telescope.lua` |
 | Health check      | `./scripts/health-check`             |
 | Quality gate      | `./scripts/quality-gate`             |
+| Smoke gate        | `./scripts/smoke`                    |
+| Gate self-test    | `./scripts/gate-selftest`            |
 | Pre-commit hook   | `./scripts/pre-commit`               |
-| Validate setup    | `nvim --headless "+CheckHealth" +qa` |
+| Pre-push hook     | `./scripts/pre-push`                 |
+| Validate setup    | `./scripts/health-check --isolated`  |
 | Re-index OpenCode | `:reload` inside OpenCode            |
 | Export summaries  | `:export summary.md` inside OpenCode |
 
 ### Testing & Quality Scripts
 
-Three automation scripts are provided in `scripts/`:
+These automation scripts are provided in `scripts/` (details in `docs/TESTING.md`):
 
-1. **`health-check`** - Comprehensive configuration health check
-2. **`quality-gate`** - Pre-commit/pre-push validation
-3. **`pre-commit`** - Git pre-commit hook (optional)
+1. **`health-check`** - Comprehensive configuration health check; exits 1 on any failure
+2. **`quality-gate`** - Pre-commit/pre-push validation; a missing tool fails it
+3. **`smoke`** - Buffer-opening smoke gate in an isolated environment
+4. **`gate-selftest`** - Proves `smoke`, `quality-gate` and `health-check` fail on known-bad inputs
+5. **`pre-commit`** / **`pre-push`** - Git hooks, installed by **`install-hooks`** through `core.hooksPath`
+6. **`versions.env`** - Versions `health-check` enforces
 
 ### Luacheck Configuration
 

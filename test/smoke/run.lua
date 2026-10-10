@@ -622,6 +622,53 @@ local function check_tools()
   end
 end
 
+-- Deprecated or private APIs the config's own files must not use (F15). A text
+-- scan, so it also covers code paths no case exercises. Lua patterns.
+local deprecated_apis = {
+  { api = "vim.loop", pattern = "vim%.loop", use = "vim.uv" },
+  { api = "vim.lsp.set_log_level", pattern = "vim%.lsp%.set_log_level", use = "vim.lsp.log.set_level" },
+  { api = "nvim_out_write", pattern = "nvim_out_write", use = "vim.api.nvim_echo" },
+  { api = "_make_floating_popup_size", pattern = "_make_floating_popup_size", use = "a size computed in the config" },
+  {
+    api = "open_floating_preview override",
+    pattern = "function%s+vim%.lsp%.util%.open_floating_preview",
+    use = "the winborder option",
+  },
+  { api = 'require("lspconfig")', pattern = "require[%s%(,]*[\"']lspconfig[\"']", use = "vim.lsp.config" },
+  { api = "lspconfig.util", pattern = "lspconfig%.util", use = "vim.fs.root and root_markers" },
+  { api = "find_git_ancestor", pattern = "find_git_ancestor", use = "vim.fs.root" },
+  { api = "vim.lsp.buf_get_clients", pattern = "buf_get_clients", use = "vim.lsp.get_clients" },
+  { api = "vim.lsp.get_active_clients", pattern = "get_active_clients", use = "vim.lsp.get_clients" },
+  { api = "conform lsp_fallback", pattern = "lsp_fallback", use = 'lsp_format = "fallback"' },
+  { api = "vim.tbl_islist", pattern = "tbl_islist", use = "vim.islist" },
+  { api = "vim.tbl_flatten", pattern = "tbl_flatten", use = "vim.iter(t):flatten():totable()" },
+}
+
+local function check_deprecated_scan()
+  local files = { "init.lua" }
+  for _, dir in ipairs({ "lua", "after", "ftplugin" }) do
+    if vim.fn.isdirectory(cfg .. "/" .. dir) == 1 then
+      for name, kind in vim.fs.dir(cfg .. "/" .. dir, { depth = 20 }) do
+        if kind == "file" and (name:match("%.lua$") or name:match("%.vim$")) then
+          table.insert(files, dir .. "/" .. name)
+        end
+      end
+    end
+  end
+  table.sort(files)
+  for _, rel in ipairs(files) do
+    local lnum = 0
+    for line in ((read_file(cfg .. "/" .. rel) or "") .. "\n"):gmatch("([^\n]*)\n") do
+      lnum = lnum + 1
+      for _, d in ipairs(deprecated_apis) do
+        if line:find(d.pattern) then
+          fail("scan:deprecated", ("%s: %s (use %s) at line %d"):format(rel, d.api, d.use, lnum))
+        end
+      end
+    end
+  end
+end
+
 local function check_lockfile()
   local orig = read_file((env.SMOKE_REPO or "") .. "/lazy-lock.json")
   local copy = read_file(cfg .. "/lazy-lock.json")
@@ -790,7 +837,7 @@ local function write_report(code, engine_error)
   table.insert(
     lines,
     ("SMOKE %s: %d failed, %d xfailed, %d warnings"):format(
-      code == 0 and "PASS" or "FAIL",
+      code == 0 and "PASS" or (code == 1 and "FAIL" or "ERROR"),
       #R.failures,
       #R.xfailed,
       #R.warnings
@@ -860,6 +907,8 @@ local function main()
 
   S.case = "tools"
   check_tools()
+  R.scopes.scan = true
+  check_deprecated_scan()
 
   if env.SMOKE_STARTUP_ONLY ~= "1" then
     local only = (env.SMOKE_ONLY or "") ~= "" and vim.split(env.SMOKE_ONLY, ",", { trimempty = true }) or nil

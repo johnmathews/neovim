@@ -1,49 +1,45 @@
 #!/usr/bin/env bash
 # Install git hooks for Neovim configuration
 # Run this script to set up automatic quality checks
+#
+# Sets core.hooksPath to scripts/, so git runs scripts/pre-commit and
+# scripts/pre-push from the checkout being committed. A worktree therefore gates
+# its own files, not the main checkout's (the old .git/hooks symlinks did that).
 
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-GIT_DIR="$(git rev-parse --git-dir)"
-HOOKS_DIR="$GIT_DIR/hooks"
+REPO="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
+HOOKS_DIR="$(git -C "$REPO" rev-parse --path-format=absolute --git-common-dir)/hooks"
 
 echo "🔧 Installing git hooks..."
 echo ""
 
-# Create hooks directory if it doesn't exist
-mkdir -p "$HOOKS_DIR"
+chmod +x "$REPO/scripts/pre-commit" "$REPO/scripts/pre-push"
 
-# Install pre-commit hook
-echo "📝 Installing pre-commit hook..."
-if [ -f "$HOOKS_DIR/pre-commit" ] && [ ! -L "$HOOKS_DIR/pre-commit" ]; then
-    echo "   ⚠️  Backing up existing pre-commit hook to pre-commit.backup"
-    mv "$HOOKS_DIR/pre-commit" "$HOOKS_DIR/pre-commit.backup"
-fi
+# Remove the symlinks older versions of this script created in .git/hooks
+for hook in pre-commit pre-push; do
+  if [ -L "$HOOKS_DIR/$hook" ] && [ "$(readlink "$HOOKS_DIR/$hook")" = "../../scripts/$hook" ]; then
+    rm "$HOOKS_DIR/$hook"
+    echo "   ✓ Removed old $hook symlink from .git/hooks"
+  fi
+done
 
-ln -sf "../../scripts/pre-commit" "$HOOKS_DIR/pre-commit"
-chmod +x "$HOOKS_DIR/pre-commit"
-echo "   ✓ Pre-commit hook installed"
-
-# Install pre-push hook
-echo "🚀 Installing pre-push hook..."
-if [ -f "$HOOKS_DIR/pre-push" ] && [ ! -L "$HOOKS_DIR/pre-push" ]; then
-    echo "   ⚠️  Backing up existing pre-push hook to pre-push.backup"
-    mv "$HOOKS_DIR/pre-push" "$HOOKS_DIR/pre-push.backup"
-fi
-
-ln -sf "../../scripts/pre-push" "$HOOKS_DIR/pre-push"
-chmod +x "$HOOKS_DIR/pre-push"
-echo "   ✓ Pre-push hook installed"
+git -C "$REPO" config core.hooksPath scripts
+echo "   ✓ core.hooksPath = scripts"
 
 echo ""
 echo "✅ Git hooks installed successfully!"
 echo ""
 echo "Hooks installed:"
-echo "  • pre-commit: Runs luacheck, format check, basic validation"
-echo "  • pre-push:   Runs full test suite including LSP tests"
+echo "  • pre-commit: Runs the quality gate (stylua, luacheck, smoke startup check) and staged-file checks"
+echo "  • pre-push:   Runs the quality gate and the full smoke gate (about 1 to 1.5 minutes)"
+echo ""
+echo "The smoke gate needs a one-time setup per Neovim version:"
+echo "  ./scripts/smoke --seed-from ~/.local/share/nvim"
 echo ""
 echo "To bypass hooks (emergency only):"
 echo "  git commit --no-verify"
 echo "  git push --no-verify"
+echo ""
+echo "To uninstall: git config --unset core.hooksPath"
 echo ""

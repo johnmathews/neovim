@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   gate with a specific check ID.
 - Test samples for TypeScript, SQL, JSON and TOML. The zsh sample moved to `test/zsh/test_sample.zsh`.
 
+### Changed
+- **Gates fail closed**: `quality-gate` fails when stylua or luacheck is missing, reads stylua's exit code, lints
+  `lua/`, `after/` and `test/smoke/`, and replaces its load test with `scripts/smoke --startup-only`, which also scans
+  the config for deprecated APIs. `health-check` exits 1 on any failure, enforces `scripts/versions.env`, takes the
+  median of five startups, runs `:checkhealth vim.deprecated vim.lsp`, and has an `--isolated` mode.
+- **Hooks per worktree**: `install-hooks` sets `core.hooksPath` to `scripts/`, so a worktree commit runs that
+  worktree's gate. pre-push runs the full smoke gate after `quality-gate`.
+
 ### Removed
 - `test/test_lsp.sh`: it ran bare `nvim` against the real data directory and passed when a server name appeared
   anywhere in the output. The smoke gate covers everything it checked.

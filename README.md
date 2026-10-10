@@ -354,19 +354,20 @@ Markdown, HTML, CSS
 
 ### Git Hooks (Automatic Quality Assurance)
 
+`./scripts/install-hooks` sets `core.hooksPath` to `scripts/`, so every worktree runs its own hooks. The smoke gate
+needs a one-time `./scripts/smoke --seed-from ~/.local/share/nvim` per Neovim version.
+
 **Pre-commit hook** (runs before each commit):
 
 - Luacheck validation
 - Code formatting check
-- Neovim load test
+- Startup check in an isolated Neovim (`scripts/smoke --startup-only`)
 - Common issue detection
 
 **Pre-push hook** (runs before push to remote):
 
 - Full quality gate
-- LSP attachment tests
-- Health check
-- Documentation validation
+- Full smoke gate: a real buffer per language (about 1 to 1.5 minutes)
 
 **Bypass hooks** (emergency only):
 
