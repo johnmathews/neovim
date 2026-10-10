@@ -16,7 +16,7 @@ Markdown development.
 - **Git Integration** - Gitsigns for inline blame, diffs, and staging
 - **Smart Completion** - nvim-cmp with LuaSnip snippets
 - **Syntax Highlighting** - Treesitter with custom text objects
-- **Fast Navigation** - Leap motion, Harpoon marks, and project management
+- **Fast Navigation** - Leap motion, Harpoon marks, project-root cwd and session search
 - **Performance** - Lazy-loaded plugins, ~140ms startup time
 - **Testing** - Automated LSP testing and comprehensive test suite
 - **Documentation** - Detailed guides for LSP, keymaps, and performance
@@ -90,7 +90,9 @@ nvim
 - `fzf-native` - Better performance and FZF syntax support
 - `live_grep_args` - Pass arguments to ripgrep (e.g., `--no-ignore`, `-tpy`)
 - `smart_history` - Persistent search history
-- `project` - Project management
+
+Entering a file buffer moves the working directory to its project root (the nearest `.git`, `Makefile`,
+`package.json` or similar; `lua/autocmd.lua`). `<Tab>p` searches saved sessions (`:AutoSession search`).
 
 ### 2. LSP (Language Server Protocol)
 

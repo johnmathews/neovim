@@ -93,7 +93,7 @@ Complete reference of all custom keybindings in this Neovim configuration.
 
 | Key      | Mode   | Description                        |
 | -------- | ------ | ---------------------------------- |
-| `<Tab>p` | Normal | Projects (switch between projects) |
+| `<Tab>p` | Normal | Sessions: search (`:AutoSession search`) |
 | `<Tab>h` | Normal | Help tags (search Vim help)        |
 | `<Tab>z` | Normal | Resume last Telescope picker       |
 | `<Tab>b` | Normal | LSP workspace symbols              |
@@ -289,7 +289,7 @@ Toggle back to terminal mode before committing to keep diffs clean.
 | `wc`              | Normal | Get highlight group under cursor |
 | `<leader>x`       | Normal | Open current file in default app |
 | `<C-p>`           | Normal | Jump forward in jump list        |
-| `<localleader>fs` | Normal | Search sessions (auto-session)   |
+| `<localleader>fs` | Normal | Search sessions (`:AutoSession search`) |
 
 ### Jump List
 

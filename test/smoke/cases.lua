@@ -35,6 +35,31 @@
 ---@field requests table[]|nil
 ---@field check fun(buf: integer, t: table)|nil
 
+-- Project root and session picker (F14): entering a file buffer moves cwd to its root
+-- marker, and the session picker replaces project.nvim's.
+local function project_checks(buf, t)
+  local root = vim.fn.resolve(vim.fn.stdpath("config"))
+  vim.cmd.cd(vim.fn.fnameescape(vim.fn.stdpath("cache")))
+  vim.cmd("enew")
+  local scratch = vim.api.nvim_get_current_buf()
+  vim.cmd("silent buffer " .. buf)
+  vim.api.nvim_buf_delete(scratch, { force = true })
+  local cwd = vim.fn.resolve(vim.fn.getcwd())
+  if cwd ~= root then
+    t.fail("project:cwd", ("entering %s left cwd at %s, want %s"):format(vim.fn.expand("%:t"), cwd, root))
+  end
+  vim.cmd.cd(vim.fn.fnameescape(root))
+  for _, lhs in ipairs({ "<Tab>p", "<localleader>fs" }) do
+    local rhs = vim.fn.maparg(lhs, "n")
+    if not rhs:find("AutoSession search", 1, true) then
+      t.fail("project:pickers", ("%s maps to %q, want :AutoSession search"):format(lhs, rhs))
+    end
+  end
+  if package.loaded["project_nvim"] then
+    t.fail("project:plugin", "project.nvim is loaded; vim.fs.root in lua/autocmd.lua replaces it")
+  end
+end
+
 ---@type SmokeCase[]
 local cases = {
   {
@@ -54,6 +79,8 @@ local cases = {
       { method = "textDocument/codeAction", line = 6, col = 7 },
     },
     check = function(buf, t)
+      project_checks(buf, t)
+
       -- vaf on the comment inside calculate_sum selects the whole function
       vim.api.nvim_win_set_cursor(0, { 12, 4 })
       local ok, err = pcall(vim.cmd, "normal vaf")

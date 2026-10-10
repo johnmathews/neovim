@@ -158,12 +158,7 @@ map("n", "<Tab>dc", ":cexpr []<CR>", KeymapOptions("Clear quickfix window"))
 map("n", "<C-p>", "<C-i>", default_options)
 
 -- auto session
-local ok = pcall(require, "session-lens")
-if ok then
-  vim.keymap.set("n", "<localleader>fs", function()
-    require("session-lens").search_session()
-  end, KeymapOptions("Sessions: search"))
-end
+map("n", "<localleader>fs", "<Cmd>AutoSession search<CR>", KeymapOptions("Sessions: search"))
 
 -- backgroud git commit and push
 map("n", "gG", ":lua Functions.asyncGitCommitAndPush()<CR>", KeymapOptions("Quietly push all changes to remote"))

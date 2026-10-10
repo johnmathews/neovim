@@ -229,7 +229,7 @@ nvim +StartupTime
 
 1. **`require('plugins')`** (~113ms inclusive) - lazy.nvim and every non-lazy plugin's config
 2. **Mason** (~18ms) - mason, mason-tool-installer and mason-lspconfig setup
-3. **Telescope setup** (~16ms) - Fuzzy finder + extensions (the projects extension alone ~10ms)
+3. **Telescope setup** (~16ms) - Fuzzy finder + extensions (measured with project.nvim's extension, since removed)
 4. **Custom snippets** (~9ms) - `luasnip.loaders.from_lua`
 5. **LSP configuration** (~7ms) - `lua/plugins/lsp.lua`
 

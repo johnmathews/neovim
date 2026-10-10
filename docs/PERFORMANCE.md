@@ -43,13 +43,13 @@ One `--startuptime` profile on 0.11.6 (total 143 ms; inclusive times, so nested 
 | 112.6     | `require('plugins')` (lazy.nvim and every non-lazy plugin's config) |
 | 17.7      | `require('plugins.mason')`                  |
 | 15.6      | `require('plugins.telescope')`              |
-| 10.3      | the telescope `projects` extension          |
 | 10.0      | `require('mason-lspconfig')`                |
 | 9.1       | `require('luasnip.loaders.from_lua')` (custom snippets) |
 | 6.7       | `require('plugins.lsp')`                    |
 | 5.9       | `asyncrun.vim/plugin/asyncrun.vim`          |
 
-0.12.6 shows the same order, a little slower per entry in a single profile (128 ms for `plugins`).
+0.12.6 shows the same order, a little slower per entry in a single profile (128 ms for `plugins`). The profile predates
+the removal of project.nvim: 10 ms of the 15.6 ms for `plugins.telescope` was its telescope extension.
 
 **Note:** headless startup fires neither `UIEnter` nor `VeryLazy`, so noice, lualine and the other `VeryLazy` plugins
 are not in these numbers. They load after the first screen is drawn.

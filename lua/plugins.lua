@@ -48,13 +48,6 @@ return lazy.setup({
     end,
   },
   {
-    "ahmedkhalf/project.nvim",
-    config = function()
-      require("plugins.project")
-    end,
-  },
-
-  {
     "rcarriga/nvim-notify",
     event = "VeryLazy",
     config = function()
@@ -84,15 +77,12 @@ return lazy.setup({
 
   {
     "rmagatti/auto-session",
+    -- session-lens is built into auto-session now (`:AutoSession search`)
     dependencies = {
       "nvim-telescope/telescope.nvim",
-      "rmagatti/session-lens",
     },
     config = function()
       require("plugins.auto-session")
-      pcall(function()
-        require("plugins.telescope").load_extension("session-lens")
-      end)
     end,
   },
 

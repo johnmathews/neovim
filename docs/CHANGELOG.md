@@ -53,7 +53,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   postgres (bigquery for `.bq`).
 - Mason also installs sqlfluff, yamlfmt, jq, shellcheck and jsonlint, which the format and lint config already used.
 
+- **Project root without project.nvim** (F14): a `BufEnter` autocmd in `lua/autocmd.lua` moves cwd to the nearest root
+  marker with `vim.fs.root`, with the same markers and excluded path. `<Tab>p`, the dashboard's `p` button and
+  `<localleader>fs` open `:AutoSession search`.
+
 ### Removed
+- **project.nvim** (F14, F18): unmaintained since 2023, and it calls `vim.lsp.buf_get_clients()`, which 0.12 removed
+  apart from a shim. **session-lens** (F18): merged into auto-session.
 - `test/test_lsp.sh`: it ran bare `nvim` against the real data directory and passed when a server name appeared
   anywhere in the output. The smoke gate covers everything it checked.
 

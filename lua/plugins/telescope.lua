@@ -49,7 +49,7 @@ map(
   { noremap = true, silent = true, desc = "Telescope ripgrep with args" }
 )
 
-map("n", "<Tab>p", ":Telescope projects<CR>", default_options)
+map("n", "<Tab>p", "<Cmd>AutoSession search<CR>", { noremap = true, silent = true, desc = "Sessions: search" })
 map("n", "<Tab>h", ":Telescope help_tags<cr>", default_options)
 
 map("n", "<Tab>tc", ":Telescope command_history<CR>", default_options)
@@ -94,7 +94,6 @@ map("n", "<localleader>i", ":Telescope lsp_implementations<CR>", default_options
 map("n", "<Tab>b", ":Telescope lsp_workspace_symbols<CR>", default_options)
 
 -- register extensions
-telescope.load_extension("projects")
 -- telescope-fzf-native: https://github.com/nvim-telescope/telescope.nvim/wiki/Switching-from-fzf-to-telescope
 telescope.load_extension("fzf")
 telescope.load_extension("harpoon")
@@ -258,7 +257,6 @@ telescope.setup({
       override_file_sorter = true, -- override the file sorter
       case_mode = "smart_case", -- or "ignore_case" or "respect_case"
     },
-    projects = {},
   },
 })
 
