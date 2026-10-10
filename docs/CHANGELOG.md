@@ -16,7 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   gate with a specific check ID.
 - Test samples for TypeScript, SQL, JSON and TOML. The zsh sample moved to `test/zsh/test_sample.zsh`.
 
+### Fixed
+- **LSP settings apply again** (F1): mason-lspconfig v2 ignores `handlers`, so no per-server setting, `on_attach`, navic,
+  `<leader>li` or cmp capability had applied. Servers now use native `vim.lsp.config`: capabilities through
+  `vim.lsp.config("*")`, overrides in `after/lsp/<server>.lua`, one `LspAttach` autocmd for navic and `<leader>li`.
+  basedpyright runs in `basic` mode again (18 diagnostics on the sample become 4).
+- **Only the listed servers start** (F13): `automatic_enable = false` plus an explicit `vim.lsp.enable` list of 10
+  servers. sqls, stylua, eslint, biome and the other Mason servers no longer start.
+
 ### Changed
+- **Floating window borders**: `winborder = "rounded"` replaces the `open_floating_preview` override. The cmp menu and
+  the which-key popup now take the rounded border too.
 - **Gates fail closed**: `quality-gate` fails when stylua or luacheck is missing, reads stylua's exit code, lints
   `lua/`, `after/` and `test/smoke/`, and replaces its load test with `scripts/smoke --startup-only`, which also scans
   the config for deprecated APIs. `health-check` exits 1 on any failure, enforces `scripts/versions.env`, takes the

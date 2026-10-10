@@ -1,12 +1,8 @@
 -- lua/plugins/lsp.lua
-local ok_lsp, lspconfig = pcall(require, "lspconfig")
-if not ok_lsp then
-  return
-end
-
-local util = require("lspconfig.util")
-
-local navic_ok, navic = pcall(require, "nvim-navic")
+-- Servers start through Neovim's native vim.lsp.config / vim.lsp.enable. nvim-lspconfig
+-- only supplies the default lsp/<server>.lua configs. Per-server overrides live in
+-- after/lsp/<server>.lua, merged in this order: vim.lsp.config("*"), then lspconfig's
+-- lsp/<server>.lua, then after/lsp/<server>.lua. See docs/LSP.md.
 
 -- Faster Lua module loading (Nvim ≥ 0.9)
 pcall(vim.loader.enable)
@@ -21,182 +17,65 @@ vim.diagnostic.config({
   float = { border = "rounded" },
 })
 
--- Rounded borders for all LSP floats
-local _open_floating_preview = vim.lsp.util.open_floating_preview
-function vim.lsp.util.open_floating_preview(contents, syntax, opts, ...)
-  opts = opts or {}
-  opts.border = opts.border or "rounded"
-  return _open_floating_preview(contents, syntax, opts, ...)
-end
-
--- Capabilities (nvim-cmp)
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-local ok_cmp, cmp_cap = pcall(require, "cmp_nvim_lsp")
+-- Capabilities (nvim-cmp) for every server
+local ok_cmp, cmp_lsp = pcall(require, "cmp_nvim_lsp")
 if ok_cmp then
-  capabilities = cmp_cap.default_capabilities(capabilities)
+  vim.lsp.config("*", { capabilities = cmp_lsp.default_capabilities() })
 end
 
--- on_attach with inlay-hint toggle and improved go-to keybindings
-local on_attach = function(client, bufnr)
-  local map = function(mode, lhs, rhs, opts)
-    opts = opts or { buffer = bufnr, silent = true }
-    opts.buffer = bufnr
-    vim.keymap.set(mode, lhs, rhs, opts)
-  end
+-- Replaces a per-server on_attach: an on_attach in a server config would replace the one
+-- nvim-lspconfig ships for that server (basedpyright defines one).
+vim.api.nvim_create_autocmd("LspAttach", {
+  group = vim.api.nvim_create_augroup("UserLspAttach", { clear = true }),
+  callback = function(args)
+    local client = vim.lsp.get_client_by_id(args.data.client_id)
+    if not client then
+      return
+    end
+    local bufnr = args.buf
 
-  -- LSP keybindings are now set globally in mappings.lua to avoid load-order issues
-  -- They are set as global keymaps instead of buffer-local to ensure they persist
-  -- and don't get shadowed by other plugins during LSP attachment
+    -- LSP keybindings are now set globally in mappings.lua to avoid load-order issues
+    -- They are set as global keymaps instead of buffer-local to ensure they persist
+    -- and don't get shadowed by other plugins during LSP attachment
 
-  if navic_ok and client.server_capabilities.documentSymbolProvider then
-    navic.attach(client, bufnr)
-  end
-
-  if vim.lsp.inlay_hint then
-    map("n", "<leader>li", function()
-      local enabled = vim.lsp.inlay_hint.is_enabled and vim.lsp.inlay_hint.is_enabled(bufnr)
-      if enabled == nil then
-        enabled = vim.lsp.inlay_hint.is_enabled and vim.lsp.inlay_hint.is_enabled() or false
+    if client:supports_method("textDocument/documentSymbol") then
+      local navic_ok, navic = pcall(require, "nvim-navic")
+      if navic_ok then
+        navic.attach(client, bufnr)
       end
-      if vim.lsp.inlay_hint.enable then
-        vim.lsp.inlay_hint.enable(not enabled, { bufnr = bufnr })
-      else
-        vim.lsp.inlay_hint(bufnr, not enabled) -- very old API fallback
-      end
-    end)
-  end
-end
+    end
 
--- mason-lspconfig v2
-local ok_mlc, mason_lspconfig = pcall(require, "mason-lspconfig")
-if not ok_mlc then
-  return
-end
-
-mason_lspconfig.setup({
-  ensure_installed = {
-    "lua_ls",
-    "basedpyright",
-    "ts_ls",
-    "bashls",
-    "yamlls",
-    "jsonls",
-    "dockerls",
-    "taplo",
-  },
-
-  handlers = {
-    -- default handler for anything not overridden below
-    function(server)
-      lspconfig[server].setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-      })
-    end,
-
-    -- Lua
-    ["lua_ls"] = function()
-      lspconfig.lua_ls.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        root_dir = function(fname)
-          return util.find_git_ancestor(fname)
-            or util.root_pattern(".luarc.json", ".luarc.jsonc", ".stylua.toml", "stylua.toml")(fname)
-            or vim.fn.stdpath("config")
-        end,
-        settings = {
-          Lua = {
-            runtime = { version = "LuaJIT" },
-            workspace = { checkThirdParty = false },
-            diagnostics = {
-              unusedLocalExclude = { "^_" }, -- allow _client, _foo
-              globals = { "vim", "KeymapOptions", "Functions", "Functions_ok" },
-            },
-            hint = { enable = true },
-            telemetry = { enable = false },
-          },
-        },
-      })
-    end,
-
-    -- BasedPyright
-    ["basedpyright"] = function()
-      lspconfig.basedpyright.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        root_dir = function(fname)
-          return util.root_pattern("pyproject.toml", "setup.cfg", "requirements.txt", ".git")(fname)
-            or util.find_git_ancestor(fname)
-        end,
-        settings = {
-          basedpyright = {
-            analysis = {
-              typeCheckingMode = "basic", -- try "standard"/"strict" later if you like
-              autoImportCompletions = true,
-            },
-          },
-          python = {
-            analysis = {
-              diagnosticMode = "workspace",
-            },
-          },
-        },
-      })
-    end,
-
-    -- YAML (disable formatting so conform.nvim owns it)
-    ["yamlls"] = function()
-      lspconfig.yamlls.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        settings = {
-          yaml = {
-            validate = true,
-            format = { enable = false },
-            keyOrdering = false,
-          },
-        },
-      })
-    end,
-
-    -- TypeScript/JavaScript
-    ["ts_ls"] = function()
-      lspconfig.ts_ls.setup({
-        on_attach = on_attach,
-        capabilities = capabilities,
-        root_dir = util.root_pattern("package.json", "tsconfig.json", "jsconfig.json", ".git"),
-        single_file_support = true,
-      })
-    end,
-
-    -- Bash (suppress diagnostics; let nvim-lint/shellcheck handle them)
-    ["bashls"] = function()
-      local has_shellcheck = (vim.fn.executable("shellcheck") == 1)
-
-      lspconfig.bashls.setup({
-        on_attach = on_attach, -- DO NOT override publishDiagnostics here
-        capabilities = capabilities,
-        filetypes = { "sh", "bash", "zsh" }, -- Attach to sh, bash, and zsh files
-        settings = {
-          bashIde = {
-            globPattern = "*@(.sh|.inc|.bash|.command|.zsh)",
-            shellcheckPath = has_shellcheck and "shellcheck" or "", -- enable if present
-            shellcheckArguments = { "-x" }, -- follow sourced files (optional)
-          },
-        },
-      })
-
-      -- Debug: verify configuration was applied
-      vim.notify(
-        "[bashls] Configured with filetypes: " .. table.concat(lspconfig.bashls.filetypes or {}, ", "),
-        vim.log.levels.INFO
-      )
-
-      if not has_shellcheck then
-        vim.schedule(function()
-          vim.notify("[bashls] shellcheck not found on PATH; diagnostics will be limited", vim.log.levels.WARN)
-        end)
-      end
-    end,
-  },
+    if client:supports_method("textDocument/inlayHint") then
+      vim.keymap.set("n", "<leader>li", function()
+        vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = bufnr }), { bufnr = bufnr })
+      end, { buffer = bufnr, silent = true, desc = "LSP: toggle inlay hints" })
+    end
+  end,
 })
+
+-- The servers that start, on every machine. Mason installs them; nothing else is enabled.
+-- SQL has no LSP on purpose (dadbod completes, sqlfluff formats). stylua, eslint and
+-- biome run as tools through conform and nvim-lint instead of as servers.
+local servers = {
+  "lua_ls",
+  "basedpyright",
+  "ruff",
+  "ts_ls",
+  "bashls",
+  "yamlls",
+  "jsonls",
+  "dockerls",
+  "taplo",
+  "marksman",
+}
+
+-- mason-lspconfig v2 only installs servers here; automatic_enable would start every
+-- server Mason happens to hold.
+local ok_mlc, mason_lspconfig = pcall(require, "mason-lspconfig")
+if ok_mlc then
+  mason_lspconfig.setup({ ensure_installed = servers, automatic_enable = false })
+else
+  vim.notify("mason-lspconfig is not installed: LSP servers will not be auto-installed", vim.log.levels.WARN)
+end
+
+vim.lsp.enable(servers)

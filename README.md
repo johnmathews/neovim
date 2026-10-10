@@ -196,12 +196,13 @@ Markdown, HTML, CSS
 │   ├── colorscheme.lua         # Theme configuration
 │   ├── plugins.lua             # Plugin declarations (lazy.nvim)
 │   ├── plugins/                # Plugin configurations (45 files)
-│   │   ├── lsp.lua             # LSP setup
+│   │   ├── lsp.lua             # LSP setup (vim.lsp.config, LspAttach, enabled servers)
 │   │   ├── telescope.lua       # Telescope configuration
 │   │   ├── treesitter.lua      # Treesitter setup
 │   │   ├── cmp.lua             # Completion configuration
 │   │   └── ...
 │   └── snippets/               # LuaSnip snippets (6 languages)
+├── after/lsp/                  # Per-server LSP overrides (merged over nvim-lspconfig's defaults)
 ├── ftplugin/                   # Filetype-specific settings (22 files)
 ├── scripts/
 │   ├── health-check            # Configuration health check

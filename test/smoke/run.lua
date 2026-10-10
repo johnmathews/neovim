@@ -434,7 +434,10 @@ end
 local function missing_leaves(want, have, prefix, out)
   for k, v in pairs(want) do
     local path = prefix and (prefix .. "." .. tostring(k)) or tostring(k)
-    local h = type(have) == "table" and have[k] or nil
+    local h = nil -- not `have[k] or nil`: that would turn a false leaf into a missing one
+    if type(have) == "table" then
+      h = have[k]
+    end
     if type(v) == "table" and not vim.islist(v) then
       missing_leaves(v, h, path, out)
     elseif not vim.deep_equal(v, h) then
@@ -498,13 +501,18 @@ local function check_treesitter(c, buf)
     end
   end
   if c.folds then
-    vim.cmd("normal! zx")
+    -- folds are computed from the parse tree, which may still be parsing on a busy machine
     local folded = 0
-    for l = 1, vim.api.nvim_buf_line_count(buf) do
-      if vim.fn.foldlevel(l) > 0 then
-        folded = folded + 1
+    vim.wait(5000, function()
+      vim.cmd("normal! zx")
+      folded = 0
+      for l = 1, vim.api.nvim_buf_line_count(buf) do
+        if vim.fn.foldlevel(l) > 0 then
+          folded = folded + 1
+        end
       end
-    end
+      return folded > 0
+    end, 250)
     if folded == 0 then
       fail(
         c.name .. ":folds",
@@ -573,6 +581,25 @@ local function check_init()
     if package.loaded[mod] == nil then
       fail("startup:modules", ("module %s never loaded: init.lua stopped before it"):format(mod))
     end
+  end
+end
+
+-- The enabled LSP configs must be exactly cases.enabled_servers, so the set that can
+-- start is the same on every machine (F13). Nvim 0.11 and 0.12 keep it in
+-- vim.lsp._enabled_configs; there is no public listing API.
+local function check_enabled(want)
+  if not want then
+    return
+  end
+  local have = vim.tbl_keys(vim.lsp._enabled_configs or {})
+  table.sort(have)
+  local sorted = vim.deepcopy(want)
+  table.sort(sorted)
+  if table.concat(have, ",") ~= table.concat(sorted, ",") then
+    fail(
+      "startup:enabled",
+      ("enabled LSP configs {%s}, want exactly {%s}"):format(table.concat(have, ","), table.concat(sorted, ","))
+    )
   end
 end
 
@@ -904,6 +931,8 @@ local function main()
   vim.wait(1000)
   vim.cmd("redraw!")
   check_messages("dashboard", from)
+
+  check_enabled(cases.enabled_servers)
 
   S.case = "tools"
   check_tools()

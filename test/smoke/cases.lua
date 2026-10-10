@@ -34,7 +34,7 @@
 ---@field check fun(buf: integer, t: table)|nil
 
 ---@type SmokeCase[]
-return {
+local cases = {
   {
     name = "python",
     file = "test/python/test_sample.py",
@@ -61,6 +61,23 @@ return {
         t.fail("python:textobjects", ("vaf from line 12 selected %d-%d, want 10-13 (%s)"):format(s, e, tostring(err)))
       end
       vim.api.nvim_win_set_cursor(0, { 1, 0 })
+
+      -- a restarted server must get the same settings as the first start
+      local before = vim.lsp.get_clients({ bufnr = 0, name = "basedpyright" })[1]
+      if before and vim.fn.exists(":LspRestart") == 2 then
+        vim.cmd("silent LspRestart basedpyright")
+        vim.wait(20000, function()
+          local after = vim.lsp.get_clients({ bufnr = 0, name = "basedpyright" })[1]
+          return after ~= nil and after.id ~= before.id and after.initialized
+        end, 200)
+        local after = vim.lsp.get_clients({ bufnr = 0, name = "basedpyright" })[1]
+        local mode = after and vim.tbl_get(after.config.settings or {}, "basedpyright", "analysis", "typeCheckingMode")
+        if not after or after.id == before.id then
+          t.fail("python:restart", ":LspRestart did not start a new basedpyright client")
+        elseif mode ~= "basic" then
+          t.fail("python:restart", ("after :LspRestart typeCheckingMode=%s, want basic"):format(tostring(mode)))
+        end
+      end
     end,
   },
   {
@@ -149,3 +166,19 @@ return {
     lang = "sql",
   },
 }
+
+-- The exact set of enabled LSP configs (checked once per run as startup:enabled).
+cases.enabled_servers = {
+  "lua_ls",
+  "basedpyright",
+  "ruff",
+  "ts_ls",
+  "bashls",
+  "yamlls",
+  "jsonls",
+  "dockerls",
+  "taplo",
+  "marksman",
+}
+
+return cases

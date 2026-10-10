@@ -11,20 +11,7 @@
 --   finding  finding ID, and the unit planned to fix it
 --   nvim     only on these versions ("0.12" matches 0.12.x); omit for every version
 return {
-  -- F1: mason-lspconfig v2 ignores `handlers`, so no per-server setting, on_attach,
-  -- navic, <leader>li or cmp capability applies (W3)
-  { id = "python:settings", match = "typeCheckingMode=nil", finding = "F1 (W3)" },
-  { id = "python:diags", match = "lsp:basedpyright=18, want 4", finding = "F1 (W3)" },
-  { id = "lua:settings", match = "Lua.runtime.version=nil", finding = "F1 (W3)" },
-  { id = "yaml:settings", match = "yaml.format.enable=true", finding = "F1 (W3)" },
-  { id = "zsh:clients", match = "LSP clients {}, want exactly {bashls}", finding = "F1 (W3)" },
-  { id = "*:capabilities", match = "did not receive the cmp-nvim-lsp completion capabilities", finding = "F1 (W3)" },
-  { id = "*:keymaps", match = "<leader>li (inlay hints) is not buffer-mapped", finding = "F1 (W3)" },
-  { id = "*:navic", match = "nvim-navic is not attached", finding = "F1 (W3)" },
-
-  -- F13: automatic_enable starts every Mason server, and ruff reports twice (W3, W4)
-  { id = "lua:clients", match = "LSP clients {lua_ls,stylua}", finding = "F13 (W3)" },
-  { id = "sql:clients", match = "LSP clients {sqls}", finding = "F13 (W3)" },
+  -- F13: ruff reports twice, once from its LSP server and once from nvim-lint (W4)
   { id = "python:diags", match = "ruff=4, want 0", finding = "F13 (W4)" },
   { id = "python:duplicates", match = "from lsp:ruff and ruff", finding = "F13 (W4)" },
 
@@ -51,10 +38,6 @@ return {
   },
 
   -- F15 and F25: deprecated or private APIs in the config's own files (the text scan)
-  { id = "scan:deprecated", match = 'lua/plugins/lsp.lua: require("lspconfig")', finding = "F15 (W3)" },
-  { id = "scan:deprecated", match = "lua/plugins/lsp.lua: lspconfig.util", finding = "F15 (W3)" },
-  { id = "scan:deprecated", match = "lua/plugins/lsp.lua: open_floating_preview override", finding = "F15 (W3)" },
-  { id = "scan:deprecated", match = "lua/plugins/lsp.lua: find_git_ancestor", finding = "F15 (W3)" },
   { id = "scan:deprecated", match = "lua/plugins/conform.lua: vim.loop", finding = "F15 (W4)" },
   { id = "scan:deprecated", match = "lua/plugins/nvim-lint.lua: vim.loop", finding = "F15 (W4)" },
   { id = "scan:deprecated", match = "lua/plugins/conform.lua: conform lsp_fallback", finding = "F25 (W4)" },

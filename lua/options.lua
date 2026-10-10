@@ -30,6 +30,7 @@ local options = {
   directory = "/tmp/,/private/tmp", -- maybe this is swapfile location?
 
   winbar = nil, -- winbar disabled
+  winborder = "rounded", -- rounded borders on every floating window (LSP hover, signature help, diagnostics)
 
   timeout = true,
   timeoutlen = 300,
