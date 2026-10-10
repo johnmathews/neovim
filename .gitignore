@@ -25,3 +25,6 @@ plugin/packer_compiled.lua
 
 node_modules/
 db_ui/connections.json
+
+# engineering-team run artifacts (evaluation, plan, evidence)
+.engineering-team/

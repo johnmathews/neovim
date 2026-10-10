@@ -1,3 +1,5 @@
+**Status:** superseded by [TESTING.md](../TESTING.md) (2026-10-11). These are the 2025-11-07 results on Neovim 0.11.4; the smoke gate (`scripts/smoke`) now produces current results.
+
 # Test Results Summary
 
 **Date:** 2025-11-07  

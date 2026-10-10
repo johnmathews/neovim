@@ -213,16 +213,15 @@ is archived.
 │   ├── lua/                    # Lua test files
 │   ├── javascript/             # JavaScript test files
 │   └── ...
+├── AGENTS.md                   # Architecture & conventions (for agents and humans)
 └── docs/
-    ├── AGENTS.md               # Architecture & conventions
     ├── CHANGELOG.md            # Version history
-    ├── IMPROVEMENTS.md         # Enhancement tracking
     ├── KEYMAPS.md              # Complete keymap reference
     ├── LSP.md                  # LSP documentation
+    ├── MARKDOWN-FORMATTING.md  # Markdown formatting and print mode
     ├── PERFORMANCE.md          # Performance analysis
     ├── TESTING.md              # Testing infrastructure
-    ├── TEST_RESULTS.md         # Latest test results
-    └── TESTING_CHANGELOG_GUIDE.md # Testing & changelog guide
+    └── archive/                # Superseded docs, kept for their history
 ```
 
 ---
@@ -242,14 +241,7 @@ is archived.
 ./scripts/quality-gate
 ```
 
-### Test Results (2025-11-08)
-
-- ✅ **Health Check:** PASS
-- ✅ **Code Quality:** 0 warnings / 0 errors (58 Lua files)
-- ✅ **LSP Attachment:** 4/4 languages (100%)
-- ✅ **Startup Performance:** 350ms (excellent, <500ms threshold)
-
-**Detailed Results:** See [docs/TEST_RESULTS.md](docs/TEST_RESULTS.md)
+What each script checks, and how to read its output, is in [docs/TESTING.md](docs/TESTING.md).
 
 ---
 
@@ -257,20 +249,19 @@ is archived.
 
 **Current Performance:**
 
-- Headless startup: ~350ms (average of 5 runs)
-- Real-world startup: ~250-280ms (with lazy-loading)
-- Plugin count: 88 (8 plugins lazy-loaded)
+- Headless startup: ~140ms (median, Neovim 0.11.6 and 0.12.6)
+- Plugin count: 85 (`lazy-lock.json`)
 
 **Lazy-Loaded Plugins:**
 
-- Telescope (loads on `<Tab>` keypress)
 - nvim-cmp (loads on `InsertEnter`)
-- LuaSnip (loads on `InsertEnter`)
 - Gitsigns (loads on `BufReadPre`)
 - Alpha dashboard (loads on `VimEnter`)
-- Lualine (loads on `VeryLazy`)
-- Mason (deferred with `run_on_start = false`)
+- Lualine, noice and nvim-notify (load on `VeryLazy`)
 - Harpoon (loads on keypress)
+
+Telescope and LuaSnip declare lazy triggers but load at startup anyway: auto-session depends on Telescope, and
+`init.lua` loads the custom snippets. Mason's tool installer checks its list on every start.
 
 **Performance Guide:** See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for detailed analysis and optimization tips.
 
@@ -282,13 +273,12 @@ is archived.
 | ------------------------------------------------------------- | ---------------------------------------------------- |
 | [AGENTS.md](AGENTS.md)                                        | Architecture, design principles, conventions         |
 | [CHANGELOG.md](docs/CHANGELOG.md)                             | Version history and change tracking                  |
-| [IMPROVEMENTS.md](docs/IMPROVEMENTS.md)                       | Enhancement implementation details                   |
 | [KEYMAPS.md](docs/KEYMAPS.md)                                 | Complete keymap reference (searchable via `<Tab>tk`) |
 | [LSP.md](docs/LSP.md)                                         | LSP servers, formatters, linters                     |
 | [PERFORMANCE.md](docs/PERFORMANCE.md)                         | Startup analysis and optimization                    |
-| [TESTING.md](docs/TESTING.md)                                 | Testing infrastructure and CI/CD                     |
-| [TEST_RESULTS.md](docs/TEST_RESULTS.md)                       | Latest test execution results                        |
-| [TESTING_CHANGELOG_GUIDE.md](docs/TESTING_CHANGELOG_GUIDE.md) | Testing & changelog workflows                        |
+| [MARKDOWN-FORMATTING.md](docs/MARKDOWN-FORMATTING.md)         | Markdown formatting, linting and print mode          |
+| [TESTING.md](docs/TESTING.md)                                 | Smoke gate, quality gate, health check, git hooks    |
+| [docs/archive/](docs/archive/)                                | Superseded docs (test results, improvement log)      |
 
 ---
 

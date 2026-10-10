@@ -63,12 +63,27 @@ CI. `VERSIONS_ENV=<file>` reads another versions file, and `NVIM=<path>` selects
    ✓ Neovim 0.11.6 (pinned 0.11.6)
 
 2. Checking required CLI tools...
-   ✓ cc: Apple clang version 17.0.0
-   ✓ luacheck: Luacheck: 1.2.0
+   ✓ cc: Apple clang version 21.0.0 (clang-2100.1.1.101)
    ...
+   ✓ node: v22.22.0
+
+3. Running luacheck...
+Total: 0 warnings / 0 errors in 69 files
+   ✓ Luacheck passed (0 warnings)
+
+4. Testing Neovim loads (scripts/smoke --startup-only)...
+   ✓ Neovim starts cleanly
+
+5. Measuring startup performance...
+   Runs: 138.608 137.031 135.551 128.674 142.445 ms
+   Median startup time: 137.031ms
+   ✓ Under 150ms target
+...
 
 🎉 Health check passed!
 ```
+
+That is `./scripts/health-check --isolated` on 2026-10-11 (about 5 seconds, load average about 11).
 
 ---
 
@@ -125,7 +140,7 @@ from the checkout being committed, so a worktree gates its own files rather than
 `git config --unset core.hooksPath`.
 
 #### Pre-Commit Hook (`./scripts/pre-commit`)
-Runs automatically before every `git commit` (about 20 seconds).
+Runs automatically before every `git commit` (about 3.5 seconds, measured 2026-10-11).
 
 **What it checks:**
 - ✓ Quality gate (stylua, luacheck, smoke startup check)
@@ -143,7 +158,7 @@ git commit --no-verify -m "message"
 ```
 
 #### Pre-Push Hook (`./scripts/pre-push`)
-Runs automatically before every `git push` (about 1 to 1.5 minutes).
+Runs automatically before every `git push` (about 45 seconds on 0.11.6, measured 2026-10-11; longer on a busy machine).
 
 **What it checks:**
 - ✓ Quality gate (stylua, luacheck, smoke startup check)

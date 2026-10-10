@@ -48,7 +48,9 @@ Agents must:
 - **Plugin manager:** `lazy.nvim`
 - **Required CLIs:** `stylua`, `luacheck`, `ripgrep`, `fd`, `node` > v18
   - Install luacheck: `brew install luacheck` (macOS)
-- **Optional CLIs:** ...
+- **Optional CLIs:** `uv` (the Python provider: `uv tool install pynvim`), Typora (macOS, `<leader>X`), and the
+  `tree-sitter` CLI, which becomes required at the Neovim 0.12 cutover. Formatters, linters and LSP servers come from
+  Mason (`lua/plugins/mason.lua`, `lua/plugins/lsp.lua`).
 - **Python:** used for data and scripting. The Python provider is the `pynvim` tool from `uv tool install pynvim`
   (`$UV_TOOL_DIR/pynvim`, default `~/.local/share/uv/tools/pynvim`), set in `init.lua`. The Node provider is disabled.
 - **Preferred shell:** zsh
@@ -107,10 +109,10 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 
 ## Build / Lint / Test Commands
 
-- **Lint Lua:** `luacheck lua/` (uses `.luacheckrc`)
-  - Should report: `0 warnings / 0 errors in 51 files`
+- **Lint Lua:** `luacheck lua/ after/ test/smoke` (uses `.luacheckrc`; the same paths `scripts/quality-gate` lints)
+  - Should report `0 warnings / 0 errors`
   - Config: `.luacheckrc` defines globals, disables line length, ignores unused vars in snippets
-  - Run from config root: `cd ~/.config/nvim && luacheck lua/`
+  - Run from config root: `cd ~/.config/nvim && luacheck lua/ after/ test/smoke`
 - **Format Lua:** `stylua .` (formats all Lua files)
   - Check only: `stylua --check .`
 - **Prettier:** `prettierd` via conform.nvim (for Markdown)
@@ -138,7 +140,7 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 - **Types & Docs:** Add `---@param` and `---@return` annotations for LSP; use `---@class` for table schemas.
 - **Comments:** Use single-line `--` comments; avoid multi-line blocks; prefer self-documenting code over comments.
 - **Keymaps:** Define in `lua/mappings.lua` with `desc` field for discoverability; group related maps by prefix.
-- **Linting:** All code must pass `luacheck lua/` (0 warnings) and `stylua --check .` before commit.
+- **Linting:** All code must pass `luacheck lua/ after/ test/smoke` (0 warnings) and `stylua --check .` before commit.
 - **Commits:** Atomic, tested with `./scripts/quality-gate` before commit.
 
 ---
@@ -148,7 +150,7 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 | Purpose           | Command                              |
 | ----------------- | ------------------------------------ |
 | Format all Lua    | `stylua .`                           |
-| Lint Lua          | `luacheck lua/`                      |
+| Lint Lua          | `luacheck lua/ after/ test/smoke`    |
 | Lint single file  | `luacheck lua/plugins/telescope.lua` |
 | Health check      | `./scripts/health-check`             |
 | Quality gate      | `./scripts/quality-gate`             |
@@ -178,7 +180,7 @@ The `.luacheckrc` file configures luacheck behavior:
 - **Allowed globals:** Neovim-specific globals like `vim`, `KeymapOptions`, plugin toggle functions
 - **Line length:** Maximum 150 characters (`max_line_length = 150`)
 - **Snippet exceptions:** Unused variables/functions allowed in `lua/snippets/` (common for snippet helpers)
-- **Target:** Zero warnings/errors across all 51 Lua files
+- **Target:** Zero warnings/errors across every checked Lua file
 
 ---
 
@@ -233,16 +235,20 @@ nvim +StartupTime
 4. **Custom snippets** (~9ms) - `luasnip.loaders.from_lua`
 5. **LSP configuration** (~7ms) - `lua/plugins/lsp.lua`
 
-**See `PERFORMANCE.md` for detailed analysis and optimization recommendations.**
+**See `docs/PERFORMANCE.md` for detailed analysis and optimization recommendations.**
 
 ---
 
 ## Documentation
 
-- **`KEYMAPS.md`** - Complete keymap reference (searchable via `<Tab>tk`)
-- **`LSP.md`** - Language Server Protocol, formatters, and linters documentation
-- **`PERFORMANCE.md`** - Startup performance analysis and optimization guide
-- **`TESTING.md`** - Testing infrastructure, quality gates, and CI/CD setup
+- **`docs/KEYMAPS.md`** - Complete keymap reference (searchable via `<Tab>tk`)
+- **`docs/LSP.md`** - Language Server Protocol, formatters, and linters documentation
+- **`docs/MARKDOWN-FORMATTING.md`** - Markdown formatting, linting and print mode
+- **`docs/PERFORMANCE.md`** - Startup performance analysis and optimization guide
+- **`docs/TESTING.md`** - Smoke gate, quality gate, health check and git hooks
+- **`docs/CHANGELOG.md`** - Version history
+- **`docs/archive/`** - Superseded docs, kept for their history
+- **`journal/`** - Dated development journal entries
 - **`AGENTS.md`** - This file (architecture and conventions)
 
 ---

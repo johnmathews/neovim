@@ -65,6 +65,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   marker with `vim.fs.root`, with the same markers and excluded path. `<Tab>p`, the dashboard's `p` button and
   `<localleader>fs` open `:AutoSession search`.
 
+- **Docs** (F26, F20): `TEST_RESULTS.md`, `TESTING_CHANGELOG_GUIDE.md` and `IMPROVEMENTS.md` moved to `docs/archive/`
+  with a Status header naming the doc that replaced each. README drops the 2025-11-08 test results, and its startup,
+  plugin-count and lazy-loading claims match the code again. AGENTS.md lists the optional CLIs and lints the same paths as
+  `quality-gate`. `.engineering-team/` is git-ignored.
+
 ### Removed
 - **project.nvim** (F14, F18): unmaintained since 2023, and it calls `vim.lsp.buf_get_clients()`, which 0.12 removed
   apart from a shim. **session-lens** (F18): merged into auto-session.
