@@ -34,7 +34,8 @@ done
 
 # Where scripts/smoke writes its report: ask it the same way it decides.
 smoke_home() {
-  local args=("${PASS_ARGS[@]}")
+  # ${a[@]+...}: bash 3.2 (macOS /bin/bash) treats an empty array as unset under set -u
+  local args=(${PASS_ARGS[@]+"${PASS_ARGS[@]}"})
   local i
   for ((i = 0; i < ${#args[@]}; i++)); do
     if [ "${args[$i]}" = "--home" ]; then
@@ -61,7 +62,7 @@ for fixture in "$REPO"/test/smoke/fixtures/*.lua; do
   IFS=$'\t' read -r expect_id expect_exit extra < <("$NVIM_BIN" --clean -l "$REPO/test/smoke/fixture.lua" info "$fixture")
   [ "$expect_id" = "-" ] && expect_id=""
   # shellcheck disable=SC2086 # extra holds the fixture's own smoke arguments
-  "$SMOKE" --fixture "$name" "${PASS_ARGS[@]}" $extra >"$HOME_DIR.selftest-$name.log" 2>&1
+  "$SMOKE" --fixture "$name" ${PASS_ARGS[@]+"${PASS_ARGS[@]}"} $extra >"$HOME_DIR.selftest-$name.log" 2>&1
   rc=$?
   if [ "$rc" -ne "$expect_exit" ]; then
     echo "FAIL  $name: exit $rc, want $expect_exit (log: $HOME_DIR.selftest-$name.log)"

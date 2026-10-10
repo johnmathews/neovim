@@ -49,6 +49,7 @@ local function project_checks(buf, t)
     t.fail("project:cwd", ("entering %s left cwd at %s, want %s"):format(vim.fn.expand("%:t"), cwd, root))
   end
   vim.cmd.cd(vim.fn.fnameescape(root))
+
   for _, lhs in ipairs({ "<Tab>p", "<localleader>fs" }) do
     local rhs = vim.fn.maparg(lhs, "n")
     if not rhs:find("AutoSession search", 1, true) then
@@ -301,6 +302,18 @@ local cases = {
             ("%s gave line %d %q, want '// added' (%s)"):format(c.keys, c.lnum, got, tostring(err))
           )
         end
+      end
+      -- with no commentstring, gco opens a plain line instead of leaving a stray "x"
+      vim.cmd("enew")
+      local scratch = vim.api.nvim_get_current_buf()
+      vim.bo.commentstring = ""
+      vim.api.nvim_buf_set_lines(scratch, 0, -1, false, { "text" })
+      pcall(vim.api.nvim_feedkeys, vim.keycode("gcoadded<Esc>"), "mx", false)
+      local lines = vim.api.nvim_buf_get_lines(scratch, 0, -1, false)
+      vim.cmd("silent buffer #")
+      vim.api.nvim_buf_delete(scratch, { force = true })
+      if table.concat(lines, "|") ~= "text|added" then
+        t.fail("typescript:comment", ("gco with no commentstring gave %s, want text|added"):format(vim.inspect(lines)))
       end
       vim.cmd("silent edit!")
     end,

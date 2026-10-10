@@ -86,9 +86,28 @@ if [ -d "$REAL_DATA" ] && [ "$(cd "$REAL_DATA" && pwd -P)" = "$SMOKE_HOME/data/n
   die "SMOKE_HOME resolves to the real data directory $REAL_DATA"
 fi
 
+# A directory this script made: empty, marked, or holding only the layout it writes.
+# --fresh deletes SMOKE_HOME, so it must never be a directory the user pointed at by
+# mistake (`--home ~`, `--home .`).
+is_smoke_home() {
+  [ -f "$1/.nvim-smoke-home" ] && return 0
+  local entry
+  for entry in "$1"/* "$1"/.[!.]*; do
+    [ -e "$entry" ] || continue
+    case "$(basename "$entry")" in
+      config | data | state | cache | report.json | summary.txt | stderr.log | bootstrap-*.log | .timed-out) ;;
+      *) return 1 ;;
+    esac
+  done
+  return 0
+}
+is_smoke_home "$SMOKE_HOME" || die "SMOKE_HOME $SMOKE_HOME holds files scripts/smoke did not create; use an empty directory"
+touch "$SMOKE_HOME/.nvim-smoke-home"
+
 if [ "$FRESH" -eq 1 ]; then
   rm -rf "$SMOKE_HOME"
   mkdir -p "$SMOKE_HOME"
+  touch "$SMOKE_HOME/.nvim-smoke-home"
 fi
 
 CFG="$SMOKE_HOME/config/nvim"
@@ -130,6 +149,10 @@ tar -C "$REPO" --exclude=./.git --exclude=./.claude --exclude=./.engineering-tea
 # Root markers such as .git must exist in the copy, as they do in a real checkout.
 git -C "$CFG" init -q
 
+# init.lua finds uv's pynvim through $UV_TOOL_DIR or $XDG_DATA_HOME/uv/tools. Point it at
+# this machine's tool directory before XDG_DATA_HOME moves into the sandbox, so the
+# provider and Mundo checks see the same Python host a real session would.
+export UV_TOOL_DIR="${UV_TOOL_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/uv/tools}"
 export XDG_CONFIG_HOME="$SMOKE_HOME/config"
 export XDG_DATA_HOME="$SMOKE_HOME/data"
 export XDG_STATE_HOME="$SMOKE_HOME/state"
@@ -154,15 +177,20 @@ run_nvim() {
   rm -f "$marker"
   (cd "$CFG" && exec "$NVIM" "$@" </dev/null 2>"$log") &
   local pid=$!
+  # The watchdog's sleep runs in the background so the TERM trap can stop it; a
+  # leftover sleep would hold the caller's stdout open until the timeout (`smoke | tail`).
   (
-    sleep "$TIMEOUT"
+    trap 'kill "$sleeper" 2>/dev/null; exit 0' TERM
+    sleep "$TIMEOUT" &
+    sleeper=$!
+    wait "$sleeper"
     if kill -0 "$pid" 2>/dev/null; then
       touch "$marker"
       kill -TERM "$pid" 2>/dev/null || true
       sleep 5
       kill -KILL "$pid" 2>/dev/null || true
     fi
-  ) &
+  ) </dev/null >/dev/null 2>&1 &
   local watchdog=$!
   local rc=0
   wait "$pid" || rc=$?

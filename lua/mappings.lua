@@ -163,9 +163,18 @@ map("n", "<C-p>", "<C-i>", default_options)
 -- invert commenting of visually selected lines
 -- https://github.com/numToStr/Comment.nvim/issues/17#issuecomment-939410954
 vim.keymap.set("v", "gci", ":normal gcc<CR>", { silent = true, desc = "Comment: invert each selected line" })
--- open a commented line below or above, in insert mode
-vim.keymap.set("n", "gco", "o<Esc>Vcx<Esc><Cmd>normal gcc<CR>fxa<BS>", { desc = "Comment: add line below" })
-vim.keymap.set("n", "gcO", "O<Esc>Vcx<Esc><Cmd>normal gcc<CR>fxa<BS>", { desc = "Comment: add line above" })
+-- open a commented line below or above, in insert mode (a plain line when the buffer
+-- has no commentstring, where gcc would only warn and leave the placeholder x behind)
+local function comment_line_keys(open)
+  return function()
+    if vim.bo.commentstring == "" then
+      return open
+    end
+    return open .. "<Esc>Vcx<Esc><Cmd>normal gcc<CR>fxa<BS>"
+  end
+end
+vim.keymap.set("n", "gco", comment_line_keys("o"), { expr = true, desc = "Comment: add line below" })
+vim.keymap.set("n", "gcO", comment_line_keys("O"), { expr = true, desc = "Comment: add line above" })
 
 -- auto session
 map("n", "<localleader>fs", "<Cmd>AutoSession search<CR>", KeymapOptions("Sessions: search"))
