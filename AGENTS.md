@@ -73,11 +73,13 @@ actions, or go to definition be tested?
 - Keymaps: `./lua/mappings.lua`
 - Autocmds: `./lua/autocmd.lua`
 - Plugins: `./lua/plugins/`
-- LSP setup: `./lua/plugins/lsp.lua` (and related files under `lua/plugins/`)
+- LSP setup: `./lua/plugins/lsp.lua` (enable list, LspAttach) + per-server overrides in `./after/lsp/`
 - Format/Lint: `./lua/plugins/conform.lua` + linters; Stylua for Lua
 - Treesitter: `./lua/plugins/treesitter.lua`
 - Telescope: `./lua/plugins/telescope.lua`
 - Snippets: `./lua/snippets/`
+- Gates and hooks: `./scripts/` (smoke, gate-selftest, quality-gate, health-check, pre-commit, pre-push)
+- Smoke gate engine, cases and known failures: `./test/smoke/`; sample files per language under `./test/`
 
 ---
 
@@ -111,7 +113,7 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 
 - **Lint Lua:** `luacheck lua/ after/ test/smoke` (uses `.luacheckrc`; the same paths `scripts/quality-gate` lints)
   - Should report `0 warnings / 0 errors`
-  - Config: `.luacheckrc` defines globals, disables line length, ignores unused vars in snippets
+  - Config: `.luacheckrc` defines globals, sets `max_line_length = 150`, ignores unused vars in snippets
   - Run from config root: `cd ~/.config/nvim && luacheck lua/ after/ test/smoke`
 - **Format Lua:** `stylua .` (formats all Lua files)
   - Check only: `stylua --check .`

@@ -28,3 +28,12 @@ db_ui/connections.json
 
 # engineering-team run artifacts (evaluation, plan, evidence)
 .engineering-team/
+
+# secrets and credentials (never commit)
+.env
+.env.*
+*.key
+*.pem
+credentials.json
+vault_password
+*.secret

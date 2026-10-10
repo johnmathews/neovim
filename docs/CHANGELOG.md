@@ -37,6 +37,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`filetype = "on"`** in `lua/options.lua` set the option, not the `:filetype on` command, so the empty startup buffer
   had the filetype `on`. Neovim enables filetype detection by default; the line is gone.
 
+- **Gate scripts, from the Stage A review:** `scripts/smoke` no longer leaves its watchdog's `sleep` holding the
+  caller's output open for the whole timeout (`smoke | tail` waited 300 s); `--fresh` refuses to delete a directory
+  the script did not make; the smoke gate passes this machine's uv tool directory in, so the Python-host and Mundo
+  checks run where `pynvim` is installed; `gate-selftest` works under macOS's bash 3.2; pre-commit checks the staged
+  content for trailing whitespace instead of the working tree.
+- **`gco`/`gcO` in a buffer with no commentstring** open a plain line instead of leaving a stray `x`.
+
 ### Changed
 - **Floating window borders**: `winborder = "rounded"` replaces the `open_floating_preview` override. The cmp menu and
   the which-key popup now take the rounded border too.
@@ -63,7 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Project root without project.nvim** (F14): a `BufEnter` autocmd in `lua/autocmd.lua` moves cwd to the nearest root
   marker with `vim.fs.root`, with the same markers and excluded path. `<Tab>p`, the dashboard's `p` button and
-  `<localleader>fs` open `:AutoSession search`.
+  `<localleader>fs` open `:AutoSession search` (the dashboard button now reads "Find session").
 
 - **Docs** (F26, F20): `TEST_RESULTS.md`, `TESTING_CHANGELOG_GUIDE.md` and `IMPROVEMENTS.md` moved to `docs/archive/`
   with a Status header naming the doc that replaced each. README drops the 2025-11-08 test results, and its startup,

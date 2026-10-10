@@ -212,18 +212,23 @@ An environment with neither exits 2 with these instructions instead of installin
 ./scripts/smoke --nvim /path/to/nvim     # another Neovim binary (or NVIM=...)
 ./scripts/smoke --no-xfail               # show known failures as failures
 ./scripts/smoke --strict                 # plugin deprecations fail instead of warn
+./scripts/smoke --fixture init-error     # break the copied config with test/smoke/fixtures/<name>.lua first
+./scripts/smoke --fresh --seed-from ~/.local/share/nvim   # delete SMOKE_HOME and start over
 ```
+
+`--fresh` only deletes a directory the script made: empty, marked with `.nvim-smoke-home`, or holding only its own
+layout (`config/`, `data/`, `state/`, `cache/`, reports). Pointing `--home` at anything else (`~`, a repo) exits 2.
 
 **What it checks:**
 
 | Scope | Check |
 | --- | --- |
-| Startup | Every module `init.lua` requires is loaded. Every message is explained (below). No WARN or ERROR notify. No deprecated API called from the config. `lazy-lock.json` unchanged by the run |
+| Startup | Every module `init.lua` requires is loaded. The enabled LSP configs are exactly `cases.enabled_servers` (`startup:enabled`). Every message is explained (below). No WARN or ERROR notify. No deprecated API called from the config. `lazy-lock.json` unchanged by the run |
 | Dashboard | Rendering the alpha dashboard prints nothing unexplained |
 | Tools | Every conform formatter is known and available, every nvim-lint linter is defined and executable |
 | Each case | The exact LSP client set, pinned server settings, diagnostic counts per owner (`lsp:<client>` or the linter name), no finding reported by two owners, cmp-nvim-lsp capabilities on every client, a buffer-local `<leader>li` where a client supports inlay hints, navic where a client supports document symbols, the treesitter parser in use, `af`/`if` textobjects, folds, and real LSP requests (definition, hover, prepareRename, codeAction) for Python and Lua |
-| Case checks | Per-case `check` functions in `cases.lua`: Python textobjects, `:LspRestart` keeping settings, the Python host (uv's `pynvim` or none) and the disabled Node host; `<leader>x` calling `vim.ui.open` (markdown); SQL formatting on `<leader>cf` but not on save |
-| Mundo | Only where uv's `pynvim` is installed (`$UV_TOOL_DIR`, else `$XDG_DATA_HOME/uv/tools`): `:MundoToggle` opens its window. Inside the gate `XDG_DATA_HOME` is `SMOKE_HOME/data`, so set `UV_TOOL_DIR` to run it |
+| Case checks | Per-case `check` functions in `cases.lua`. Python: textobjects, `:LspRestart` keeping settings, basedpyright on push diagnostics (`python:pull`), `grr` jumping through Telescope, project root cwd and the `<Tab>p`/`<localleader>fs` session pickers, the Python host (uv's `pynvim` or none) and the disabled Node host. Lua: `gr`/`gi` unmapped, `grr`/`gri`/`<leader>cl`/`<leader>cL` (`keymaps:defaults`), no buffer with filetype `on`, no `nil` in the statusline, noice owning LSP progress (`config:*`). TypeScript and TSX: native `gcc`/`gco`/`gcO` and the comment style per node. Markdown: `<leader>x` calling `vim.ui.open`, glow gone. SQL: formatting on `<leader>cf` but not on save |
+| Mundo | Only where uv's `pynvim` is installed (`$UV_TOOL_DIR`, else `$XDG_DATA_HOME/uv/tools`): `:MundoToggle` opens its window. `scripts/smoke` passes this machine's tool directory into the sandbox as `UV_TOOL_DIR` |
 
 Headless Neovim never fires `UIEnter`, so lazy never fires `VeryLazy`. The gate fires `UIEnter` itself, so noice,
 nvim-notify, lualine, navic and the other `VeryLazy` plugins load as they do in a terminal.
@@ -283,11 +288,11 @@ stylua .
 ### Linting
 
 ```bash
-# Lint all Lua files
-luacheck lua/
+# Lint every Lua file the gates lint
+luacheck lua/ after/ test/smoke
 
 # Lint with verbose output
-luacheck lua/ --formatter plain
+luacheck lua/ after/ test/smoke --formatter plain
 
 # Lint single file
 luacheck lua/plugins/telescope.lua
@@ -348,9 +353,15 @@ jobs:
           sudo luarocks install luacheck
           cargo install stylua
       
+      - name: Install plugins and tools for the smoke gate
+        run: ./scripts/smoke --bootstrap
+
       - name: Run quality gate
         run: ./scripts/quality-gate
 ```
+
+This is a sketch, not a tested workflow: `quality-gate` runs `scripts/smoke --startup-only`, which exits 2 until the
+environment is bootstrapped, hence the extra step. The Linux CI job planned for the 0.12 cutover replaces it.
 
 ---
 
@@ -359,7 +370,7 @@ jobs:
 ### Zero Tolerance
 
 The following must **always pass**:
-- ✅ `luacheck lua/` → 0 warnings, 0 errors
+- ✅ `luacheck lua/ after/ test/smoke` → 0 warnings, 0 errors
 - ✅ `stylua --check .` → no formatting needed
 - ✅ Neovim loads without errors
 - ✅ `./scripts/smoke` → `SMOKE PASS` (known failures only in `test/smoke/xfail.lua`)
@@ -367,7 +378,7 @@ The following must **always pass**:
 ### Performance Targets
 
 - **Startup time:** <150ms (target), <500ms (acceptable)
-- **Plugin count:** <50 (current: ~39)
+- **Plugin count:** <50 (target); 85 today (`lazy-lock.json`)
 - **Config size:** <10MB
 
 ---
@@ -378,7 +389,7 @@ The following must **always pass**:
 
 1. **View errors:**
    ```bash
-   luacheck lua/
+   luacheck lua/ after/ test/smoke
    ```
 
 2. **Common issues:**
@@ -402,7 +413,7 @@ The following must **always pass**:
 
 1. **Check syntax errors:**
    ```bash
-   luacheck lua/
+   luacheck lua/ after/ test/smoke
    ```
 
 2. **View error details:**
@@ -412,7 +423,7 @@ The following must **always pass**:
 
 3. **Check logs:**
    ```bash
-   nvim --headless "+lua print(vim.lsp.get_log_path())" +qa
+   nvim --headless "+lua print(vim.lsp.log.get_filename())" +qa
    ```
 
 ---

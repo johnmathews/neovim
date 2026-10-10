@@ -27,7 +27,7 @@ Markdown development.
 
 ### Requirements
 
-- **Neovim:** v0.11.4+
+- **Neovim:** v0.11+ (0.12 after the treesitter cutover; `scripts/versions.env` holds the enforced minimum)
 - **Node.js:** v18+ (for LSP servers)
 - **CLI Tools:**
 
@@ -35,7 +35,7 @@ Markdown development.
   brew install luacheck stylua ripgrep fd
   ```
 
-- **Optional:** the Python provider, for Python remote plugins such as vim-mundo. Install it with
+- **Optional:** the Python provider, for Python plugins such as vim-mundo. Install it with
   `uv tool install pynvim`; `init.lua` uses that interpreter when it exists. The Node provider is disabled.
 
 ### Installation
@@ -192,21 +192,24 @@ is archived.
 │   ├── autocmd.lua             # Autocommands
 │   ├── functions.lua           # Custom functions
 │   ├── plugins.lua             # Plugin declarations (lazy.nvim)
-│   ├── plugins/                # Plugin configurations (38 files)
+│   ├── plugins/                # Plugin configurations (37 files)
 │   │   ├── lsp.lua             # LSP setup (vim.lsp.config, LspAttach, enabled servers)
 │   │   ├── telescope.lua       # Telescope configuration
 │   │   ├── treesitter.lua      # Treesitter setup
 │   │   ├── cmp.lua             # Completion configuration
 │   │   └── ...
-│   └── snippets/               # LuaSnip snippets (6 languages)
+│   └── snippets/               # LuaSnip snippets (5 languages + all.lua)
 ├── after/lsp/                  # Per-server LSP overrides (merged over nvim-lspconfig's defaults)
-├── ftplugin/                   # Filetype-specific settings (23 files)
+├── ftplugin/                   # Filetype-specific settings (22 files)
 ├── scripts/
 │   ├── health-check            # Configuration health check
 │   ├── quality-gate            # Pre-commit validation
 │   ├── smoke                   # Buffer-opening smoke gate (isolated Neovim)
 │   ├── gate-selftest           # Proves the smoke gate fails on known-bad configs
-│   └── pre-commit              # Git pre-commit hook
+│   ├── pre-commit              # Git pre-commit hook
+│   ├── pre-push                # Git pre-push hook (quality gate + full smoke gate)
+│   ├── install-hooks           # Points core.hooksPath at scripts/
+│   └── versions.env            # Tool versions the gates enforce
 ├── test/                       # Test files for LSP/linter validation
 │   ├── smoke/                  # Smoke gate engine, cases, xfail list, fixtures
 │   ├── python/                 # Python test files
@@ -300,8 +303,8 @@ Telescope and LuaSnip declare lazy triggers but load at startup anyway: auto-ses
 # Inside Neovim
 :Mason
 
-# Or update all
-:MasonUpdateAll
+# Or update every tool in lua/plugins/mason.lua
+:MasonToolsUpdate
 ```
 
 ### Format Code
@@ -355,7 +358,7 @@ needs a one-time `./scripts/smoke --seed-from ~/.local/share/nvim` per Neovim ve
 **Pre-push hook** (runs before push to remote):
 
 - Full quality gate
-- Full smoke gate: a real buffer per language (about 1 to 1.5 minutes)
+- Full smoke gate: a real buffer per language (about 45 seconds; see `docs/TESTING.md`)
 
 **Bypass hooks** (emergency only):
 

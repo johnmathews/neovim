@@ -39,7 +39,7 @@ Each file in `after/lsp/` returns only the fields it changes:
 
 | File | Overrides |
 | --- | --- |
-| `after/lsp/basedpyright.lua` | `typeCheckingMode = "basic"`, auto-import completions |
+| `after/lsp/basedpyright.lua` | `typeCheckingMode = "basic"`, auto-import completions, push diagnostics (F31) |
 | `after/lsp/bashls.lua` | filetypes `sh`, `bash`, `zsh`; glob pattern; shellcheck `-x` |
 | `after/lsp/lua_ls.lua` | LuaJIT runtime, Neovim globals, hints, no telemetry |
 | `after/lsp/yamlls.lua` | validation on, formatting off (conform owns YAML formatting), no key-order warnings |
@@ -67,8 +67,9 @@ border. Diagnostic floats also set `float.border` in `vim.diagnostic.config`.
 
 ## Quick Reference
 
-One owner per job: each language has one LSP server set, one formatter chain and one linter, so no finding appears
-twice.
+One owner per job: each language has one LSP server set, one formatter chain and one linter, so a finding is not
+reported twice by tools that check the same thing. (JSON is the exception: jsonls and jsonlint can both flag a syntax
+error such as a trailing comma.)
 
 | Language       | LSP Server          | Formatter           | Linter            |
 | -------------- | ------------------- | ------------------- | ----------------- |
@@ -82,12 +83,14 @@ twice.
 | **YAML**       | yamlls              | yamlfmt             | yamlls            |
 | **TOML**       | taplo               | taplo               | taplo             |
 | **Markdown**   | marksman            | prettierd           | markdownlint      |
-| **Docker**     | dockerls            | -                   | dockerls          |
+| **Docker**     | dockerls            | dockerls (LSP fallback) | dockerls      |
 | **SQL**        | -                   | sqlfluff            | -                 |
 
 Python lint comes from the ruff LSP server and sh/bash lint from bashls, so nvim-lint runs neither. Zsh is the one
-shell nvim-lint covers, because bashls does not shellcheck it. The smoke gate (`test/smoke/cases.lua`) asserts each
-row's diagnostic sources, so a second owner turns it red.
+shell nvim-lint covers, because bashls does not shellcheck it. The smoke gate (`test/smoke/cases.lua`) asserts the
+diagnostic sources for Python, Lua, Bash, Zsh and Markdown, where a second owner has bitten before: nvim-lint
+running ruff or shellcheck next to the LSP server turns it red. The JavaScript, TypeScript, JSON and YAML cases only
+assert the LSP server's diagnostics, and TOML, Docker and SQL have no diagnostic expectation.
 
 ---
 

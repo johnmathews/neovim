@@ -112,8 +112,9 @@ Each test file contains **intentional errors and edge cases** to verify that:
 3. **Test LSP features:**
    - **Go to definition:** `gd` on a function/variable
    - **Hover documentation:** `K` on a symbol
-   - **Code actions:** `<leader>ca` on an error
-   - **Rename:** `<leader>rn` on a symbol
+   - **Code actions:** `gra` on an error
+   - **Rename:** `grn` on a symbol
+   - **References:** `grr` (Telescope)
    - **Format:** `<leader>cf` to format the file
 
 4. **Test linting:**
@@ -140,13 +141,14 @@ section of [`docs/TESTING.md`](../docs/TESTING.md).
 
 The gate's own files live in `test/smoke/`: `run.lua` (the engine), `preinit.lua` (notify and deprecation
 recorder), `cases.lua` (per-language expectations), `xfail.lua` (known failures with finding IDs), `allow.lua`
-(accepted messages), and `fixtures/` (known-bad configs for the self-test).
+(accepted messages), `bootstrap.lua` (the `--bootstrap` restore), `fixture.lua` (applies and checks fixtures), and
+`fixtures/` (known-bad configs for the self-test).
 
 ## Expected Behavior
 
 Each test file should:
 
-- ✅ Have LSP server attach automatically (`:LspInfo`)
+- ✅ Have its LSP server attach automatically (`:checkhealth vim.lsp`), except SQL, which has none on purpose
 - ✅ Show diagnostic warnings/errors inline
 - ✅ Provide code actions where applicable
 - ✅ Support go-to-definition and hover documentation
