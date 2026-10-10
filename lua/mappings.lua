@@ -117,6 +117,9 @@ map(
 -- gx is mapped to open a url using the open-browser plugin
 map("n", "<leader>x", ":!xdg-open %<CR><CR>", KeymapOptions("Open current file in default app"))
 
+-- open the current file in Typora (macOS) - sibling to <leader>x (default app)
+map("n", "<leader>X", ":lua Functions.open_in_typora()<CR>", KeymapOptions("Open current file in Typora"))
+
 -- Split navigations
 map("n", "<C-H>", "<C-W><C-H>", default_options)
 map("n", "<C-J>", "<C-W><C-J>", default_options)

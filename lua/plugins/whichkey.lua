@@ -56,6 +56,7 @@ which_key.add({
   { "<leader>vf", desc = "Edit ftplugin" },
   { "<leader>vr", desc = "Reload vimrc" },
   { "<leader>x", desc = "Open in default app" },
+  { "<leader>X", desc = "Open in Typora" },
 
   -- LocalLeader groups
   { "<LocalLeader>", group = "LocalLeader (Backslash)" },

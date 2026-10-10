@@ -66,6 +66,33 @@ M.active_tools = function()
   )
 end
 
+-- open the current buffer's file in Typora (macOS only)
+-- Typora reads from disk, so the buffer is written first to reflect unsaved edits.
+M.open_in_typora = function()
+  if vim.fn.has("mac") ~= 1 then
+    vim.notify("open_in_typora is macOS-only (uses `open -a Typora`)", vim.log.levels.WARN)
+    return
+  end
+
+  local filepath = vim.fn.expand("%:p")
+  if filepath == "" then
+    vim.notify("No file in the current buffer", vim.log.levels.WARN)
+    return
+  end
+
+  if vim.bo.modifiable and vim.bo.modified then
+    vim.cmd("silent write")
+  end
+
+  vim.system({ "open", "-a", "Typora", filepath }, {}, function(obj)
+    if obj.code ~= 0 then
+      vim.schedule(function()
+        vim.notify("Typora failed to open:\n" .. (obj.stderr or ""), vim.log.levels.ERROR)
+      end)
+    end
+  end)
+end
+
 -- toggle the quickfix window
 vim.cmd([[
   function! ToggleQuickFix()
