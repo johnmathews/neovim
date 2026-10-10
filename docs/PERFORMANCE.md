@@ -1,172 +1,74 @@
-# Neovim Startup Performance Report
+# Neovim Startup Performance
 
-**Generated:** 2025-11-07 (Updated after lazy-loading improvements)  
-**Neovim version:** v0.11.4  
-**Total startup time:** ~347ms (headless, average of 3 runs)
-
----
-
-## Performance Target
-
-**Goal:** <150ms cold boot startup time  
-**Current:** 347ms (headless), improved lazy-loading for real-world usage  
-**Gap:** 197ms (2.3x slower than target for headless boot)
-
-**Note:** Headless startup doesn't benefit from lazy-loading optimizations. Real-world usage with `InsertEnter`, `BufReadPre`, and keypress-triggered loading will be significantly faster.
+**Measured:** 2026-10-10, Neovim 0.11.6 and 0.12.6, macOS (Apple silicon), load average about 6
+**Startup:** about 140 ms headless (median of 10), under the 150 ms target
 
 ---
 
-## Top 10 Slowest Operations
+## Target
 
-| Time (ms) | Component | Type |
-|-----------|-----------|------|
-| 108.2ms | `require('plugins')` | Plugin loading via lazy.nvim |
-| 14.6ms | `require('plugins.lsp')` | LSP configuration |
-| 10.7ms | `require('plugins.telescope')` | Telescope setup |
-| 6.4ms | nvim-ts-autotag sourcing | Treesitter plugin |
-| 6.3ms | `require('plugins.cmp')` | Completion engine |
-| 5.4ms | telescope projects extension | Extension loading |
-| 4.9ms | `require('nvim-treesitter')` | Treesitter core |
-| 4.3ms | `require('plugins.mason')` | Mason tool installer |
-| 4.1ms | LuaSnip plugin | Snippet engine |
-| 3.9ms | `require('plugins.lualine')` | Statusline |
-
-**Total from top 10:** ~169ms (49% of startup time)
+**Goal:** under 150 ms cold boot, measured as `NVIM STARTED` in `--startuptime` for a headless start.
+`scripts/health-check` takes the median of five runs after a warm-up, warns above 150 ms and fails above 500 ms.
 
 ---
 
-## Analysis
+## What Made Startup Slow
 
-### Major Contributors
+Until 2026-10-10 startup was about 400 ms. Most of it was two shell-outs in `init.lua` on every launch, not plugin
+loading:
 
-1. **Lazy.nvim plugin loading (108ms)**
-   - This is the plugin manager orchestrating all plugin loads
-   - Unavoidable overhead but could be optimized with better lazy-loading
+- `io.popen("poetry env info -p")` to pick a Python host. It cost about 240 ms (`poetry env info -p` alone takes 0.24 s)
+  and fell back to a hard-coded pyenv path.
+- `io.popen("command -v neovim-node-host")`, up to twice, for a Node host that no plugin uses.
 
-2. **LSP Stack (14.6ms)**
-   - Mason registry initialization
-   - Multiple LSP server configurations
-   - Already fairly optimized
+The Python host is now the `pynvim` tool from `uv tool install pynvim`, found by path with no subprocess, and the Node
+provider is disabled. An interleaved A/B test (10 runs of each config, alternating, isolated data directories):
 
-3. **Telescope (10.7ms + 5.4ms = 16.1ms)**
-   - Heavy fuzzy finder with many extensions
-   - Projects extension adds overhead
-   - Could benefit from lazy-loading
+| Neovim | Before (median) | After (median) |
+| ------ | --------------- | -------------- |
+| 0.11.6 | 422 ms          | 139 ms         |
+| 0.12.6 | 398 ms          | 138 ms         |
 
-4. **Completion Stack (6.3ms + 4.1ms = 10.4ms)**
-   - nvim-cmp + LuaSnip
-   - Loaded eagerly on startup
-   - Good candidate for lazy-loading
-
-5. **Treesitter (4.9ms + 6.4ms = 11.3ms)**
-   - Core + autotag plugin
-   - Necessary for syntax highlighting
-   - Already uses lazy.nvim events
+`vim.loader.enable()` also moved to the first line of `init.lua`, so it caches every module, not only those required
+after `lua/plugins/lsp.lua`.
 
 ---
 
-## Optimization Recommendations
+## Where the Time Goes Now
 
-### High Impact (Potential 50-80ms savings)
+One `--startuptime` profile on 0.11.6 (total 143 ms; inclusive times, so nested entries overlap):
 
-1. **Lazy-load Telescope (save ~16ms)**
-   - Only load on first `<Tab>` keypress
-   - Extensions can load with main plugin
-   ```lua
-   keys = { "<Tab>" }, -- Load on first Tab press
-   cmd = { "Telescope" }, -- Load on :Telescope command
-   ```
+| Time (ms) | Component                                   |
+| --------- | ------------------------------------------- |
+| 112.6     | `require('plugins')` (lazy.nvim and every non-lazy plugin's config) |
+| 17.7      | `require('plugins.mason')`                  |
+| 15.6      | `require('plugins.telescope')`              |
+| 10.0      | `require('mason-lspconfig')`                |
+| 9.1       | `require('luasnip.loaders.from_lua')` (custom snippets) |
+| 6.7       | `require('plugins.lsp')`                    |
+| 5.9       | `asyncrun.vim/plugin/asyncrun.vim`          |
 
-2. **Lazy-load completion (save ~10ms)**
-   - Load nvim-cmp on InsertEnter
-   - Load LuaSnip with cmp
-   ```lua
-   event = "InsertEnter",
-   ```
+0.12.6 shows the same order, a little slower per entry in a single profile (128 ms for `plugins`). The profile predates
+the removal of project.nvim: 10 ms of the 15.6 ms for `plugins.telescope` was its telescope extension.
 
-3. **Defer non-essential plugins (save ~20ms)**
-   - Alpha (dashboard): only needed on empty buffer
-   - Lualine: could defer 50-100ms
-   - Git signs: load on BufRead
-
-### Medium Impact (Potential 20-40ms savings)
-
-4. **Optimize Mason setup (save ~5ms)**
-   - Disable `run_on_start = true`
-   - Only check tools when explicitly needed
-
-5. **Trim unused plugins (save ~10ms)**
-   - Review if all 39 plugins are actively used
-   - Remove or disable unused functionality
-
-6. **Lazy-load LSP per filetype (save ~5ms)**
-   - Only initialize LSP servers for open file types
-   - Already partially implemented via mason-lspconfig
-
-### Low Impact (Potential 5-15ms savings)
-
-7. **Optimize snippet loading**
-   - Defer snippet compilation
-   - Load snippets on first use
-
-8. **Reduce autocommands**
-   - Audit autocmd.lua for unnecessary triggers
-   - Combine similar autocommands
+**Note:** headless startup fires neither `UIEnter` nor `VeryLazy`, so noice, lualine and the other `VeryLazy` plugins
+are not in these numbers. They load after the first screen is drawn.
 
 ---
 
-## Implemented Optimizations (2025-01-13)
-
-✅ **Lazy-load Telescope** - Load on first `<Tab>` keypress  
-✅ **Lazy-load nvim-cmp** - Load on `InsertEnter`  
-✅ **Lazy-load LuaSnip** - Load on `InsertEnter`  
-✅ **Lazy-load alpha-nvim** - Load on `VimEnter`  
-✅ **Lazy-load gitsigns** - Load on `BufReadPre`  
-
-**Impact:** While headless startup remains similar (~347ms vs 342ms baseline), real-world usage benefits significantly from deferred loading of heavy plugins until actually needed.
-
----
-
-## Performance Testing Commands
+## Measuring
 
 ```bash
-# Detailed startup profile
+# Median of five, in the isolated smoke environment (never the real data directory)
+./scripts/health-check --isolated
+
+# One profile
 nvim --startuptime startup.log --headless +qa
-cat startup.log | awk '{if ($2 > 1) print $0}'
+awk '$2 > 5' startup.log
 
-# Quick startup time check
-nvim --startuptime /dev/stdout --headless +qa | grep "NVIM STARTED"
-
-# Using vim-startuptime plugin (installed)
+# Interactive profiling (vim-startuptime plugin)
 nvim +StartupTime
 ```
 
----
-
-## Baseline Measurements
-
-| Scenario | Time | Date | Notes |
-|----------|------|------|-------|
-| Headless startup (baseline) | 342ms | 2025-11-07 | Before lazy-loading |
-| With file loading | ~490ms | 2025-11-07 | Before lazy-loading |
-| After lazy-loading improvements | 347ms | 2025-11-07 | Headless (doesn't show benefits) |
-| Real-world usage (estimated) | ~250-280ms | 2025-11-07 | With lazy-loading benefits |
-
----
-
-## Next Steps
-
-1. **Implement high-impact lazy-loading** (Telescope, completion)
-2. **Measure again** to confirm improvements
-3. **Iterate** on medium and low-impact optimizations
-4. **Document** final performance in AGENTS.md
-
----
-
-## Notes
-
-- Startup time includes plugin manager overhead (~108ms)
-- Real-world usage feels fast due to lazy-loading after startup
-- Target of <150ms is aggressive for a full-featured config
-- **Realistic target:** 200-250ms with current feature set
-- Many "slow" operations happen during plugin initialization, not user actions
+A busy machine inflates every number: at a load average of 50 or more, medians above 500 ms are common. Compare
+configurations by alternating runs on the same machine, not by comparing against this page.

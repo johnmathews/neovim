@@ -22,10 +22,15 @@ if ok_mti then
       "prettierd", -- Markdown
       "biome", -- JS/TS/JSON
       "ruff", -- Python
+      "sqlfluff", -- SQL
+      "yamlfmt", -- YAML
+      "jq", -- JSON
       -- linters
       "eslint_d",
       "mypy",
       "markdownlint",
+      "shellcheck", -- run by bashls (sh, bash) and nvim-lint (zsh)
+      "jsonlint",
     },
     auto_update = false,
     run_on_start = true,

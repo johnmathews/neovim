@@ -1,15 +1,18 @@
 #!/usr/bin/env bash
 # Complete quality gate check combining 3 critical validations:
 #   - Stylua formatting check (--check mode, suggests 'stylua .' if needed)
-#   - Luacheck linting (lua/ directory, --quiet mode)
-#   - Neovim headless load test (10s timeout, validates config loads without errors)
-# Run before committing or pushing
-
-set -e
+#   - Luacheck linting (lua/, after/ and test/smoke/)
+#   - Smoke gate startup check (scripts/smoke --startup-only: init errors, messages,
+#     tools and the deprecated-API scan, in an isolated environment)
+# Run before committing or pushing. A missing tool is a failure, never a pass.
 
 echo "🔒 Running complete quality gate..."
 echo ""
 
+# Git exports GIT_DIR and GIT_INDEX_FILE to hooks; with them set, git commands here
+# would act on the committing repository instead of the paths they are given.
+# shellcheck disable=SC2046 # word splitting is intended: one variable name per word
+unset $(git rev-parse --local-env-vars 2>/dev/null)
 cd "$(dirname "$0")/.." || exit 1
 
 # Color codes
@@ -19,35 +22,54 @@ NC='\033[0m'
 
 FAILED=0
 
+require_tool() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo -e "${RED}   ✗ $1 is not installed${NC}"
+    FAILED=1
+    return 1
+  fi
+}
+
 # Step 1: Format check
 echo "1️⃣  Checking formatting (stylua)..."
-if stylua --check . 2>&1 | grep -q "Diff"; then
-  echo -e "${RED}   ✗ Formatting check failed${NC}"
-  echo "   Run: stylua ."
-  FAILED=1
-else
-  echo -e "${GREEN}   ✓ Formatting correct${NC}"
+if require_tool stylua; then
+  if stylua --check . >/dev/null 2>&1; then
+    echo -e "${GREEN}   ✓ Formatting correct${NC}"
+  else
+    echo -e "${RED}   ✗ Formatting check failed${NC}"
+    echo "   Run: stylua ."
+    FAILED=1
+  fi
 fi
 echo ""
 
 # Step 2: Lint
 echo "2️⃣  Running linter (luacheck)..."
-if luacheck lua/ --quiet; then
-  echo -e "${GREEN}   ✓ Luacheck passed${NC}"
-else
-  echo -e "${RED}   ✗ Luacheck failed${NC}"
-  FAILED=1
+if require_tool luacheck; then
+  LINT_DIRS=()
+  for dir in lua after test/smoke; do
+    [ -d "$dir" ] && LINT_DIRS+=("$dir/")
+  done
+  if luacheck "${LINT_DIRS[@]}" --quiet; then
+    echo -e "${GREEN}   ✓ Luacheck passed${NC}"
+  else
+    echo -e "${RED}   ✗ Luacheck failed${NC}"
+    FAILED=1
+  fi
 fi
 echo ""
 
-# Step 3: Load test
-echo "3️⃣  Testing Neovim loads..."
-if timeout 10 nvim --headless "+lua print('Quality gate: OK')" +qa 2>&1 | grep -q "OK"; then
-  echo -e "${GREEN}   ✓ Neovim loads successfully${NC}"
+# Step 3: Startup in the isolated smoke environment
+echo "3️⃣  Testing Neovim starts cleanly (scripts/smoke --startup-only)..."
+SMOKE_LOG="$(mktemp)"
+if ./scripts/smoke --startup-only >"$SMOKE_LOG" 2>&1; then
+  echo -e "${GREEN}   ✓ Neovim starts cleanly${NC}"
 else
-  echo -e "${RED}   ✗ Neovim failed to load${NC}"
+  echo -e "${RED}   ✗ Startup check failed${NC}"
+  grep -v '^XFAIL' "$SMOKE_LOG" | sed 's/^/   /' | tail -25
   FAILED=1
 fi
+rm -f "$SMOKE_LOG"
 echo ""
 
 # Summary

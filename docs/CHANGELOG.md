@@ -7,6 +7,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Smoke gate** (`scripts/smoke`, `test/smoke/`): opens one real buffer per daily language in an isolated Neovim
+  (`SMOKE_HOME`, never `~/.local/share/nvim`) and asserts on LSP clients and settings, diagnostics per owner,
+  treesitter, textobjects, folds, keymaps, lint, LSP requests and every message. Known failures live in
+  `test/smoke/xfail.lua` with their finding IDs. See `docs/TESTING.md`.
+- **Gate self-test** (`scripts/gate-selftest`, `test/smoke/fixtures/`): ten known-bad configs that must each fail the
+  gate with a specific check ID.
+- Test samples for TypeScript, SQL, JSON and TOML. The zsh sample moved to `test/zsh/test_sample.zsh`.
+
+### Fixed
+- **LSP settings apply again** (F1): mason-lspconfig v2 ignores `handlers`, so no per-server setting, `on_attach`, navic,
+  `<leader>li` or cmp capability had applied. Servers now use native `vim.lsp.config`: capabilities through
+  `vim.lsp.config("*")`, overrides in `after/lsp/<server>.lua`, one `LspAttach` autocmd for navic and `<leader>li`.
+  basedpyright runs in `basic` mode again (18 diagnostics on the sample become 4).
+- **Only the listed servers start** (F13): `automatic_enable = false` plus an explicit `vim.lsp.enable` list of 10
+  servers. sqls, stylua, eslint, biome and the other Mason servers no longer start.
+- **basedpyright diagnostics on 0.12** (F31): on 0.12 basedpyright switched to pull diagnostics, and about one buffer
+  in four opened without them. `after/lsp/basedpyright.lua` keeps it on push, as on 0.11.
+- **zsh is shellchecked again** (F5): `shellcheck_zsh` is now a copy of nvim-lint's shellcheck linter, so it no longer
+  rewrites the shared linter's args, and it asks for `json1`, the format nvim-lint parses.
+- **markdownlint runs again** (F6): every markdown lint run had failed with "expected table, got function". The linter
+  is now a function that returns a copy with list `args`, `--stdin` restored, and print mode's `--disable MD013` kept.
+- **One owner per lint finding** (F13): nvim-lint no longer runs ruff (the ruff LSP server reports it) or shellcheck on
+  sh and bash (bashls runs it).
+- **conform options** (F25): `default_format_opts = { lsp_format = "fallback" }` replaces the deprecated
+  `lsp_fallback`, and YAML no longer lists the unknown formatter `lsp`.
+- **Statusline `nil`** (F27): lualine's symbols component returned `nil`, which rendered as the text "nil".
+- **`filetype = "on"`** in `lua/options.lua` set the option, not the `:filetype on` command, so the empty startup buffer
+  had the filetype `on`. Neovim enables filetype detection by default; the line is gone.
+
+- **Gate scripts, from the Stage A review:** `scripts/smoke` no longer leaves its watchdog's `sleep` holding the
+  caller's output open for the whole timeout (`smoke | tail` waited 300 s); `--fresh` refuses to delete a directory
+  the script did not make; the smoke gate passes this machine's uv tool directory in, so the Python-host and Mundo
+  checks run where `pynvim` is installed; `gate-selftest` works under macOS's bash 3.2; pre-commit checks the staged
+  content for trailing whitespace instead of the working tree.
+- **`gco`/`gcO` in a buffer with no commentstring** open a plain line instead of leaving a stray `x`.
+
+### Changed
+- **Floating window borders**: `winborder = "rounded"` replaces the `open_floating_preview` override. The cmp menu and
+  the which-key popup now take the rounded border too.
+- **Gates fail closed**: `quality-gate` fails when stylua or luacheck is missing, reads stylua's exit code, lints
+  `lua/`, `after/` and `test/smoke/`, and replaces its load test with `scripts/smoke --startup-only`, which also scans
+  the config for deprecated APIs. `health-check` exits 1 on any failure, enforces `scripts/versions.env`, takes the
+  median of five startups, runs `:checkhealth vim.deprecated vim.lsp`, and has an `--isolated` mode.
+- **Hooks per worktree**: `install-hooks` sets `core.hooksPath` to `scripts/`, so a worktree commit runs that
+  worktree's gate. pre-push runs the full smoke gate after `quality-gate`.
+
+- **Startup is about 140 ms, down from about 400 ms** (F11): `init.lua` no longer shells out to `poetry` and
+  `neovim-node-host` on every launch. `vim.loader.enable()` moved to its first line.
+- **Python provider** (F22): `g:python3_host_prog` is the `pynvim` tool from `uv tool install pynvim` when it exists,
+  instead of `poetry` or a hard-coded pyenv 3.10.12 path. The Node provider is disabled; no remote plugin uses it.
+- **`<leader>x`** opens the current file with `vim.ui.open`, which works on macOS (`xdg-open` does not exist there).
+- **Deprecated and private APIs** (F15): `vim.lsp.log.set_level`, `vim.uv`, `nvim_echo`, and a choice-popup size the
+  config computes instead of the private `_make_floating_popup_size`.
+- **`grr` and `gri`** (F16) open the Telescope references and implementations pickers. They replace the global `gr`
+  and `gi`, which made Neovim wait for the other `gr*` defaults (`gra`, `grn`, `grt`) and hid Vim's `gi`. The Trouble
+  LSP panel moves from `<leader>cl`, which it shared with "Run lint", to `<leader>cL`.
+- **SQL formats with sqlfluff** on `<leader>cf` only, never on save. Without a `.sqlfluff` file the dialect is
+  postgres (bigquery for `.bq`).
+- Mason also installs sqlfluff, yamlfmt, jq, shellcheck and jsonlint, which the format and lint config already used.
+
+- **Project root without project.nvim** (F14): a `BufEnter` autocmd in `lua/autocmd.lua` moves cwd to the nearest root
+  marker with `vim.fs.root`, with the same markers and excluded path. `<Tab>p`, the dashboard's `p` button and
+  `<localleader>fs` open `:AutoSession search` (the dashboard button now reads "Find session").
+
+- **Docs** (F26, F20): `TEST_RESULTS.md`, `TESTING_CHANGELOG_GUIDE.md` and `IMPROVEMENTS.md` moved to `docs/archive/`
+  with a Status header naming the doc that replaced each. README drops the 2025-11-08 test results, and its startup,
+  plugin-count and lazy-loading claims match the code again. AGENTS.md lists the optional CLIs and lints the same paths as
+  `quality-gate`. `.engineering-team/` is git-ignored.
+
+### Removed
+- **project.nvim** (F14, F18): unmaintained since 2023, and it calls `vim.lsp.buf_get_clients()`, which 0.12 removed
+  apart from a shim. **session-lens** (F18): merged into auto-session.
+- **Comment.nvim** (F18): Neovim's native `gc` replaces it, with the same keys. `gci` moved to `lua/mappings.lua`, `gco`
+  and `gcO` are re-implemented on top of `gcc`, and `gcA` is gone. nvim-ts-context-commentstring stays, loaded on the
+  first commentstring lookup. The Dockerfile override went too: the runtime ftplugin sets `# %s`.
+- **glow.nvim** (F18, archived): `<leader>mg`, `:Glow` and the non-buffer-local `<Leader>p` from
+  `ftplugin/markdown.vim`. The `glow` CLI is no longer a requirement.
+- **vim-numbers** (F18, F16): its visual and operator-pending `an`/`in` hid 0.12's built-in treesitter node selection.
+- **lualine-lsp-progress** (F18): archived, and only referenced by a commented-out component.
+- **fidget.nvim** (F25): noice already shows LSP progress, and the installed fidget called the deprecated
+  `vim.lsp.get_active_clients`. **lsp_signature.nvim** (F25): installed but never set up.
+- **Config files nothing loaded** (F25): `lua/colorscheme.lua` and `lua/plugins/{lsp-colors,fzf,filetype,monokai,vimtex,
+  javascript,asyncrun}.lua`. Neovim already maps `uv.lock` to toml, so `filetype.lua` added nothing.
+- `test/test_lsp.sh`: it ran bare `nvim` against the real data directory and passed when a server name appeared
+  anywhere in the output. The smoke gate covers everything it checked.
+
 ## [1.2.0] - 2025-11-08
 
 ### Added

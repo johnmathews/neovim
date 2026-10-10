@@ -1,5 +1,5 @@
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
-if not vim.loop.fs_stat(lazypath) then
+if not vim.uv.fs_stat(lazypath) then
   vim.fn.system({
     "git",
     "clone",
@@ -48,13 +48,6 @@ return lazy.setup({
     end,
   },
   {
-    "ahmedkhalf/project.nvim",
-    config = function()
-      require("plugins.project")
-    end,
-  },
-
-  {
     "rcarriga/nvim-notify",
     event = "VeryLazy",
     config = function()
@@ -84,15 +77,12 @@ return lazy.setup({
 
   {
     "rmagatti/auto-session",
+    -- session-lens is built into auto-session now (`:AutoSession search`)
     dependencies = {
       "nvim-telescope/telescope.nvim",
-      "rmagatti/session-lens",
     },
     config = function()
       require("plugins.auto-session")
-      pcall(function()
-        require("plugins.telescope").load_extension("session-lens")
-      end)
     end,
   },
 
@@ -147,7 +137,6 @@ return lazy.setup({
     "nvim-lualine/lualine.nvim",
     dependencies = {
       "nvim-tree/nvim-web-devicons",
-      "WhoIsSethDaniel/lualine-lsp-progress.nvim",
     },
     event = "VeryLazy", -- Defer statusline to after UI is ready
     config = function()
@@ -155,23 +144,24 @@ return lazy.setup({
     end,
   },
 
-  -- comments
+  -- comments: Neovim's native gc, with the commentstring of the treesitter node under the cursor
   {
-    "numToStr/Comment.nvim",
-    dependencies = {
-      "nvim-treesitter/nvim-treesitter",
-      "JoosepAlviste/nvim-ts-context-commentstring",
-    },
+    "JoosepAlviste/nvim-ts-context-commentstring",
+    lazy = true, -- loaded by the first commentstring lookup below
+    init = function()
+      -- Skip the deprecated nvim-treesitter context_commentstring module (it errors
+      -- on attach) and configure ts_context_commentstring the modern way instead.
+      vim.g.skip_ts_context_commentstring_module = true
+      -- https://github.com/JoosepAlviste/nvim-ts-context-commentstring/wiki/Integrations
+      local get_option = vim.filetype.get_option
+      ---@diagnostic disable-next-line: duplicate-set-field
+      vim.filetype.get_option = function(filetype, option)
+        return option == "commentstring" and require("ts_context_commentstring.internal").calculate_commentstring()
+          or get_option(filetype, option)
+      end
+    end,
     config = function()
       require("plugins.comment")
-    end,
-  },
-
-  -- lsp status indicator, because maybe the lualine one is broken?
-  {
-    "j-hui/fidget.nvim",
-    config = function()
-      require("fidget").setup({})
     end,
   },
 
@@ -250,7 +240,6 @@ return lazy.setup({
     end,
   },
 
-  { "ray-x/lsp_signature.nvim", dependencies = "neovim/nvim-lspconfig" },
   {
     "folke/trouble.nvim",
     opts = {}, -- for default options, refer to the configuration section for custom setup.
@@ -272,7 +261,7 @@ return lazy.setup({
         desc = "Symbols (Trouble)",
       },
       {
-        "<leader>cl",
+        "<leader>cL", -- <leader>cl is "Run lint" (lua/plugins/nvim-lint.lua)
         "<cmd>Trouble lsp toggle focus=false win.position=right<cr>",
         desc = "LSP Definitions / references / ... (Trouble)",
       },
@@ -495,33 +484,12 @@ return lazy.setup({
     end,
   },
 
-  -- Beautiful markdown preview in terminal
-  {
-    "ellisonleao/glow.nvim",
-    ft = { "markdown" }, -- Only load for markdown buffers
-    cmd = "Glow", -- Also load on :Glow command
-    keys = {
-      {
-        "<leader>mg",
-        function()
-          vim.cmd("Glow")
-        end,
-        desc = "Markdown: preview with Glow",
-      },
-    },
-    config = function()
-      require("plugins.glow")
-    end,
-  },
-
   {
     "simnalamburt/vim-mundo",
     config = function()
       require("plugins.mundo")
     end,
   },
-
-  { "MisanthropicBit/vim-numbers" },
 
   {
     "tyru/open-browser.vim",

@@ -63,10 +63,7 @@ let g:rainbow_active = 0
 " vnoremap <leader>fp gw
 
 " this breaks syntax highlighting, so put it at the end
-" Glow preview - disabled because it crashes vim.
 lua << EOF
-  vim.api.nvim_set_keymap("n", "<Leader>p", ":Glow<CR>", KeymapOptions("Preview markdown"))
-
   -- Markdown Print Mode toggle (<leader>mp)
   -- Switches between terminal mode (hard wraps at 121 chars, good for editing)
   -- and print mode (no hard wraps, good for Typora / printing)
@@ -79,7 +76,7 @@ lua << EOF
       vim.wo.colorcolumn = "121"
       vim.notify("Markdown Print Mode: OFF (hard wraps at 121)", vim.log.levels.INFO)
     end
-    require("conform").format({ async = false, lsp_fallback = true })
+    require("conform").format({ async = false, lsp_format = "fallback" })
     require("lint").try_lint()
   end, { buffer = true, desc = "Toggle Markdown Print Mode" })
 EOF

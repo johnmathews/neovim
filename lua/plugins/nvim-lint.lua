@@ -1,6 +1,6 @@
 -- lua/plugins/nvim-lint.lua
 
-local uv = vim.uv or vim.loop
+local uv = vim.uv
 local lint = require("lint")
 
 local function has_linter(bufnr)
@@ -25,44 +25,44 @@ end
 
 -- Configure shellcheck for zsh files to use bash mode
 -- (shellcheck doesn't natively support zsh, so we treat it as bash)
-local shellcheck_zsh = require("lint").linters.shellcheck
-shellcheck_zsh.args = {
-  "--format=json",
-  "-",
-  "--shell=bash", -- Force bash mode for zsh files
-}
-lint.linters.shellcheck_zsh = shellcheck_zsh
+-- A copy, so the shared shellcheck linter keeps its own args. nvim-lint parses json1.
+lint.linters.shellcheck_zsh = vim.tbl_extend("force", {}, lint.linters.shellcheck, {
+  args = {
+    "--format=json1",
+    "--shell=bash", -- Force bash mode for zsh files
+    "-",
+  },
+})
 
 -- Configure markdownlint to use project-specific config with global fallback
 -- Suppresses MD013 (line length) when markdown print mode is active
-require("lint").linters.markdownlint.args = function()
+-- nvim-lint wants `args` as a list, so the whole linter is a function that builds a copy
+local markdownlint = lint.linters.markdownlint
+lint.linters.markdownlint = function()
   local file_dir = vim.fn.expand("%:p:h")
   local local_config = vim.fn.findfile(".markdownlint.json", file_dir .. ";")
 
-  local args
+  local args = { "--stdin" }
   if local_config ~= "" and vim.fn.filereadable(local_config) == 1 then
-    args = { "--config", local_config }
+    vim.list_extend(args, { "--config", local_config })
   else
-    args = { "--config", vim.fn.stdpath("config") .. "/.markdownlint.json" }
+    vim.list_extend(args, { "--config", vim.fn.stdpath("config") .. "/.markdownlint.json" })
   end
 
   if vim.b.markdown_print_mode then
-    table.insert(args, "--disable")
-    table.insert(args, "MD013")
+    vim.list_extend(args, { "--disable", "MD013" })
   end
 
-  return args
+  return vim.tbl_extend("force", {}, markdownlint, { args = args })
 end
 
+-- Python (ruff) and sh/bash (shellcheck) are linted by their LSP servers, not here
 local lint_timers = {}
 lint.linters_by_ft = {
-  bash = { "shellcheck" },
   javascript = { "eslint_d" },
   json = { "jsonlint" },
   lua = { "luacheck" },
   markdown = { "markdownlint" },
-  python = { "ruff" },
-  sh = { "shellcheck" },
   typescript = { "eslint_d" },
   zsh = { "shellcheck_zsh" },
 }
