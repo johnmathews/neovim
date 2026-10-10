@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   sh and bash (bashls runs it).
 - **conform options** (F25): `default_format_opts = { lsp_format = "fallback" }` replaces the deprecated
   `lsp_fallback`, and YAML no longer lists the unknown formatter `lsp`.
+- **Statusline `nil`** (F27): lualine's symbols component returned `nil`, which rendered as the text "nil".
+- **`filetype = "on"`** in `lua/options.lua` set the option, not the `:filetype on` command, so the empty startup buffer
+  had the filetype `on`. Neovim enables filetype detection by default; the line is gone.
 
 ### Changed
 - **Floating window borders**: `winborder = "rounded"` replaces the `open_floating_preview` override. The cmp menu and
@@ -72,6 +75,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ftplugin/markdown.vim`. The `glow` CLI is no longer a requirement.
 - **vim-numbers** (F18, F16): its visual and operator-pending `an`/`in` hid 0.12's built-in treesitter node selection.
 - **lualine-lsp-progress** (F18): archived, and only referenced by a commented-out component.
+- **fidget.nvim** (F25): noice already shows LSP progress, and the installed fidget called the deprecated
+  `vim.lsp.get_active_clients`. **lsp_signature.nvim** (F25): installed but never set up.
+- **Config files nothing loaded** (F25): `lua/colorscheme.lua` and `lua/plugins/{lsp-colors,fzf,filetype,monokai,vimtex,
+  javascript,asyncrun}.lua`. Neovim already maps `uv.lock` to toml, so `filetype.lua` added nothing.
 - `test/test_lsp.sh`: it ran bare `nvim` against the real data directory and passed when a server name appeared
   anywhere in the output. The smoke gate covers everything it checked.
 

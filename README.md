@@ -191,9 +191,8 @@ is archived.
 │   ├── mappings.lua            # Keybindings
 │   ├── autocmd.lua             # Autocommands
 │   ├── functions.lua           # Custom functions
-│   ├── colorscheme.lua         # Theme configuration
 │   ├── plugins.lua             # Plugin declarations (lazy.nvim)
-│   ├── plugins/                # Plugin configurations (45 files)
+│   ├── plugins/                # Plugin configurations (38 files)
 │   │   ├── lsp.lua             # LSP setup (vim.lsp.config, LspAttach, enabled servers)
 │   │   ├── telescope.lua       # Telescope configuration
 │   │   ├── treesitter.lua      # Treesitter setup
@@ -201,7 +200,7 @@ is archived.
 │   │   └── ...
 │   └── snippets/               # LuaSnip snippets (6 languages)
 ├── after/lsp/                  # Per-server LSP overrides (merged over nvim-lspconfig's defaults)
-├── ftplugin/                   # Filetype-specific settings (22 files)
+├── ftplugin/                   # Filetype-specific settings (23 files)
 ├── scripts/
 │   ├── health-check            # Configuration health check
 │   ├── quality-gate            # Pre-commit validation

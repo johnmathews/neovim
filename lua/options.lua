@@ -66,7 +66,6 @@ local options = {
 
   background = "dark",
 
-  filetype = "on",
   syntax = "on",
 
   cursorline = false,

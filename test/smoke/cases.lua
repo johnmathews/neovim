@@ -114,6 +114,38 @@ local function keymap_checks(t)
   end
 end
 
+-- Inert or broken global config (F25, F27): a new buffer gets no filetype, the statusline
+-- never prints "nil", and noice alone shows LSP progress.
+local function inert_checks(t)
+  local buf = vim.api.nvim_get_current_buf()
+  vim.cmd("enew")
+  local ft = vim.bo.filetype
+  local scratch = vim.api.nvim_get_current_buf()
+  vim.cmd("silent buffer " .. buf)
+  vim.api.nvim_buf_delete(scratch, { force = true })
+  if ft ~= "" then
+    t.fail("config:filetype", (":enew gave filetype %q, want none"):format(ft))
+  end
+  -- 'filetype' is buffer-local: setting it in options.lua tags whatever buffer is current
+  -- at startup, which is the empty buffer a bare `nvim` shows the dashboard over
+  for _, b in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.bo[b].filetype == "on" then
+      t.fail("config:filetype", ("buffer %d (%q) has filetype 'on'"):format(b, vim.api.nvim_buf_get_name(b)))
+    end
+  end
+  local line = vim.api.nvim_eval_statusline(vim.o.statusline, { winid = 0 }).str
+  if line:find("%f[%w]nil%f[%W]") then
+    t.fail("config:statusline", ("statusline contains nil: %q"):format(line))
+  end
+  if package.loaded["fidget"] then
+    t.fail("config:progress", "fidget.nvim is loaded; noice shows LSP progress")
+  end
+  local ok, noice_config = pcall(require, "noice.config")
+  if not ok or not vim.tbl_get(noice_config.options or {}, "lsp", "progress", "enabled") then
+    t.fail("config:progress", "noice's lsp.progress is not enabled")
+  end
+end
+
 ---@type SmokeCase[]
 local cases = {
   {
@@ -236,6 +268,7 @@ local cases = {
     },
     check = function(_, t)
       keymap_checks(t)
+      inert_checks(t)
     end,
   },
   {

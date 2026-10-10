@@ -165,14 +165,6 @@ return lazy.setup({
     end,
   },
 
-  -- lsp status indicator, because maybe the lualine one is broken?
-  {
-    "j-hui/fidget.nvim",
-    config = function()
-      require("fidget").setup({})
-    end,
-  },
-
   {
     "SmiteshP/nvim-navic",
     dependencies = {
@@ -248,7 +240,6 @@ return lazy.setup({
     end,
   },
 
-  { "ray-x/lsp_signature.nvim", dependencies = "neovim/nvim-lspconfig" },
   {
     "folke/trouble.nvim",
     opts = {}, -- for default options, refer to the configuration section for custom setup.
