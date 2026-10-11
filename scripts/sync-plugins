@@ -68,10 +68,12 @@ if [ -n "$TREE_SITTER_MIN" ] && version_lt "$TS_VERSION" "$TREE_SITTER_MIN"; the
   refuse "tree-sitter $TS_VERSION is older than the required $TREE_SITTER_MIN"
 fi
 command -v cc >/dev/null 2>&1 || refuse "no C compiler (cc) on PATH (needed to build parsers)"
+command -v git >/dev/null 2>&1 || refuse "git is not on PATH"
 
 # The config and data dirs Neovim itself would use.
 paths="$("$NVIM" --clean --headless \
-  +'lua io.stdout:write(vim.fn.stdpath("config") .. "\n" .. vim.fn.stdpath("data"))' +qa 2>/dev/null)"
+  +'lua io.stdout:write(vim.fn.stdpath("config") .. "\n" .. vim.fn.stdpath("data"))' +qa 2>/dev/null)" ||
+  refuse "cannot ask $NVIM for its config and data directories"
 CONFIG_DIR="$(printf '%s\n' "$paths" | sed -n 1p)"
 DATA_DIR="$(printf '%s\n' "$paths" | sed -n 2p)"
 [ -n "$CONFIG_DIR" ] && [ -n "$DATA_DIR" ] || refuse "cannot read Neovim's config and data directories"
@@ -85,6 +87,17 @@ say "Neovim $NVIM_VERSION, tree-sitter $TS_VERSION, config $CONFIG_DIR, data $DA
 
 git -C "$REPO" diff --quiet -- lazy-lock.json ||
   refuse "lazy-lock.json has uncommitted changes. Commit them, or discard them: git -C $REPO checkout -- lazy-lock.json"
+
+# From here on lazy may rewrite the lockfile. It was the committed one a moment ago, so a
+# failed run puts it back, and the retry does not trip over the check above.
+restore_lockfile() {
+  local rc=$?
+  if [ "$rc" -ne 0 ] && ! git -C "$REPO" diff --quiet -- lazy-lock.json; then
+    git -C "$REPO" checkout -- lazy-lock.json && echo "sync-plugins: put the committed lazy-lock.json back" >&2
+  fi
+  exit "$rc"
+}
+trap restore_lockfile EXIT
 
 # run_phase NAME: one Neovim process running a phase of test/smoke/bootstrap.lua
 # (plugins: restore to the lockfile; tools: Mason packages, then parsers)

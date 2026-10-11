@@ -57,18 +57,42 @@ local function restore_plugins()
 
   -- lazy reports a plugin it could not move (local changes, a checkout that fails on a new
   -- submodule) and carries on. Do what it advises by hand: remove the plugin, install it again.
+  -- The old checkout is moved aside, not deleted, until the new one is on its pin.
+  -- lazy.nvim itself is never moved: this process is running its code.
   local off = off_pin()
   if #off > 0 then
     vim.fn.writefile(pinned_text, lockfile, "b")
     Lock._loaded = false
+    local moved = {}
     for _, o in ipairs(off) do
-      log(("reinstalling %s: lazy left it at %s, lazy-lock.json pins %s"):format(o.plugin.name, o.have, o.want))
-      vim.fn.delete(o.plugin.dir, "rf")
+      local dir = o.plugin.dir
+      if o.plugin.name == "lazy.nvim" then
+        step_failed(("lazy.nvim is at %s, lazy-lock.json pins %s; run :Lazy restore"):format(o.have, o.want))
+      elseif vim.fn.isdirectory(dir) == 1 then
+        log(("reinstalling %s: lazy left it at %s, lazy-lock.json pins %s"):format(o.plugin.name, o.have, o.want))
+        vim.fn.delete(dir .. ".off-pin", "rf")
+        if vim.fn.rename(dir, dir .. ".off-pin") == 0 then
+          moved[o.plugin.name] = dir
+        else
+          step_failed("cannot move " .. dir .. " aside")
+        end
+      end
     end
     require("lazy.core.plugin").update_state()
     require("lazy.manage").install({ wait = true, show = false, lockfile = true })
+    local still = {}
     for _, o in ipairs(off_pin()) do
+      still[o.plugin.name] = true
       step_failed(("%s is at %s, lazy-lock.json pins %s"):format(o.plugin.name, o.have, o.want))
+    end
+    for name, dir in pairs(moved) do
+      if still[name] then
+        -- the reinstall failed: put the old checkout back rather than leave none
+        vim.fn.delete(dir, "rf")
+        vim.fn.rename(dir .. ".off-pin", dir)
+      else
+        vim.fn.delete(dir .. ".off-pin", "rf")
+      end
     end
   end
 end
@@ -80,9 +104,11 @@ local function install_tools()
   registry.refresh(function()
     refreshed = true
   end)
-  vim.wait(120000, function()
+  if not vim.wait(120000, function()
     return refreshed
-  end, 200)
+  end, 200) then
+    step_failed("the Mason registry did not refresh within 2 minutes")
+  end
   local servers = {}
   local okm, mlc_settings = pcall(require, "mason-lspconfig.settings")
   local okmap, mappings = pcall(function()
@@ -109,23 +135,53 @@ local function install_tools()
       end)
     end
   end
-  vim.wait(900000, function()
+  if not vim.wait(900000, function()
     return pending == 0
-  end, 500)
+  end, 500) then
+    step_failed(("%d Mason installs still running after 15 minutes"):format(pending))
+  end
   if vim.fn.exists(":MasonToolsInstallSync") == 2 then
     log("installing Mason tools (mason-tool-installer)")
     vim.cmd("MasonToolsInstallSync")
+  end
+  -- neither callback above nor :MasonToolsInstallSync raises on a failed install, so check
+  local okt, mason_config = pcall(require, "plugins.mason")
+  local tools = okt and type(mason_config) == "table" and mason_config.tools or {}
+  for _, name in ipairs(vim.list_extend(vim.deepcopy(servers), tools)) do
+    if registry.has_package(name) and not registry.is_installed(name) then
+      step_failed("Mason package not installed: " .. name)
+    end
   end
 
   -- Parsers: the list lua/plugins/treesitter.lua exports, built synchronously.
   local okc, ts_config = pcall(require, "plugins.treesitter")
   if okc and type(ts_config) == "table" and ts_config.parsers then
-    log("installing parsers")
-    local okw, err = pcall(function()
-      require("nvim-treesitter").install(ts_config.parsers):wait(900000)
-    end)
-    if not okw then
-      step_failed("parser install: " .. tostring(err))
+    local ts = require("nvim-treesitter")
+    -- Built parsers only: get_installed() also counts query directories, so a language whose
+    -- parser is missing but whose queries remain counts as installed, and install() skips it.
+    -- force rebuilds those half-installed languages.
+    local function missing_parsers()
+      local built = {}
+      for _, lang in ipairs(ts.get_installed("parsers")) do
+        built[lang] = true
+      end
+      return vim.tbl_filter(function(lang)
+        return not built[lang]
+      end, ts_config.parsers)
+    end
+    local missing = missing_parsers()
+    if #missing > 0 then
+      log("installing parsers: " .. table.concat(missing, ", "))
+      local okw, err = pcall(function()
+        return ts.install(missing, { force = true }):wait(900000)
+      end)
+      if not okw then
+        step_failed("parser install: " .. tostring(err))
+      end
+    end
+    -- the install task reports a failed build only through its return value; check the result
+    for _, lang in ipairs(missing_parsers()) do
+      step_failed("parser not installed: " .. lang)
     end
   else
     step_failed("lua/plugins/treesitter.lua exports no parser list (nvim-treesitter master checked out?)")

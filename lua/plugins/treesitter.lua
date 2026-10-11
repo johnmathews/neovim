@@ -33,9 +33,11 @@ local parsers = {
   "yaml",
 }
 
--- Install what is missing. Building a parser needs the tree-sitter CLI.
+-- Install what is missing. Building a parser needs the tree-sitter CLI. Only built parsers
+-- count: get_installed() also lists query directories, so a language whose parser is gone
+-- would look installed, and force makes install() rebuild it.
 local installed = {}
-for _, lang in ipairs(ts.get_installed()) do
+for _, lang in ipairs(ts.get_installed("parsers")) do
   installed[lang] = true
 end
 local missing = vim.tbl_filter(function(lang)
@@ -43,7 +45,7 @@ local missing = vim.tbl_filter(function(lang)
 end, parsers)
 if #missing > 0 then
   if vim.fn.executable("tree-sitter") == 1 then
-    ts.install(missing)
+    ts.install(missing, { force = true })
   else
     vim.notify(
       "tree-sitter CLI not found: cannot install treesitter parsers " .. table.concat(missing, ", "),
