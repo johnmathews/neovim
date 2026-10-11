@@ -10,7 +10,7 @@ This document is written for OpenCode (Anthropic models, plan mode)
 ## TL;DR for Agents
 
 - Purpose: describe rules, structure, and safe edit scope for this Neovim configuration.
-- Environment: macOS · Neovim v0.11+ · lazy.nvim · Stylua · Luacheck.
+- Environment: macOS and Linux · Neovim v0.12.6 · lazy.nvim · Stylua · Luacheck.
 - Safe Actions: fix lint issues, adjust LSP config, improve keymaps, optimize startup.
 - Guardrails: run lint/format before + after; never delete comments; avoid vendor files.
 - Goal: maintain a clean, fast, low-maintenance setup (less than 150 ms cold-boot).
@@ -36,7 +36,7 @@ Agents must:
 ### Agent Interaction Summary
 
 - Claude / OpenCode uses this file to guide coding decisions.
-- All examples assume macOS + Neovim v0.11+.
+- All examples assume macOS + Neovim v0.12.6; Linux (Ubuntu 24.04+, Debian 13+) is set up by `scripts/bootstrap-linux`.
 - Output should follow Stylua + Luacheck rules.
 
 ---
@@ -49,8 +49,8 @@ Agents must:
 - **Required CLIs:** `stylua`, `luacheck`, `ripgrep`, `fd`, `node` 20 or later (markdownlint-cli needs it), the
   `tree-sitter` CLI 0.26.1 or later and a C compiler (nvim-treesitter's `main` branch builds parsers with both)
   - Install luacheck: `brew install luacheck` (macOS)
-- **Optional CLIs:** `uv` (the Python provider: `uv tool install pynvim`) and Typora (macOS, `<leader>X`).
-  Formatters, linters and LSP servers come from Mason (`lua/plugins/mason.lua`, `lua/plugins/lsp.lua`).
+- **Optional CLIs:** `uv` (the Python provider: `uv tool install pynvim`) and Typora (macOS, `<leader>X`). Formatters,
+  linters and LSP servers come from Mason (`lua/plugins/mason.lua`, `lua/plugins/lsp.lua`).
 - **Python:** used for data and scripting. The Python provider is the `pynvim` tool from `uv tool install pynvim`
   (`$UV_TOOL_DIR/pynvim`, default `~/.local/share/uv/tools/pynvim`), set in `init.lua`. The Node provider is disabled.
 - **Preferred shell:** zsh
@@ -63,6 +63,11 @@ All changes should be tested before being accepted. A test directory should exis
 file types, with a variety of errors in them. These files can be used to verify that nvim and its plugins behave as
 expected. they function like test data to test nvim against. LSP features should be tested, but how can things like code
 actions, or go to definition be tested?
+
+The smoke gate (`scripts/smoke`, `test/smoke/`) answers this: it opens each sample under `test/` in an isolated Neovim
+and sends real LSP requests (definition, hover, prepareRename, codeAction), types keys such as `grr`, `gra` and `vaf`,
+and checks clients, diagnostics, treesitter, keymaps and messages. `scripts/gate-selftest` proves it fails on broken
+configs, and CI (`.github/workflows/ci.yml`) runs both on Linux. Details: `docs/TESTING.md`.
 
 ---
 
@@ -79,7 +84,10 @@ actions, or go to definition be tested?
 - Telescope: `./lua/plugins/telescope.lua`
 - Snippets: `./lua/snippets/`
 - Gates and hooks: `./scripts/` (smoke, gate-selftest, quality-gate, health-check, pre-commit, pre-push)
+- Machine setup: `./scripts/bootstrap-linux` (Linux tools at the versions in `scripts/versions.env`),
+  `./scripts/sync-plugins` (plugins, Mason packages and parsers to the lockfile, any OS)
 - Smoke gate engine, cases and known failures: `./test/smoke/`; sample files per language under `./test/`
+- CI: `./.github/workflows/ci.yml` (Linux, x86_64 and aarch64)
 
 ---
 
@@ -122,12 +130,12 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 - **Format on save:** Auto via `conform.nvim`
 - **Manual format:** `<leader>cf`
 - **Manual lint:** `<leader>cl`
-- **Run single test:** `t<leader>n` (nearest), `t<leader>f` (file)
+- **Run the gate for one language:** `./scripts/smoke --only python`
 - **Health check:** `:checkhealth` or `./scripts/health-check` (`--isolated` runs in the smoke environment, never the
   real data dir)
 - **Full quality gate:** `./scripts/quality-gate` (stylua + luacheck + `scripts/smoke --startup-only`)
-- **Smoke gate:** `./scripts/smoke` opens a real buffer per language in an isolated Neovim; first run per Neovim
-  version: `./scripts/smoke --seed-from ~/.local/share/nvim`. `./scripts/gate-selftest` proves the gates can fail.
+- **Smoke gate:** `./scripts/smoke` opens a real buffer per language in an isolated Neovim; first run per Neovim version:
+  `./scripts/smoke --seed-from ~/.local/share/nvim`. `./scripts/gate-selftest` proves the gates can fail.
 
 ---
 
@@ -135,10 +143,13 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 
 - **Formatting:** Stylua (2-space indents, spaces not tabs), Prettier for non-Lua files.
 - **Files:** plugin configs in `lua/plugins/`, snippets in `lua/snippets/`, autocmds in `lua/autocmd.lua`.
-- **Globals allowed:** `vim`, `P`, `Functions`, `KeymapOptions`, `PrintTable`, and plugin-specific toggles (see `.luacheckrc`).
+- **Globals allowed:** `vim`, `P`, `Functions`, `KeymapOptions`, `PrintTable`, and plugin-specific toggles (see
+  `.luacheckrc`).
 - **Naming:** snake_case for files/functions; PascalCase for modules; descriptive, unambiguous names.
-- **Imports:** Use `local module = require("path")` at top of functions for lazy-loading; avoid module-level requires outside of plugin specs.
-- **Error handling:** Wrap risky requires with `pcall(require, "module")` and check return values; use `vim.notify()` for user-facing errors.
+- **Imports:** Use `local module = require("path")` at top of functions for lazy-loading; avoid module-level requires
+  outside of plugin specs.
+- **Error handling:** Wrap risky requires with `pcall(require, "module")` and check return values; use `vim.notify()` for
+  user-facing errors.
 - **Types & Docs:** Add `---@param` and `---@return` annotations for LSP; use `---@class` for table schemas.
 - **Comments:** Use single-line `--` comments; avoid multi-line blocks; prefer self-documenting code over comments.
 - **Keymaps:** Define in `lua/mappings.lua` with `desc` field for discoverability; group related maps by prefix.
@@ -161,6 +172,8 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 | Pre-commit hook   | `./scripts/pre-commit`               |
 | Pre-push hook     | `./scripts/pre-push`                 |
 | Validate setup    | `./scripts/health-check --isolated`  |
+| Set up Linux      | `./scripts/bootstrap-linux`          |
+| Sync plugins      | `./scripts/sync-plugins`             |
 | Re-index OpenCode | `:reload` inside OpenCode            |
 | Export summaries  | `:export summary.md` inside OpenCode |
 
@@ -173,7 +186,9 @@ These automation scripts are provided in `scripts/` (details in `docs/TESTING.md
 3. **`smoke`** - Buffer-opening smoke gate in an isolated environment
 4. **`gate-selftest`** - Proves `smoke`, `quality-gate` and `health-check` fail on known-bad inputs
 5. **`pre-commit`** / **`pre-push`** - Git hooks, installed by **`install-hooks`** through `core.hooksPath`
-6. **`versions.env`** - Versions `health-check` enforces
+6. **`versions.env`** - Versions `health-check` enforces and `bootstrap-linux` installs, with their sha256 digests
+7. **`bootstrap-linux`** - Linux setup (Neovim, tree-sitter CLI, stylua, uv, node, apt packages); never on macOS
+8. **`sync-plugins`** - Plugins, Mason packages and parsers to `lazy-lock.json`; only for the config Neovim loads
 
 ### Luacheck Configuration
 
@@ -212,7 +227,7 @@ This section is informational only, not actionable.
 informational only, not actionable
 
 **Target:** less than 150ms cold boot startup  
-**Current:** ~140ms headless median (as of 2026-10-10, Neovim 0.11.6 and 0.12.6)  
+**Current:** 125-145ms headless median (as of 2026-10-11, Neovim 0.12.6, measured at load averages of 88-122)  
 **Status:** under target. Removing the `poetry` and `neovim-node-host` shell-outs from `init.lua` cut about 280ms
 
 ### Startup Profiling
@@ -231,11 +246,11 @@ nvim +StartupTime
 
 ### Top Contributors to Startup Time
 
-1. **`require('plugins')`** (~113ms inclusive) - lazy.nvim and every non-lazy plugin's config
-2. **Mason** (~18ms) - mason, mason-tool-installer and mason-lspconfig setup
-3. **Telescope setup** (~16ms) - Fuzzy finder + extensions (measured with project.nvim's extension, since removed)
-4. **Custom snippets** (~9ms) - `luasnip.loaders.from_lua`
-5. **LSP configuration** (~7ms) - `lua/plugins/lsp.lua`
+1. **`require('plugins')`** (~105ms inclusive) - lazy.nvim and every non-lazy plugin's config
+2. **Mason** (~21ms) - mason, mason-tool-installer and mason-lspconfig setup
+3. **Telescope setup** (~14ms) - Fuzzy finder + extensions
+4. **LSP configuration** (~13ms) - `lua/plugins/lsp.lua`
+5. **Custom snippets** (~10ms) - `luasnip.loaders.from_lua`
 
 **See `docs/PERFORMANCE.md` for detailed analysis and optimization recommendations.**
 
@@ -247,7 +262,8 @@ nvim +StartupTime
 - **`docs/LSP.md`** - Language Server Protocol, formatters, and linters documentation
 - **`docs/MARKDOWN-FORMATTING.md`** - Markdown formatting, linting and print mode
 - **`docs/PERFORMANCE.md`** - Startup performance analysis and optimization guide
-- **`docs/TESTING.md`** - Smoke gate, quality gate, health check and git hooks
+- **`docs/TESTING.md`** - Smoke gate, quality gate, health check, git hooks, CI and plugin sync
+- **`docs/UPGRADE-0.12.md`** - One-time runbook for the Neovim 0.12 cutover (archive once every machine has migrated)
 - **`docs/CHANGELOG.md`** - Version history
 - **`docs/archive/`** - Superseded docs, kept for their history
 - **`journal/`** - Dated development journal entries

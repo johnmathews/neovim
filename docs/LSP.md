@@ -8,9 +8,9 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 
 ## How Servers Start
 
-LSP servers use Neovim's native configuration (`vim.lsp.config` and `vim.lsp.enable`, Neovim 0.11+). nvim-lspconfig only
-supplies a default config file per server (`lsp/<server>.lua` on the runtimepath). Its old
-`require("lspconfig")[server].setup()` framework is deprecated and is not used.
+LSP servers use Neovim's native configuration (`vim.lsp.config` and `vim.lsp.enable`). nvim-lspconfig only supplies a
+default config file per server (`lsp/<server>.lua` on the runtimepath). Its old `require("lspconfig")[server].setup()`
+framework is deprecated and is not used.
 
 `lua/plugins/lsp.lua` does four things:
 

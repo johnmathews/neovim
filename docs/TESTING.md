@@ -62,10 +62,11 @@ what you start every day. `--isolated` runs them in the smoke environment (`SMOK
 ====================================
 
 1. Checking Neovim version...
-   NVIM v0.11.6
-   ✓ Neovim 0.11.6 (pinned 0.11.6)
+   NVIM v0.12.6
+   ✓ Neovim 0.12.6 (pinned 0.12.6)
 
 2. Checking required CLI tools...
+   ✓ tree-sitter: tree-sitter 0.27.1
    ✓ cc: Apple clang version 21.0.0 (clang-2100.1.1.101)
    ...
    ✓ node: v22.22.0
@@ -171,7 +172,8 @@ git commit --no-verify -m "message"
 
 #### Pre-Push Hook (`./scripts/pre-push`)
 
-Runs automatically before every `git push` (about 45 seconds on 0.11.6, measured 2026-10-11; longer on a busy machine).
+Runs automatically before every `git push` (about 50 seconds on 0.12.6, measured 2026-10-11 at a load average of 37 to
+73; longer on a busier machine).
 
 **What it checks:**
 
@@ -249,7 +251,7 @@ guard did exactly that.
 | Tools | Every conform formatter is known and available, every nvim-lint linter is defined and executable |
 | Each case | The exact LSP client set, pinned server settings, diagnostic counts per owner (`lsp:<client>` or the linter name), no finding reported by two owners, cmp-nvim-lsp capabilities on every client, a buffer-local `<leader>li` where a client supports inlay hints, navic where a client supports document symbols, the treesitter parser in use, `af`/`if` textobjects, folds, and real LSP requests (definition, hover, prepareRename, codeAction) for Python and Lua |
 | Case checks | Per-case `check` functions in `cases.lua`. Python: textobjects (`vaf`, buffer-local `]m`), the native treesitter foldexpr, `<leader>tc`/`tp` and the removed master-era keys (`treesitter:keymaps`), `:LspRestart` keeping settings, basedpyright on push diagnostics (`python:pull`), `grr` jumping through Telescope, aerial finding symbols, `gra` opening a Telescope picker (`python:ui-select`), Telescope's history database inside the data dir (`python:telescope`), project root cwd and the `<Tab>p`/`<localleader>fs` session pickers, the Python host (uv's `pynvim` or none) and the disabled Node host, and the keymap docs (below). Lua: `gr`/`gi` unmapped, `grr`/`gri`/`<leader>cl`/`<leader>cL` (`keymaps:defaults`), no buffer with filetype `on`, no `nil` in the statusline, noice owning LSP progress (`config:*`). TypeScript and TSX: native `gcc`/`gco`/`gcO`, the comment style per node, and no nvim-ts-context-commentstring. Markdown: `<leader>x` calling `vim.ui.open`, glow gone, no folds, and its keymap docs. SQL: the ftplugin's `]]`, formatting on `<leader>cf` but not on save |
-| Keymap docs | `docs/KEYMAPS.md` against the running config, both ways: every key in a `Key \| Mode` table is mapped in its modes (`keymaps:documented`; the Markdown section in the Markdown buffer, the rest in the Python buffer), every mapping with a desc under `<Leader>`, `<LocalLeader>`, `<Tab>`, `g` or an F-key is documented (`keymaps:undocumented`), every label in `lua/plugins/whichkey.lua` names a mapping (`keymaps:whichkey`), and gitsigns' `<Leader>shs`/`shr` call gitsigns (`keymaps:gitsigns`). Vim built-ins the doc mentions (`gd`, `gD`, `<C-o>`) are exempt |
+| Keymap docs | `docs/KEYMAPS.md` against the running config, both ways: every key in a `Key \| Mode` table is mapped in its modes (`keymaps:documented`; the Markdown section in the Markdown buffer, the rest in the Python buffer), every mapping with a desc under `<Leader>`, `<LocalLeader>`, `<Tab>`, `g` or an F-key is documented (`keymaps:undocumented`), every label in `lua/plugins/whichkey.lua` names a mapping (`keymaps:whichkey`), and gitsigns' `<Leader>shs`/`shr` call gitsigns (`keymaps:gitsigns`). `<C-o>`, a Vim command the doc mentions, is exempt |
 | Mundo | Only where uv's `pynvim` is installed (`$UV_TOOL_DIR`, else `$XDG_DATA_HOME/uv/tools`): `:MundoToggle` opens its window. `scripts/smoke` passes this machine's tool directory into the sandbox as `UV_TOOL_DIR` |
 
 Headless Neovim never fires `UIEnter`, so lazy never fires `VeryLazy`. The gate fires `UIEnter` itself, so noice,

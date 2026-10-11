@@ -1,6 +1,6 @@
 # Neovim LSP Demo Guide
 
-Welcome to the LSP keybinding demo! This directory contains examples to test all the **built-in Neovim v0.11+ LSP keybindings** you have configured.
+Welcome to the LSP keybinding demo! This directory contains examples to test all the **LSP keybindings** this config sets up on Neovim 0.12.
 
 **Note:** These are Neovim's standard LSP keybindings, not custom ones. All keybindings use the `g` prefix or other standard vim motions.
 
@@ -103,7 +103,7 @@ main.py
 - Try `:lua vim.lsp.buf.document_symbol()` to see all symbols in the file
 - The import error in main.py is normal - it's a path resolution issue, but LSP navigation still works!
 
-## All LSP Keybindings (Neovim v0.11+ Built-in)
+## All LSP Keybindings (Neovim 0.12)
 
 ### Go-to Commands
 | Keybinding | Action | Type |

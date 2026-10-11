@@ -146,18 +146,18 @@ GitSigns keys are buffer-local: they exist in buffers inside a git repository, t
 
 ### Built-in LSP Navigation (Neovim 0.12)
 
-| Key          | Mode   | Description                              |
-| ------------ | ------ | ---------------------------------------- |
-| `gd`         | Normal | Go to definition (built-in LSP)          |
-| `gD`         | Normal | Go to declaration (built-in LSP)         |
-| `gra`        | Normal | Code actions in a Telescope dropdown     |
-| `grn`        | Normal | Rename symbol (workspace-wide)           |
-| `grt`        | Normal | Go to type definition                    |
-| `grx`        | Normal | Run the code lens on the current line    |
-| `gO`         | Normal | Document symbols (Markdown: the outline) |
-| `K`          | Normal | Hover documentation                      |
-| `<leader>li` | Normal | Toggle inlay hints                       |
-| `<F4>`       | Normal | Restart LSP server                       |
+| Key          | Mode   | Description                                   |
+| ------------ | ------ | --------------------------------------------- |
+| `gd`         | Normal | Go to definition (`vim.lsp.buf.definition`)   |
+| `gD`         | Normal | Go to declaration (`vim.lsp.buf.declaration`) |
+| `gra`        | Normal | Code actions in a Telescope dropdown          |
+| `grn`        | Normal | Rename symbol (workspace-wide)                |
+| `grt`        | Normal | Go to type definition                         |
+| `grx`        | Normal | Run the code lens on the current line         |
+| `gO`         | Normal | Document symbols (Markdown: the outline)      |
+| `K`          | Normal | Hover documentation                           |
+| `<leader>li` | Normal | Toggle inlay hints                            |
+| `<F4>`       | Normal | Restart LSP server                            |
 
 ### Telescope-based LSP Navigation
 

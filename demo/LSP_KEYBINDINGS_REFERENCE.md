@@ -1,6 +1,6 @@
 # LSP Keybindings Reference - Complete
 
-This document shows all LSP-related keybindings available in Neovim v0.11+.
+This document shows all LSP-related keybindings available in this config on Neovim 0.12.
 
 ## Quick Help
 
@@ -8,9 +8,9 @@ This document shows all LSP-related keybindings available in Neovim v0.11+.
 
 Press `\` (LocalLeader) to see LocalLeader bindings.
 
-## Built-in Neovim v0.11+ LSP Keybindings
+## LSP Keybindings (Neovim 0.12 defaults and this config)
 
-These are **standard Neovim keybindings** that come with Neovim 0.11+ when LSP is configured.
+These are **standard Neovim keybindings** that come with Neovim 0.12 when LSP is configured.
 
 ### Go-to Navigation (`g` prefix)
 

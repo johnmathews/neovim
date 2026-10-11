@@ -3,8 +3,8 @@
 A robust, performant Neovim configuration optimized for Python, JavaScript/TypeScript, Lua, Bash, SQL, YAML, and Markdown
 development.
 
-**Version:** 1.2.0  
-**Last Updated:** 2025-11-08  
+**Version:** 2.0.0 (Neovim 0.12; upgrading a machine from 0.11: [docs/UPGRADE-0.12.md](docs/UPGRADE-0.12.md))  
+**Last Updated:** 2026-10-11  
 **Repository:** https://github.com/johnmathews/neovim
 
 ---
@@ -17,8 +17,8 @@ development.
 - **Smart Completion** - nvim-cmp with LuaSnip snippets
 - **Syntax Highlighting** - Treesitter with custom text objects
 - **Fast Navigation** - Leap motion, Harpoon marks, project-root cwd and session search
-- **Performance** - Lazy-loaded plugins, ~140ms startup time
-- **Testing** - Automated LSP testing and comprehensive test suite
+- **Performance** - Lazy-loaded plugins, under 150ms startup
+- **Testing** - A smoke gate that opens a real buffer per language, its self-test, and Linux CI on every pull request
 - **Documentation** - Detailed guides for LSP, keymaps, and performance
 
 ---
@@ -39,7 +39,7 @@ development.
 - **Optional:** the Python provider, for Python plugins such as vim-mundo. Install it with `uv tool install pynvim`;
   `init.lua` uses that interpreter when it exists. The Node provider is disabled.
 
-### Installation
+### Installation (macOS)
 
 ```bash
 # Backup existing config
@@ -48,12 +48,24 @@ mv ~/.config/nvim ~/.config/nvim.backup
 # Clone this repository
 git clone https://github.com/johnmathews/neovim.git ~/.config/nvim
 
-# Launch Neovim (plugins will auto-install)
-nvim
-
-# Install LSP servers via Mason
-:Mason
+# Install every plugin at its lazy-lock.json commit, the Mason packages and the treesitter parsers
+cd ~/.config/nvim && scripts/sync-plugins
 ```
+
+### Linux and Codespaces
+
+Ubuntu 24.04+ or Debian 13+ (glibc 2.39 or later). `scripts/bootstrap-linux` installs Neovim 0.12.6, the tree-sitter CLI,
+stylua, uv, node when needed, and the apt packages, each pinned in `scripts/versions.env`:
+
+```bash
+git clone https://github.com/johnmathews/neovim.git ~/.config/nvim
+~/.config/nvim/scripts/bootstrap-linux
+export PATH="$HOME/.local/bin:$PATH"   # and in your shell profile
+cd ~/.config/nvim && scripts/sync-plugins
+```
+
+For Codespaces, put the same steps in the dotfiles repository's `install.sh`; the snippet is in
+[docs/UPGRADE-0.12.md](docs/UPGRADE-0.12.md). CI runs these steps on every pull request.
 
 ### First Steps
 
@@ -259,7 +271,7 @@ What each script checks, and how to read its output, is in [docs/TESTING.md](doc
 
 **Current Performance:**
 
-- Headless startup: ~140ms (median, Neovim 0.11.6 and 0.12.6)
+- Headless startup: 125-145ms (median, Neovim 0.12.6, on a busy machine)
 - Plugin count: 83 (`lazy-lock.json`)
 
 **Lazy-Loaded Plugins:**
@@ -279,16 +291,17 @@ loads the custom snippets. Mason's tool installer checks its list on every start
 
 ## 📚 Documentation
 
-| Document                                              | Purpose                                              |
-| ----------------------------------------------------- | ---------------------------------------------------- |
-| [AGENTS.md](AGENTS.md)                                | Architecture, design principles, conventions         |
-| [CHANGELOG.md](docs/CHANGELOG.md)                     | Version history and change tracking                  |
-| [KEYMAPS.md](docs/KEYMAPS.md)                         | Complete keymap reference (searchable via `<Tab>tk`) |
-| [LSP.md](docs/LSP.md)                                 | LSP servers, formatters, linters                     |
-| [PERFORMANCE.md](docs/PERFORMANCE.md)                 | Startup analysis and optimization                    |
-| [MARKDOWN-FORMATTING.md](docs/MARKDOWN-FORMATTING.md) | Markdown formatting, linting and print mode          |
-| [TESTING.md](docs/TESTING.md)                         | Smoke gate, quality gate, health check, git hooks    |
-| [docs/archive/](docs/archive/)                        | Superseded docs (test results, improvement log)      |
+| Document                                              | Purpose                                                            |
+| ----------------------------------------------------- | ------------------------------------------------------------------ |
+| [AGENTS.md](AGENTS.md)                                | Architecture, design principles, conventions                       |
+| [CHANGELOG.md](docs/CHANGELOG.md)                     | Version history and change tracking                                |
+| [KEYMAPS.md](docs/KEYMAPS.md)                         | Complete keymap reference (searchable via `<Tab>tk`)               |
+| [LSP.md](docs/LSP.md)                                 | LSP servers, formatters, linters                                   |
+| [PERFORMANCE.md](docs/PERFORMANCE.md)                 | Startup analysis and optimization                                  |
+| [MARKDOWN-FORMATTING.md](docs/MARKDOWN-FORMATTING.md) | Markdown formatting, linting and print mode                        |
+| [TESTING.md](docs/TESTING.md)                         | Smoke gate, quality gate, health check, git hooks, CI, plugin sync |
+| [UPGRADE-0.12.md](docs/UPGRADE-0.12.md)               | One-time runbook for moving a machine to Neovim 0.12               |
+| [docs/archive/](docs/archive/)                        | Superseded docs (test results, improvement log)                    |
 
 ---
 
@@ -297,7 +310,10 @@ loads the custom snippets. Mason's tool installer checks its list on every start
 ### Update Plugins
 
 ```bash
-# Inside Neovim
+# After pulling: bring this machine to the committed lazy-lock.json
+scripts/sync-plugins
+
+# Move plugins forward (then commit lazy-lock.json; other machines run scripts/sync-plugins)
 :Lazy update
 
 # Check for issues

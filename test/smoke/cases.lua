@@ -238,8 +238,8 @@ end
 -- documented modes, and every mapping with a desc under the main prefixes is documented.
 -- Runs in the Python buffer, so buffer-local maps (LSP, textobjects, gitsigns) are there.
 
--- Documented keys that are Vim motions or commands rather than mappings
-local doc_builtins = { ["gd"] = true, ["gD"] = true, ["<C-o>"] = true }
+-- Documented keys that are Vim commands rather than mappings
+local doc_builtins = { ["<C-o>"] = true }
 
 local doc_modes = { normal = "n", insert = "i", visual = "x", pending = "o", operator = "o", terminal = "t" }
 
