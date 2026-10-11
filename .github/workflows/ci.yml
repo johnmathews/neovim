@@ -29,7 +29,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     env:
-      SMOKE_HOME: ${{ github.workspace }}/../smoke-home
+      # outside the checkout (stylua and the gate's tree copy walk it), and without ".."
+      # (upload-artifact rejects relative segments)
+      SMOKE_HOME: ${{ github.workspace }}-smoke-home
     steps:
       - uses: actions/checkout@v7
 
