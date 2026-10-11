@@ -420,6 +420,9 @@ local cases = {
       -- bo.commentstring metadata, which native gc reads before 'commentstring'
       comment_check(t, 10, "^{/%* <span>{upper}</span> %*/}$")
       comment_check(t, 7, "^// const upper")
+      if package.loaded["ts_context_commentstring"] then
+        t.fail("tsx:comment", "nvim-ts-context-commentstring is loaded; the jsx query's metadata replaces it")
+      end
       vim.cmd("silent edit!")
     end,
   },

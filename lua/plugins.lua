@@ -163,24 +163,6 @@ return lazy.setup({
     end,
   },
 
-  -- comments: Neovim's native gc, with the commentstring of the treesitter node under the cursor
-  {
-    "JoosepAlviste/nvim-ts-context-commentstring",
-    lazy = true, -- loaded by the first commentstring lookup below
-    init = function()
-      -- https://github.com/JoosepAlviste/nvim-ts-context-commentstring/wiki/Integrations
-      local get_option = vim.filetype.get_option
-      ---@diagnostic disable-next-line: duplicate-set-field
-      vim.filetype.get_option = function(filetype, option)
-        return option == "commentstring" and require("ts_context_commentstring.internal").calculate_commentstring()
-          or get_option(filetype, option)
-      end
-    end,
-    config = function()
-      require("plugins.comment")
-    end,
-  },
-
   {
     "SmiteshP/nvim-navic",
     dependencies = {

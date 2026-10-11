@@ -45,3 +45,12 @@ Red (W12's code with the new checks): `python:aerial` "aerial found no symbols",
 filetype "DressingSelect"" and "dressing.nvim is loaded", and aerial's error in all 11 other cases. Green on 0.12.6:
 `SMOKE PASS: 0 failed, 0 xfailed, 0 warnings`. A fresh data dir's first start keeps lazy.nvim at `306a055` and leaves
 `lazy-lock.json` unchanged; on W12's code the same start leaves `85c7ff3` and rewrites the entry.
+
+## Follow-up: nvim-ts-context-commentstring removed
+
+The owner approved removing it once `main`'s queries proved to keep the JSX metadata: `queries/jsx/highlights.scm`
+sets `bo.commentstring` to `{/* %s */}` on JSX elements and `// %s` on attributes, and native `gc` reads that before
+`'commentstring'`. The spec, its `vim.filetype.get_option` override, `lua/plugins/comment.lua` and the lockfile line
+are gone. One behaviour changes: the plugin's config commented a JSX attribute line as `{/* … */}`, which is not valid
+between attributes; the query's `//` is. `tsx:comment` still gets `{/* <span>{upper}</span> */}` and `// const upper`,
+and now also fails if the plugin is loaded, which it does on the commit before (red), not after (green).

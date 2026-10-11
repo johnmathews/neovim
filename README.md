@@ -254,7 +254,7 @@ What each script checks, and how to read its output, is in [docs/TESTING.md](doc
 **Current Performance:**
 
 - Headless startup: ~140ms (median, Neovim 0.11.6 and 0.12.6)
-- Plugin count: 84 (`lazy-lock.json`)
+- Plugin count: 83 (`lazy-lock.json`)
 
 **Lazy-Loaded Plugins:**
 
