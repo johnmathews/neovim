@@ -1,0 +1,233 @@
+#!/usr/bin/env bash
+# Linux bootstrap for this Neovim config: Ubuntu 24.04+, Debian 13+, Codespaces, CI.
+#
+# Installs, without prompts and side by side with anything already there:
+#   - Neovim (official tarball) in $PREFIX/opt/nvim-v<version>, linked as $PREFIX/bin/nvim
+#   - the tree-sitter CLI, stylua and uv in $PREFIX/bin (official release assets)
+#   - apt packages: a C toolchain, curl, git, unzip, ripgrep, fd, luacheck,
+#     python3-venv, and node when it is missing or older than NODE_MIN
+#   - uv's pynvim, the Python provider init.lua looks for
+# Versions and sha256 digests come from scripts/versions.env; every download is
+# checked against its digest. Re-running it changes nothing that is already in place.
+# It never touches plugins: scripts/sync-plugins does that.
+#
+# Usage: scripts/bootstrap-linux
+# Environment: PREFIX (default ~/.local), SKIP_APT=1 skips apt,
+#              VERSIONS_ENV overrides scripts/versions.env.
+# Exit codes: 0 installed and verified, 1 failed.
+
+set -euo pipefail
+
+say() { echo "bootstrap: $*"; }
+die() {
+  echo "bootstrap: $*" >&2
+  exit 1
+}
+
+case "${1:-}" in
+  "") ;;
+  -h | --help) sed -n '2,/^# Exit codes:/p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  *) die "unknown option: $1 (see --help)" ;;
+esac
+
+# Git exports GIT_DIR and GIT_INDEX_FILE to hooks; with them set, git commands here
+# would act on the committing repository instead of the paths they are given.
+if command -v git >/dev/null 2>&1; then
+  # shellcheck disable=SC2046 # word splitting is intended: one variable name per word
+  unset $(git rev-parse --local-env-vars 2>/dev/null)
+fi
+REPO="$(cd "$(dirname "$0")/.." && pwd -P)"
+VERSIONS_ENV="${VERSIONS_ENV:-$REPO/scripts/versions.env}"
+# shellcheck source-path=SCRIPTDIR source=versions.env
+. "$VERSIONS_ENV" || die "cannot read $VERSIONS_ENV"
+PREFIX="${PREFIX:-$HOME/.local}"
+
+[ "$(uname -s)" = "Linux" ] || die "Linux only. On macOS, follow docs/UPGRADE-0.12.md (Homebrew)."
+
+# version_lt A B: true when version A sorts before version B
+version_lt() {
+  [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" = "$1" ]
+}
+
+case "$(uname -m)" in
+  x86_64)
+    ARCH=X86_64
+    NVIM_ASSET=nvim-linux-x86_64.tar.gz
+    TREE_SITTER_ASSET=tree-sitter-cli-linux-x64.zip
+    STYLUA_ASSET=stylua-linux-x86_64.zip
+    UV_ASSET=uv-x86_64-unknown-linux-gnu.tar.gz
+    ;;
+  aarch64 | arm64)
+    ARCH=AARCH64
+    NVIM_ASSET=nvim-linux-arm64.tar.gz
+    TREE_SITTER_ASSET=tree-sitter-cli-linux-arm64.zip
+    STYLUA_ASSET=stylua-linux-aarch64.zip
+    UV_ASSET=uv-aarch64-unknown-linux-gnu.tar.gz
+    ;;
+  *) die "unsupported architecture $(uname -m) (x86_64 and aarch64 only)" ;;
+esac
+# pinned VAR_PREFIX: the sha256 for this architecture, e.g. pinned NVIM -> $NVIM_SHA256_X86_64
+pinned() {
+  local var="${1}_SHA256_$ARCH"
+  [ -n "${!var:-}" ] || die "$var is not set in $VERSIONS_ENV"
+  echo "${!var}"
+}
+
+# The official binaries are built against glibc; older releases cannot run them.
+GLIBC="$(getconf GNU_LIBC_VERSION 2>/dev/null | awk '{print $2}')" || true
+[ -n "$GLIBC" ] || die "cannot read the glibc version (musl-based distributions are not supported)"
+if version_lt "$GLIBC" "$GLIBC_MIN"; then
+  die "glibc $GLIBC is older than the required $GLIBC_MIN. Supported: Ubuntu 24.04+, Debian 13+."
+fi
+say "glibc $GLIBC, $(uname -m), PREFIX=$PREFIX"
+
+# --- apt ----------------------------------------------------------------------
+
+node_ok() {
+  command -v node >/dev/null 2>&1 || return 1
+  local v
+  v="$(node --version 2>/dev/null | sed 's/^v//')"
+  [ -n "$v" ] && ! version_lt "$v" "$NODE_MIN"
+}
+
+if [ "${SKIP_APT:-0}" = "1" ]; then
+  say "SKIP_APT=1: not installing apt packages"
+else
+  command -v apt-get >/dev/null 2>&1 || die "apt-get not found (Debian or Ubuntu only); set SKIP_APT=1 to skip"
+  PACKAGES=(build-essential ca-certificates cmake curl git unzip tar gzip ripgrep fd-find lua-check python3-venv)
+  node_ok || PACKAGES+=(nodejs npm)
+  MISSING=()
+  for pkg in "${PACKAGES[@]}"; do
+    dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed" || MISSING+=("$pkg")
+  done
+  if [ "${#MISSING[@]}" -eq 0 ]; then
+    say "apt packages already installed"
+  else
+    SUDO=()
+    [ "$(id -u)" -eq 0 ] || SUDO=(sudo)
+    say "apt: installing ${MISSING[*]}"
+    "${SUDO[@]}" env DEBIAN_FRONTEND=noninteractive apt-get update -qq
+    "${SUDO[@]}" env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "${MISSING[@]}"
+  fi
+  node_ok || die "node $(node --version 2>/dev/null || echo missing) is older than the required $NODE_MIN"
+fi
+for tool in curl tar unzip sha256sum; do
+  command -v "$tool" >/dev/null 2>&1 || die "$tool is required"
+done
+
+# --- release assets -------------------------------------------------------------
+
+mkdir -p "$PREFIX/bin" "$PREFIX/opt"
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+# fetch URL SHA256: download URL into $TMP, check its digest, print the file's path
+fetch() {
+  local out
+  out="$TMP/$(basename "$1")"
+  curl -fsSL --retry 3 -o "$out" "$1" || die "download failed: $1"
+  local got
+  got="$(sha256sum "$out" | cut -d' ' -f1)"
+  [ "$got" = "$2" ] || die "sha256 mismatch for $1: got $got, want $2 (scripts/versions.env)"
+  echo "$out"
+}
+
+# first_line CMD...: the first line CMD prints, or nothing if it fails
+first_line() {
+  "$@" 2>/dev/null | head -1 || true
+}
+
+NVIM_DIR="$PREFIX/opt/nvim-v$NVIM_PIN"
+if [ "$(first_line "$NVIM_DIR/bin/nvim" --version)" = "NVIM v$NVIM_PIN" ]; then
+  say "nvim v$NVIM_PIN already in $NVIM_DIR"
+else
+  say "installing nvim v$NVIM_PIN into $NVIM_DIR"
+  archive="$(fetch "https://github.com/neovim/neovim/releases/download/v$NVIM_PIN/$NVIM_ASSET" "$(pinned NVIM)")"
+  rm -rf "$NVIM_DIR.partial"
+  mkdir -p "$NVIM_DIR.partial"
+  tar -xzf "$archive" -C "$NVIM_DIR.partial" --strip-components=1
+  rm -rf "$NVIM_DIR"
+  mv "$NVIM_DIR.partial" "$NVIM_DIR"
+fi
+if [ "$(readlink "$PREFIX/bin/nvim" 2>/dev/null || true)" != "$NVIM_DIR/bin/nvim" ]; then
+  ln -sfn "$NVIM_DIR/bin/nvim" "$PREFIX/bin/nvim"
+  say "linked $PREFIX/bin/nvim -> $NVIM_DIR/bin/nvim"
+fi
+
+# install_bin NAME WANT_PREFIX URL SHA256: unpack the archive at URL and install the
+# executable NAME from it into $PREFIX/bin, unless `NAME --version` already starts
+# with WANT_PREFIX
+install_bin() {
+  local name="$1" want="$2" url="$3" sha="$4" archive dir found
+  case "$(first_line "$PREFIX/bin/$name" --version)" in
+    "$want"*)
+      say "$want already in $PREFIX/bin"
+      return
+      ;;
+  esac
+  say "installing $want into $PREFIX/bin"
+  archive="$(fetch "$url" "$sha")"
+  dir="$TMP/unpack-$name"
+  mkdir -p "$dir"
+  case "$archive" in
+    *.zip) unzip -q -o "$archive" -d "$dir" ;;
+    *.tar.gz) tar -xzf "$archive" -C "$dir" ;;
+    *) die "unknown archive type: $archive" ;;
+  esac
+  found="$(find "$dir" -type f -name "$name" | head -1)"
+  [ -n "$found" ] || die "$url holds no $name executable"
+  install -m 755 "$found" "$PREFIX/bin/$name"
+}
+
+install_bin tree-sitter "tree-sitter $TREE_SITTER_PIN" \
+  "https://github.com/tree-sitter/tree-sitter/releases/download/v$TREE_SITTER_PIN/$TREE_SITTER_ASSET" \
+  "$(pinned TREE_SITTER)"
+install_bin stylua "stylua $STYLUA_PIN" \
+  "https://github.com/JohnnyMorganz/StyLua/releases/download/v$STYLUA_PIN/$STYLUA_ASSET" \
+  "$(pinned STYLUA)"
+install_bin uv "uv $UV_PIN" \
+  "https://github.com/astral-sh/uv/releases/download/$UV_PIN/$UV_ASSET" \
+  "$(pinned UV)"
+
+# Debian and Ubuntu name the fd binary fdfind.
+if ! command -v fd >/dev/null 2>&1 && [ ! -e "$PREFIX/bin/fd" ] && command -v fdfind >/dev/null 2>&1; then
+  ln -s "$(command -v fdfind)" "$PREFIX/bin/fd"
+  say "linked $PREFIX/bin/fd -> $(command -v fdfind)"
+fi
+
+# The Python provider (init.lua reads $UV_TOOL_DIR or ~/.local/share/uv/tools/pynvim).
+if "$PREFIX/bin/uv" tool list 2>/dev/null | grep -q '^pynvim '; then
+  say "pynvim already installed (uv tool)"
+else
+  say "installing pynvim (uv tool install pynvim)"
+  "$PREFIX/bin/uv" tool install --quiet pynvim
+fi
+
+# --- PATH and the final check ---------------------------------------------------
+
+if [ -n "${GITHUB_PATH:-}" ]; then
+  echo "$PREFIX/bin" >>"$GITHUB_PATH"
+fi
+case ":$PATH:" in
+  *":$PREFIX/bin:"*) ;;
+  *)
+    say "$PREFIX/bin is not on PATH. Add it in your shell profile: export PATH=\"$PREFIX/bin:\$PATH\""
+    export PATH="$PREFIX/bin:$PATH"
+    ;;
+esac
+
+# The binary PATH resolves, not the one just installed: an older nvim or tree-sitter
+# earlier on PATH would win in every shell.
+nvim_path="$(command -v nvim || true)"
+nvim_version="$(first_line nvim --version)"
+if [ "$nvim_version" != "NVIM v$NVIM_PIN" ]; then
+  die "nvim on PATH is ${nvim_path:-missing} (${nvim_version:-no version}), want v$NVIM_PIN from $PREFIX/bin/nvim"
+fi
+ts_path="$(command -v tree-sitter || true)"
+ts_version="$(first_line tree-sitter --version | awk '{print $2}')"
+ts_min="${TREE_SITTER_MIN:-$TREE_SITTER_PIN}"
+if [ -z "$ts_version" ] || version_lt "$ts_version" "$ts_min"; then
+  die "tree-sitter on PATH is ${ts_path:-missing} (${ts_version:-no version}), want $ts_min or later from $PREFIX/bin"
+fi
+say "OK: $nvim_version ($nvim_path), tree-sitter $ts_version ($ts_path)," \
+  "$(first_line stylua --version), $(first_line uv --version | awk '{print $1, $2}')"
