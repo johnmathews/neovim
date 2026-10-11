@@ -140,7 +140,7 @@ Complete reference of all custom keybindings in this Neovim configuration.
 | ------------ | ------ | ---------------------------------------- |
 | `gd`         | Normal | Go to definition (built-in LSP)          |
 | `gD`         | Normal | Go to declaration (built-in LSP)         |
-| `gra`        | Normal | Code actions (quick fix, refactor, etc.) |
+| `gra`        | Normal | Code actions in a Telescope dropdown     |
 | `grn`        | Normal | Rename symbol (workspace-wide)           |
 | `grt`        | Normal | Go to type definition                    |
 | `K`          | Normal | Hover documentation                      |

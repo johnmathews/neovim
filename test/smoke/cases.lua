@@ -183,6 +183,49 @@ local function treesitter_checks(t)
   end
 end
 
+-- Plugin pins (F4, F18): aerial outlines the buffer on 0.12, and vim.ui.select is Telescope's
+-- (telescope-ui-select replaced dressing.nvim).
+local function plugin_checks(buf, t)
+  local okA, aerial = pcall(require, "aerial")
+  if not okA then
+    t.fail("python:aerial", "aerial.nvim is not available: " .. tostring(aerial))
+  else
+    local symbols = 0
+    vim.wait(10000, function()
+      symbols = #(require("aerial.data").get_or_create(buf).items or {})
+      return symbols > 0
+    end, 200)
+    if symbols == 0 then
+      t.fail("python:aerial", "aerial found no symbols in test_sample.py")
+    end
+  end
+
+  -- `gra` on the unused `import os` (ruff offers fixes); dressing sent code actions to its own window
+  vim.api.nvim_win_set_cursor(0, { 6, 7 })
+  pcall(vim.api.nvim_feedkeys, "gra", "mx", false)
+  local opened = vim.wait(10000, function()
+    return vim.bo.filetype == "TelescopePrompt"
+  end, 50)
+  if opened then
+    -- close it as a user does. Telescope enters insert mode by feeding "A", which waits in
+    -- the typeahead; closing any other way leaves it for the next case's keys to trigger.
+    pcall(vim.api.nvim_feedkeys, vim.keycode("<Esc><Esc>"), "mx", false)
+  else
+    t.fail("python:ui-select", ("gra opened filetype %q, want a Telescope picker"):format(vim.bo.filetype))
+    vim.cmd("stopinsert")
+    vim.cmd("silent! close")
+  end
+  if package.loaded["dressing"] then
+    t.fail("python:ui-select", "dressing.nvim is loaded; telescope-ui-select replaces it")
+  end
+  vim.wait(1000, function()
+    return vim.bo.filetype == "python"
+  end, 50)
+  vim.cmd("stopinsert")
+  vim.cmd("silent buffer " .. buf)
+  vim.api.nvim_win_set_cursor(0, { 1, 0 })
+end
+
 ---@type SmokeCase[]
 local cases = {
   {
@@ -243,6 +286,7 @@ local cases = {
       end
       vim.api.nvim_win_set_cursor(0, { 1, 0 })
       treesitter_checks(t)
+      plugin_checks(buf, t)
 
       -- a restarted server must get the same settings as the first start
       local before = vim.lsp.get_clients({ bufnr = 0, name = "basedpyright" })[1]

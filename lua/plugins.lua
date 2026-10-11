@@ -8,6 +8,15 @@ if not vim.uv.fs_stat(lazypath) then
     "--branch=stable", -- latest stable release
     lazypath,
   })
+  -- Check out the commit lazy-lock.json pins, as lazy does for every other plugin. lazy
+  -- records the commit it finds installed, so the stable branch would rewrite the entry (F33).
+  local okl, lock = pcall(function()
+    return vim.json.decode(table.concat(vim.fn.readfile(vim.fn.stdpath("config") .. "/lazy-lock.json"), "\n"))
+  end)
+  local commit = okl and vim.tbl_get(lock, "lazy.nvim", "commit")
+  if commit then
+    vim.fn.system({ "git", "-C", lazypath, "checkout", "--quiet", commit })
+  end
 end
 vim.opt.rtp:prepend(lazypath)
 
@@ -55,11 +64,21 @@ return lazy.setup({
     end,
   },
 
+  -- vim.ui.select in a Telescope dropdown (code actions included); vim.ui.input stays native,
+  -- and noice renders it
   {
-    "stevearc/dressing.nvim",
-    event = "VeryLazy",
-    config = function()
-      require("plugins.dressing")
+    "nvim-telescope/telescope-ui-select.nvim",
+    lazy = true, -- telescope.lua loads the extension
+    init = function()
+      -- Until Telescope has loaded (it loads at startup, through auto-session), the first
+      -- vim.ui.select loads it. If the extension did not take over, fall back to the native one.
+      local native_select = vim.ui.select
+      ---@diagnostic disable-next-line: duplicate-set-field
+      vim.ui.select = function(...)
+        vim.ui.select = native_select
+        require("telescope")
+        return vim.ui.select(...)
+      end
     end,
   },
 
@@ -278,7 +297,6 @@ return lazy.setup({
   -- use instead of LSPSaga outline
   {
     "stevearc/aerial.nvim",
-    enabled = vim.fn.has("nvim-0.12") == 1,
     opts = {},
     config = function()
       require("plugins.aerial")

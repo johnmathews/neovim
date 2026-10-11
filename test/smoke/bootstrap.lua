@@ -16,6 +16,14 @@ local function step_failed(msg)
 end
 
 local function restore_plugins()
+  -- Installing a missing plugin at startup made lazy rewrite every lockfile entry from the
+  -- installed commits, so a plugin installed at another commit would be "restored" to itself.
+  -- Restore from the repository's lockfile instead, and make lazy read it again.
+  local repo_lock = (vim.env.SMOKE_REPO or "") .. "/lazy-lock.json"
+  if vim.fn.filereadable(repo_lock) == 1 then
+    vim.fn.writefile(vim.fn.readfile(repo_lock, "b"), vim.fn.stdpath("config") .. "/lazy-lock.json", "b")
+    require("lazy.manage.lock")._loaded = false
+  end
   log("restoring plugins from lazy-lock.json")
   require("lazy").restore({ wait = true, show = false })
   for _, plugin in pairs(require("lazy.core.config").plugins) do
