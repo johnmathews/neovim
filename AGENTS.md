@@ -46,7 +46,7 @@ Agents must:
 - **OS:** macOS (latest)
 - **Neovim:** v0.11+
 - **Plugin manager:** `lazy.nvim`
-- **Required CLIs:** `stylua`, `luacheck`, `ripgrep`, `fd`, `node` > v18
+- **Required CLIs:** `stylua`, `luacheck`, `ripgrep`, `fd`, `node` 20 or later (markdownlint-cli needs it)
   - Install luacheck: `brew install luacheck` (macOS)
 - **Optional CLIs:** `uv` (the Python provider: `uv tool install pynvim`), Typora (macOS, `<leader>X`), and the
   `tree-sitter` CLI, which becomes required at the Neovim 0.12 cutover. Formatters, linters and LSP servers come from

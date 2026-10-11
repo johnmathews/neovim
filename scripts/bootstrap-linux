@@ -4,8 +4,10 @@
 # Installs, without prompts and side by side with anything already there:
 #   - Neovim (official tarball) in $PREFIX/opt/nvim-v<version>, linked as $PREFIX/bin/nvim
 #   - the tree-sitter CLI, stylua and uv in $PREFIX/bin (official release assets)
-#   - apt packages: a C toolchain, curl, git, unzip, ripgrep, fd, luacheck,
-#     python3-venv, and node when it is missing or older than NODE_MIN
+#   - Node.js (official tarball) in $PREFIX/opt/node-v<version>, when node on PATH is
+#     missing or older than NODE_MIN. Not apt's: Ubuntu 24.04 ships node 18, and apt's
+#     npm installs Debian's eslint, which eslint_d then loads instead of its own.
+#   - apt packages: a C toolchain, curl, git, unzip, ripgrep, fd, luacheck, python3-venv
 #   - uv's pynvim, the Python provider init.lua looks for
 # Versions and sha256 digests come from scripts/versions.env; every download is
 # checked against its digest. Re-running it changes nothing that is already in place.
@@ -56,6 +58,7 @@ case "$(uname -m)" in
     TREE_SITTER_ASSET=tree-sitter-cli-linux-x64.zip
     STYLUA_ASSET=stylua-linux-x86_64.zip
     UV_ASSET=uv-x86_64-unknown-linux-gnu.tar.gz
+    NODE_ASSET=node-v$NODE_PIN-linux-x64.tar.gz
     ;;
   aarch64 | arm64)
     ARCH=AARCH64
@@ -63,6 +66,7 @@ case "$(uname -m)" in
     TREE_SITTER_ASSET=tree-sitter-cli-linux-arm64.zip
     STYLUA_ASSET=stylua-linux-aarch64.zip
     UV_ASSET=uv-aarch64-unknown-linux-gnu.tar.gz
+    NODE_ASSET=node-v$NODE_PIN-linux-arm64.tar.gz
     ;;
   *) die "unsupported architecture $(uname -m) (x86_64 and aarch64 only)" ;;
 esac
@@ -81,6 +85,18 @@ if version_lt "$GLIBC" "$GLIBC_MIN"; then
 fi
 say "glibc $GLIBC, $(uname -m), PREFIX=$PREFIX"
 
+# Run with $PREFIX/bin first on PATH when the caller's PATH lacks it, so a re-run finds
+# what the first run installed. When it is already on PATH, keep the caller's order:
+# the final check must see whatever shadows it.
+PREFIX_ON_PATH=1
+case ":$PATH:" in
+  *":$PREFIX/bin:"*) ;;
+  *)
+    PREFIX_ON_PATH=0
+    export PATH="$PREFIX/bin:$PATH"
+    ;;
+esac
+
 # --- apt ----------------------------------------------------------------------
 
 node_ok() {
@@ -95,7 +111,6 @@ if [ "${SKIP_APT:-0}" = "1" ]; then
 else
   command -v apt-get >/dev/null 2>&1 || die "apt-get not found (Debian or Ubuntu only); set SKIP_APT=1 to skip"
   PACKAGES=(build-essential ca-certificates cmake curl git unzip tar gzip ripgrep fd-find lua-check python3-venv)
-  node_ok || PACKAGES+=(nodejs npm)
   MISSING=()
   for pkg in "${PACKAGES[@]}"; do
     dpkg-query -W -f='${Status}' "$pkg" 2>/dev/null | grep -q "install ok installed" || MISSING+=("$pkg")
@@ -109,7 +124,6 @@ else
     "${SUDO[@]}" env DEBIAN_FRONTEND=noninteractive apt-get update -qq
     "${SUDO[@]}" env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends "${MISSING[@]}"
   fi
-  node_ok || die "node $(node --version 2>/dev/null || echo missing) is older than the required $NODE_MIN"
 fi
 for tool in curl tar unzip sha256sum; do
   command -v "$tool" >/dev/null 2>&1 || die "$tool is required"
@@ -189,6 +203,31 @@ install_bin uv "uv $UV_PIN" \
   "https://github.com/astral-sh/uv/releases/download/$UV_PIN/$UV_ASSET" \
   "$(pinned UV)"
 
+if node_ok; then
+  say "node $(node --version) already on PATH ($(command -v node))"
+else
+  NODE_DIR="$PREFIX/opt/node-v$NODE_PIN"
+  if [ "$(first_line "$NODE_DIR/bin/node" --version)" = "v$NODE_PIN" ]; then
+    say "node v$NODE_PIN already in $NODE_DIR"
+  else
+    say "installing node v$NODE_PIN into $NODE_DIR"
+    archive="$(fetch "https://nodejs.org/dist/v$NODE_PIN/$NODE_ASSET" "$(pinned NODE)")"
+    rm -rf "$NODE_DIR.partial"
+    mkdir -p "$NODE_DIR.partial"
+    tar -xzf "$archive" -C "$NODE_DIR.partial" --strip-components=1
+    rm -rf "$NODE_DIR"
+    mv "$NODE_DIR.partial" "$NODE_DIR"
+  fi
+  for tool in node npm npx; do
+    ln -sfn "$NODE_DIR/bin/$tool" "$PREFIX/bin/$tool"
+  done
+  say "linked node, npm and npx from $NODE_DIR into $PREFIX/bin"
+fi
+if [ -d /usr/share/nodejs/eslint ]; then
+  say "WARNING: Debian's eslint package is installed (/usr/share/nodejs/eslint); eslint_d loads it" \
+    "instead of its own ESLint. Remove it: sudo apt-get remove eslint"
+fi
+
 # Debian and Ubuntu name the fd binary fdfind.
 if ! command -v fd >/dev/null 2>&1 && [ ! -e "$PREFIX/bin/fd" ] && command -v fdfind >/dev/null 2>&1; then
   ln -s "$(command -v fdfind)" "$PREFIX/bin/fd"
@@ -208,13 +247,9 @@ fi
 if [ -n "${GITHUB_PATH:-}" ]; then
   echo "$PREFIX/bin" >>"$GITHUB_PATH"
 fi
-case ":$PATH:" in
-  *":$PREFIX/bin:"*) ;;
-  *)
-    say "$PREFIX/bin is not on PATH. Add it in your shell profile: export PATH=\"$PREFIX/bin:\$PATH\""
-    export PATH="$PREFIX/bin:$PATH"
-    ;;
-esac
+if [ "$PREFIX_ON_PATH" -eq 0 ]; then
+  say "$PREFIX/bin is not on PATH. Add it in your shell profile: export PATH=\"$PREFIX/bin:\$PATH\""
+fi
 
 # The binary PATH resolves, not the one just installed: an older nvim or tree-sitter
 # earlier on PATH would win in every shell.
@@ -229,5 +264,6 @@ ts_min="${TREE_SITTER_MIN:-$TREE_SITTER_PIN}"
 if [ -z "$ts_version" ] || version_lt "$ts_version" "$ts_min"; then
   die "tree-sitter on PATH is ${ts_path:-missing} (${ts_version:-no version}), want $ts_min or later from $PREFIX/bin"
 fi
-say "OK: $nvim_version ($nvim_path), tree-sitter $ts_version ($ts_path)," \
+node_ok || die "node on PATH is $(command -v node || echo missing) ($(first_line node --version)), want $NODE_MIN or later"
+say "OK: $nvim_version ($nvim_path), tree-sitter $ts_version ($ts_path), node $(node --version)," \
   "$(first_line stylua --version), $(first_line uv --version | awk '{print $1, $2}')"
