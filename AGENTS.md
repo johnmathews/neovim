@@ -43,7 +43,7 @@ Agents must:
 
 ## Environment
 
-- **OS:** macOS (latest)
+- **OS:** macOS (latest); Linux: Ubuntu 24.04+ and Debian 13+ via `scripts/bootstrap-linux`
 - **Neovim:** v0.12.6 (`init.lua` refuses anything older than 0.12)
 - **Plugin manager:** `lazy.nvim`
 - **Required CLIs:** `stylua`, `luacheck`, `ripgrep`, `fd`, `node` 20 or later (markdownlint-cli needs it), the

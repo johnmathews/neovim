@@ -1,5 +1,9 @@
 # Go to Definition (gd) - Detailed Explanation
 
+**Status:** superseded by [demo/GO_TO_DEFINITION_GUIDE.md](../../demo/GO_TO_DEFINITION_GUIDE.md) and
+[docs/KEYMAPS.md](../KEYMAPS.md) (2026-10-11). `gd` no longer opens a Telescope picker: it calls
+`vim.lsp.buf.definition()`.
+
 ## Quick Answer
 
 **Press `gd` on a function name → Telescope picker appears → Select the definition → Jumps to actual file**
@@ -9,6 +13,7 @@
 By default, Neovim's `gd` would jump to the **import statement** rather than the **actual function definition**.
 
 ### Before (Default Behavior - BROKEN)
+
 ```python
 # main.py:22
 from calculator import calculate_total
@@ -17,6 +22,7 @@ from calculator import calculate_total
 ```
 
 ### After (Fixed with Telescope Override)
+
 ```python
 # main.py:22
 from calculator import calculate_total
@@ -30,6 +36,7 @@ from calculator import calculate_total
 ## Why Telescope?
 
 Telescope's LSP picker (`lsp_definitions`) properly:
+
 1. **Resolves imports** - Follows import statements to actual definitions
 2. **Shows multiple results** - If multiple definitions exist, you can choose
 3. **Provides context** - Shows file path and line number for each option
@@ -56,25 +63,25 @@ Telescope's LSP picker (`lsp_definitions`) properly:
 
 ### Keyboard Shortcuts in Telescope Picker
 
-| Key | Action |
-|---|---|
-| `<Enter>` | Jump to selected definition |
-| `<C-x>` | Open in split (horizontal) |
-| `<C-v>` | Open in split (vertical) |
-| `<C-t>` | Open in new tab |
-| `<Esc>` or `q` | Cancel and go back |
+| Key            | Action                      |
+| -------------- | --------------------------- |
+| `<Enter>`      | Jump to selected definition |
+| `<C-x>`        | Open in split (horizontal)  |
+| `<C-v>`        | Open in split (vertical)    |
+| `<C-t>`        | Open in new tab             |
+| `<Esc>` or `q` | Cancel and go back          |
 
 ## Comparison: gd vs Other Go-To Keybindings
 
-| Key | Function | Behavior |
-|---|---|---|
-| `gd` | **Go to Definition** | Opens Telescope picker (resolves imports) |
-| `gD` | **Go to Declaration** | Built-in - jumps to declaration |
-| `gi` | **Go to Implementation** | Opens Telescope picker (finds implementations) |
-| `gr` | **Show References** | Shows quickfix list of all usages |
-| `grn` | **Rename** | Rename symbol workspace-wide |
-| `gra` | **Code Actions** | Shows refactoring options |
-| `K` | **Hover** | Shows documentation inline |
+| Key   | Function                 | Behavior                                       |
+| ----- | ------------------------ | ---------------------------------------------- |
+| `gd`  | **Go to Definition**     | Opens Telescope picker (resolves imports)      |
+| `gD`  | **Go to Declaration**    | Built-in - jumps to declaration                |
+| `gi`  | **Go to Implementation** | Opens Telescope picker (finds implementations) |
+| `gr`  | **Show References**      | Shows quickfix list of all usages              |
+| `grn` | **Rename**               | Rename symbol workspace-wide                   |
+| `gra` | **Code Actions**         | Shows refactoring options                      |
+| `K`   | **Hover**                | Shows documentation inline                     |
 
 ## Real-World Examples
 
@@ -92,6 +99,7 @@ result = apply_discount(100, 10)     # usage at line 35
 ```
 
 **Result:**
+
 - Telescope picker shows: `utils.py:34 def apply_discount(...)`
 - Press Enter
 - Jumps to utils.py line 34 (the actual definition)
@@ -112,6 +120,7 @@ result = add(5, 3)     # usage at line 22
 ```
 
 **Result:**
+
 - Telescope picker shows: `calculator.py:14 def add(...)`
 - Press Enter
 - Jumps to calculator.py line 14 (the real definition, not utils import!)
@@ -135,6 +144,7 @@ Choose which one you want with arrow keys and Enter.
 ## Common Scenarios
 
 ### Scenario 1: Jump to Definition
+
 ```
 Cursor: on function name
 Press: gd
@@ -142,6 +152,7 @@ Result: Telescope picker → Select → Jump to actual definition file ✓
 ```
 
 ### Scenario 2: Go Back
+
 ```
 After jumping with gd:
 Press: <C-o> (Vim standard jump-back)
@@ -149,6 +160,7 @@ Result: Returns to where you pressed gd ✓
 ```
 
 ### Scenario 3: Multiple Implementations
+
 ```
 Cursor: on abstract method or interface
 Press: gi (go to implementation)
@@ -174,6 +186,7 @@ end, { desc = "Telescope: LSP Implementations" })
 ```
 
 This ensures that:
+
 - ✅ Imports are properly resolved
 - ✅ You jump to the actual definition file
 - ✅ Multiple results are handled gracefully
@@ -182,11 +195,13 @@ This ensures that:
 ## Why Not Use Default `gd`?
 
 Neovim's default `gd` (vim.lsp.buf.definition) has limitations:
+
 - ❌ Stops at import statements
 - ❌ No Telescope picker for multiple results
 - ❌ Less intuitive workflow
 
 Our Telescope override provides:
+
 - ✅ Resolves through imports automatically
 - ✅ Searchable/filterable results
 - ✅ Multiple open options (split, tab, etc.)
@@ -200,14 +215,16 @@ Our Telescope override provides:
 
 ### gd Doesn't Show Any Results
 
-**Solution:** 
+**Solution:**
+
 1. Check `:LspInfo` - LSP must be attached
 2. Try `<F4>` to restart LSP
 3. Wait a moment for LSP to index files
 
 ### gd Jumps to Wrong File
 
-**Solution:** 
+**Solution:**
+
 1. Check the import is correct
 2. Ensure all Python files are in the correct directory
 3. Try `:LspRestart` or `<F4>`
@@ -215,11 +232,13 @@ Our Telescope override provides:
 ## Tips & Tricks
 
 ✅ **Combine with other movements:**
+
 ```
 gd → Select definition → gi → View implementations → grn → Rename
 ```
 
 ✅ **Use split opens:**
+
 ```
 In Telescope picker while on a definition:
 Press <C-x> → Opens definition in horizontal split
@@ -228,6 +247,7 @@ Useful for comparing code
 ```
 
 ✅ **Quick go-back:**
+
 ```
 After gd:
 Press <C-o> → Go back (standard Vim jump list)

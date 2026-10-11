@@ -2,7 +2,7 @@
 
 This document describes the testing infrastructure and quality gates for the Neovim configuration.
 
-**Last updated:** 2026-10-10
+**Last updated:** 2026-10-11
 
 ---
 
@@ -268,12 +268,12 @@ deprecated API called from the config fails. One called from a plugin warns, and
 finds no clipboard tool (a headless Linux runner), it also sets an in-memory `g:clipboard`, so a yank into the
 `unnamedplus` register does not print "clipboard: No provider".
 
-**Known failures.** `test/smoke/xfail.lua` lists today's failures, each with its finding ID and an optional Neovim
-version. A matching failure prints as `XFAIL` and does not fail the run. The list is strict: an entry that no longer
-fails, or that only matches failures another entry also matches, fails the run. So the change that fixes a finding must
-delete its entries, and deleting any entry while its failure remains turns the run red. An entry is judged stale only
-when its scope ran: a check that runs on some machines only (Mundo) reports under its own scope and calls `t.scope(name)`
-when it runs.
+**Known failures.** `test/smoke/xfail.lua` lists known failures, each with its finding ID and an optional Neovim version;
+since the 0.12 cutover it is empty (`return {}`). A matching failure prints as `XFAIL` and does not fail the run. The
+list is strict: an entry that no longer fails, or that only matches failures another entry also matches, fails the run.
+So the change that fixes a finding must delete its entries, and deleting any entry while its failure remains turns the
+run red. An entry is judged stale only when its scope ran: a check that runs on some machines only (Mundo) reports under
+its own scope and calls `t.scope(name)` when it runs.
 
 **Exit codes and report.** `0` pass, `1` assertion failed, `2` environment error, `3` timeout (a bash watchdog enforces
 `--timeout`, default 300 s). Results go to `SMOKE_HOME/summary.txt` (printed) and `SMOKE_HOME/report.json`.
@@ -374,6 +374,21 @@ every push to `main`, on demand (`workflow_dispatch`), and weekly. Each run uses
 When a step fails, the run uploads the smoke home's report, summary, logs and LSP log as an artifact named
 `smoke-<runner>`.
 
+## Linux Bootstrap (`./scripts/bootstrap-linux`)
+
+Sets up an Ubuntu 24.04+ or Debian 13+ machine (x86_64 or aarch64) for this config, without prompts; CI runs it on every
+leg. It installs Neovim (official tarball, into `$PREFIX/opt/nvim-v<version>` with a `$PREFIX/bin/nvim` link), the
+tree-sitter CLI, stylua and uv into `$PREFIX/bin`, Node.js when the `node` on `PATH` is missing or older than `NODE_MIN`,
+the apt packages (`build-essential`, `ripgrep`, `fd-find`, `lua-check`, `python3-venv` and the rest, via `sudo`), and
+uv's pynvim. Versions and sha256 digests come from `scripts/versions.env`; every download is checked before it is
+unpacked. A second run changes nothing. It refuses glibc below 2.39 and macOS, and ends by checking the `nvim` and
+`tree-sitter` that `PATH` resolves, naming any older binary that shadows the install.
+
+- `PREFIX` (default `~/.local`) is the install root.
+- `SKIP_APT=1` skips apt (no `sudo`).
+- `VERSIONS_ENV=<file>` reads another versions file (how the tests feed it a wrong digest).
+- Exit codes: `0` installed and verified, `1` failed.
+
 ## Plugin Sync (`./scripts/sync-plugins`)
 
 Brings a machine's plugins, Mason packages and parsers in line with the config, on macOS, Linux and CI. It works on the
@@ -381,9 +396,11 @@ config Neovim loads (`~/.config/nvim`), which must be this checkout, and refuses
 refuses an uncommitted `lazy-lock.json`. It restores every plugin to its locked commit, twice if needed: a start that
 installs a missing plugin makes lazy rewrite every lockfile entry from the commits it found installed, so the script puts
 the committed lockfile back and restores again. A plugin lazy cannot move (local changes, a checkout that fails on a new
-submodule) is removed and installed again at its pin. It then deletes the parser binaries nvim-treesitter `master` left
-in `lazy/nvim-treesitter/parser*`, installs the Mason packages and parsers, runs `Lazy clean`, and fails if
-`lazy-lock.json` changed. Exit codes: `0` in sync, `1` a step failed, `2` refused.
+submodule) is moved aside and installed again at its pin; the old checkout comes back if the reinstall fails. It then
+deletes the parser binaries nvim-treesitter `master` left in `lazy/nvim-treesitter/parser*`, installs the Mason packages
+and parsers and checks each one is installed (a parser whose build failed fails the run), runs `Lazy clean`, and fails if
+`lazy-lock.json` changed. A failed run puts the committed `lazy-lock.json` back, so a retry needs no clean-up. Exit
+codes: `0` in sync, `1` a step failed, `2` refused.
 
 ---
 
@@ -396,12 +413,12 @@ The following must **always pass**:
 - ✅ `luacheck lua/ after/ test/smoke` → 0 warnings, 0 errors
 - ✅ `stylua --check .` → no formatting needed
 - ✅ Neovim loads without errors
-- ✅ `./scripts/smoke` → `SMOKE PASS` (known failures only in `test/smoke/xfail.lua`)
+- ✅ `./scripts/smoke` → `SMOKE PASS: 0 failed, 0 xfailed` (`test/smoke/xfail.lua` is empty)
 
 ### Performance Targets
 
 - **Startup time:** <150ms (target), <500ms (acceptable)
-- **Plugin count:** <50 (target); 85 today (`lazy-lock.json`)
+- **Plugin count:** <50 (target); 83 today (`lazy-lock.json`)
 - **Config size:** <10MB
 
 ---

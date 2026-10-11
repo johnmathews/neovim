@@ -76,6 +76,6 @@ jobs:
             ${{ env.SMOKE_HOME }}/summary.txt
             ${{ env.SMOKE_HOME }}/stderr.log
             ${{ env.SMOKE_HOME }}/bootstrap-*.log
-            ${{ env.SMOKE_HOME }}/*.selftest-*.log
+            ${{ env.SMOKE_HOME }}.selftest-*.log
             ${{ env.SMOKE_HOME }}/state/nvim/lsp.log
           if-no-files-found: ignore

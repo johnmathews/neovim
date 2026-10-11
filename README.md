@@ -211,7 +211,7 @@ archived.
 │   ├── autocmd.lua             # Autocommands
 │   ├── functions.lua           # Custom functions
 │   ├── plugins.lua             # Plugin declarations (lazy.nvim)
-│   ├── plugins/                # Plugin configurations (37 files)
+│   ├── plugins/                # Plugin configurations (35 files)
 │   │   ├── lsp.lua             # LSP setup (vim.lsp.config, LspAttach, enabled servers)
 │   │   ├── telescope.lua       # Telescope configuration
 │   │   ├── treesitter.lua      # Treesitter setup
@@ -225,6 +225,8 @@ archived.
 │   ├── quality-gate            # Pre-commit validation
 │   ├── smoke                   # Buffer-opening smoke gate (isolated Neovim)
 │   ├── gate-selftest           # Proves the smoke gate fails on known-bad configs
+│   ├── bootstrap-linux         # Linux setup: Neovim, tree-sitter CLI, stylua, uv, node, apt packages
+│   ├── sync-plugins            # Plugins, Mason packages and parsers to lazy-lock.json
 │   ├── pre-commit              # Git pre-commit hook
 │   ├── pre-push                # Git pre-push hook (quality gate + full smoke gate)
 │   ├── install-hooks           # Points core.hooksPath at scripts/
@@ -280,10 +282,10 @@ What each script checks, and how to read its output, is in [docs/TESTING.md](doc
 - Gitsigns (loads on `BufReadPre`)
 - Alpha dashboard (loads on `VimEnter`)
 - Lualine, noice and nvim-notify (load on `VeryLazy`)
-- Harpoon (loads on keypress)
 
-Telescope and LuaSnip declare lazy triggers but load at startup anyway: auto-session depends on Telescope, and `init.lua`
-loads the custom snippets. Mason's tool installer checks its list on every start.
+Telescope, Harpoon and LuaSnip declare lazy triggers but load at startup anyway: auto-session depends on Telescope,
+Telescope loads Harpoon's extension, and `init.lua` loads the custom snippets. Mason's tool installer checks its list on
+every start.
 
 **Performance Guide:** See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for detailed analysis and optimization tips.
 
@@ -381,7 +383,7 @@ a one-time `./scripts/smoke --seed-from ~/.local/share/nvim` per Neovim version.
 **Pre-push hook** (runs before push to remote):
 
 - Full quality gate
-- Full smoke gate: a real buffer per language (about 45 seconds; see `docs/TESTING.md`)
+- Full smoke gate: a real buffer per language (about 50 seconds; see `docs/TESTING.md`)
 
 **Bypass hooks** (emergency only):
 

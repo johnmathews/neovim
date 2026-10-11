@@ -1,5 +1,9 @@
 # Understanding `gd` with Telescope Picker
 
+**Status:** superseded by [demo/GO_TO_DEFINITION_GUIDE.md](../../demo/GO_TO_DEFINITION_GUIDE.md) and
+[docs/KEYMAPS.md](../KEYMAPS.md) (2026-10-11). `gd` no longer opens a Telescope picker: it calls
+`vim.lsp.buf.definition()`. References and implementations are `grr` and `gri`.
+
 ## The Behavior
 
 When you press `gd` in Neovim, you now get:

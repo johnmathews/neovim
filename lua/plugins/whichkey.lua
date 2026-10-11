@@ -15,7 +15,7 @@ which_key.add({
   { "<Tab>g", group = "Git" },
   { "<Tab>t", group = "Tools" },
 
-  -- LSP keybindings (Neovim v0.11+ built-in + Telescope overrides)
+  -- LSP keybindings (Neovim 0.12 built-in + Telescope overrides)
   { "g", group = "Go-to / LSP" },
   { "gd", desc = "Go to definition" },
   { "gD", desc = "Go to declaration" },
