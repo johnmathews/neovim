@@ -157,8 +157,10 @@ local cases = {
     textobjects = true,
     folds = true,
     settings = { basedpyright = { ["basedpyright.analysis.typeCheckingMode"] = "basic" } },
-    -- ruff runs as an LSP server only, so there is no nvim-lint "ruff" namespace
-    diags = { ["lsp:basedpyright"] = 4, ["lsp:ruff"] = 4, ruff = false },
+    -- ruff runs as an LSP server only, so there is no nvim-lint "ruff" namespace. Its count
+    -- is not pinned: ruff's default rules grow between releases (0.17 adds PIE790, giving 5),
+    -- and python:duplicates already catches a second owner.
+    diags = { ["lsp:basedpyright"] = 4, ["lsp:ruff"] = true, ruff = false },
     requests = {
       { method = "textDocument/definition", line = 35, col = 13, expect_line = 10 },
       { method = "textDocument/hover", line = 35, col = 13 },

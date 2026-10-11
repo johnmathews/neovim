@@ -240,7 +240,9 @@ recorded (judged by level), an Nvim deprecation notice it recorded (judged by ca
 
 `test/smoke/preinit.lua` records notifies and deprecations. It loads with `--cmd`, before `init.lua`, and serves
 `vim.notify` through the `vim` metatable, so the replacements nvim-notify and noice install are recorded too. A
-deprecated API called from the config fails. One called from a plugin warns, and fails with `--strict`.
+deprecated API called from the config fails. One called from a plugin warns, and fails with `--strict`. Where Neovim
+finds no clipboard tool (a headless Linux runner), it also sets an in-memory `g:clipboard`, so a yank into the
+`unnamedplus` register does not print "clipboard: No provider".
 
 **Known failures.** `test/smoke/xfail.lua` lists today's failures, each with its finding ID and an optional Neovim
 version. A matching failure prints as `XFAIL` and does not fail the run. The list is strict: an entry that no longer
@@ -263,7 +265,7 @@ and checks each produces its expected failure. It passes `--home` and `--nvim` t
 | `removed-parser` | mapping python to a parser that does not exist | `python:treesitter` |
 | `notify-error` | an ERROR notify after noice replaced `vim.notify` | `startup:notify` |
 | `config-deprecated` | calling `vim.lsp.get_active_clients()` | `startup:deprecated` |
-| `extra-client` | enabling sqls for python | `python:clients` |
+| `extra-client` | attaching lua_ls to python buffers | `python:clients` |
 | `silent-linter` | a luacheck that prints nothing | `lua:diags` |
 | `double-linter` | nvim-lint running shellcheck on bash, which bashls already runs | `bash:diags` |
 | `hang` | a busy loop | exit code `3` |
@@ -328,40 +330,21 @@ cat startup.log | awk '{if ($2 > 1) print $0}' | head -20
 
 ## Continuous Integration
 
-### GitHub Actions Example
+[`.github/workflows/ci.yml`](../.github/workflows/ci.yml) is the Linux parity gate. It runs on every pull request,
+on every push to `main`, on demand (`workflow_dispatch`), and weekly. Each run uses a fresh runner, on two legs:
+`ubuntu-latest` (x86_64) and `ubuntu-24.04-arm` (aarch64).
 
-```yaml
-name: Neovim Config CI
+1. `scripts/bootstrap-linux` installs what a Linux VM gets: Neovim, the tree-sitter CLI, stylua, uv and the apt
+   toolchain, at the versions in `scripts/versions.env`.
+2. The smoke home's `data/` directory (plugins, Mason packages, parsers) is cached. The key covers `lazy-lock.json`,
+   `scripts/versions.env` and the Mason, LSP and treesitter plugin files, so any change to them starts clean.
+3. `stylua --check .` and `luacheck lua/ after/ test/smoke`.
+4. `scripts/smoke --bootstrap`, then `scripts/smoke`. The weekly run adds `scripts/smoke --strict`, so plugin
+   deprecations stay visible.
+5. `scripts/gate-selftest`.
 
-on: [push, pull_request]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Install Neovim
-        run: |
-          sudo add-apt-repository ppa:neovim-ppa/unstable
-          sudo apt-get update
-          sudo apt-get install -y neovim
-      
-      - name: Install Lua tools
-        run: |
-          sudo apt-get install -y luarocks
-          sudo luarocks install luacheck
-          cargo install stylua
-      
-      - name: Install plugins and tools for the smoke gate
-        run: ./scripts/smoke --bootstrap
-
-      - name: Run quality gate
-        run: ./scripts/quality-gate
-```
-
-This is a sketch, not a tested workflow: `quality-gate` runs `scripts/smoke --startup-only`, which exits 2 until the
-environment is bootstrapped, hence the extra step. The Linux CI job planned for the 0.12 cutover replaces it.
+When a step fails, the run uploads the smoke home's report, summary, logs and LSP log as an artifact named
+`smoke-<runner>`.
 
 ---
 
