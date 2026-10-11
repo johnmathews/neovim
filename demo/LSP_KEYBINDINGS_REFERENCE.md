@@ -150,13 +150,6 @@ main.py:22  calculate_total(numbers)
 | `<leader>tsa` | Swap next parameter | `func(a, b, c)` → `func(a, c, b)` |
 | `<leader>tsA` | Swap previous parameter | `func(a, b, c)` → `func(b, a, c)` |
 
-### Peek Definition
-
-| Key | Action |
-|---|---|
-| `<leader>df` | Peek function definition (without jumping) |
-| `<leader>dF` | Peek class definition |
-
 ## Diagnostics
 
 | Key | Action |
@@ -176,7 +169,6 @@ main.py:22  calculate_total(numbers)
 | **Telescope** | `\r`, `\d`, `\i`, `\t` | Custom |
 | **Treesitter** | `af`, `if`, `ac`, `ic`, `]m`, `[m`, `]]`, `[[` | Treesitter |
 | **Swap** | `<leader>tsa`, `<leader>tsA` | Treesitter |
-| **Peek** | `<leader>df`, `<leader>dF` | Treesitter |
 
 ## How to Discover Keybindings
 

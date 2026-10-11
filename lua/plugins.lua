@@ -149,9 +149,6 @@ return lazy.setup({
     "JoosepAlviste/nvim-ts-context-commentstring",
     lazy = true, -- loaded by the first commentstring lookup below
     init = function()
-      -- Skip the deprecated nvim-treesitter context_commentstring module (it errors
-      -- on attach) and configure ts_context_commentstring the modern way instead.
-      vim.g.skip_ts_context_commentstring_module = true
       -- https://github.com/JoosepAlviste/nvim-ts-context-commentstring/wiki/Integrations
       local get_option = vim.filetype.get_option
       ---@diagnostic disable-next-line: duplicate-set-field
@@ -352,19 +349,18 @@ return lazy.setup({
   },
   {
     "nvim-treesitter/nvim-treesitter",
+    branch = "main",
+    lazy = false, -- `main` does not support lazy-loading
     build = ":TSUpdate",
     config = function()
       require("plugins.treesitter")
     end,
     dependencies = {
       -- https://github.com/nvim-treesitter/nvim-treesitter-textobjects
-      "nvim-treesitter/nvim-treesitter-textobjects",
-      -- this is an (unmaintained) treesitter plugin.
-      -- config is in the `rainbow` attribute in treesitter.lua
+      { "nvim-treesitter/nvim-treesitter-textobjects", branch = "main" },
       "HiPhish/rainbow-delimiters.nvim",
       -- "p00f/nvim-ts-rainbow",
     },
-    event = "BufReadPre",
   },
   {
     "nvim-treesitter/nvim-treesitter-context",
@@ -372,7 +368,6 @@ return lazy.setup({
   },
 
   -- autoclose and autorename html tags (html,tsx,vue,svelte,php,rescript)
-  -- this is a treesitter plugin. config is the `autotag` attribute in treesitter.lua
   {
     "windwp/nvim-ts-autotag",
     config = function()

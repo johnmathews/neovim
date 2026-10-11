@@ -3,7 +3,7 @@
 -- that the running process has already loaded:
 --   plugins  restore every plugin to its lazy-lock.json commit
 --   tools    install the Mason packages the config asks for (LSP servers and tools),
---            then treesitter parsers the way the installed nvim-treesitter branch does it
+--            then the treesitter parsers lua/plugins/treesitter.lua lists
 -- Exits 0 on success, 1 if any step failed. Needs network.
 
 local failed = false
@@ -69,23 +69,18 @@ local function install_tools()
     vim.cmd("MasonToolsInstallSync")
   end
 
-  -- Parsers. master installs through :TSUpdateSync; main exports its parser list.
-  if pcall(require, "nvim-treesitter.configs") then
-    log("installing parsers (nvim-treesitter master)")
-    vim.cmd("TSUpdateSync")
-  else
-    local okc, ts_config = pcall(require, "plugins.treesitter")
-    if okc and type(ts_config) == "table" and ts_config.parsers then
-      log("installing parsers (nvim-treesitter main)")
-      local okw, err = pcall(function()
-        require("nvim-treesitter").install(ts_config.parsers):wait(900000)
-      end)
-      if not okw then
-        step_failed("parser install: " .. tostring(err))
-      end
-    else
-      log("nvim-treesitter main without a parser list in plugins.treesitter: skipping parsers")
+  -- Parsers: the list lua/plugins/treesitter.lua exports, built synchronously.
+  local okc, ts_config = pcall(require, "plugins.treesitter")
+  if okc and type(ts_config) == "table" and ts_config.parsers then
+    log("installing parsers")
+    local okw, err = pcall(function()
+      require("nvim-treesitter").install(ts_config.parsers):wait(900000)
+    end)
+    if not okw then
+      step_failed("parser install: " .. tostring(err))
     end
+  else
+    step_failed("lua/plugins/treesitter.lua exports no parser list (nvim-treesitter master checked out?)")
   end
 end
 

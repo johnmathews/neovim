@@ -214,7 +214,12 @@ An environment with neither exits 2 with these instructions instead of installin
 ./scripts/smoke --strict                 # plugin deprecations fail instead of warn
 ./scripts/smoke --fixture init-error     # break the copied config with test/smoke/fixtures/<name>.lua first
 ./scripts/smoke --fresh --seed-from ~/.local/share/nvim   # delete SMOKE_HOME and start over
+./scripts/smoke --nvim /opt/homebrew/bin/nvim --expect-guard  # Neovim < 0.12: check init.lua stops at its guard
 ```
+
+The config needs Neovim 0.12. On an older Neovim, `init.lua` prints one ERROR and stops before lazy.nvim loads, so
+it never installs plugins or rewrites `lazy-lock.json`. Every other mode fails there; `--expect-guard` passes only
+when the guard did exactly that.
 
 `--fresh` only deletes a directory the script made: empty, marked with `.nvim-smoke-home`, or holding only its own
 layout (`config/`, `data/`, `state/`, `cache/`, reports). Pointing `--home` at anything else (`~`, a repo) exits 2.

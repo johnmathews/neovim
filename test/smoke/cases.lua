@@ -147,6 +147,42 @@ local function inert_checks(t)
   end
 end
 
+-- nvim-treesitter `main` (F2, F3, F24): textobject maps are buffer-local, folds use the
+-- native foldexpr, and the master-era maps are gone, so the built-in motions come back.
+local function treesitter_checks(t)
+  local m = vim.fn.maparg("]m", "n", false, true)
+  if m.buffer ~= 1 or not m.callback then
+    t.fail("python:textobjects", ("]m is %s, want a buffer-local textobjects mapping"):format(vim.inspect(m)))
+  end
+  if vim.wo.foldexpr ~= "v:lua.vim.treesitter.foldexpr()" then
+    t.fail("python:folds", ("foldexpr=%s, want v:lua.vim.treesitter.foldexpr()"):format(vim.wo.foldexpr))
+  end
+  for lhs, want in pairs({ ["<leader>tc"] = "Inspect<CR>", ["<leader>tp"] = "InspectTree<CR>" }) do
+    local rhs = vim.fn.maparg(lhs, "n")
+    if not rhs:find(want, 1, true) then
+      t.fail("treesitter:keymaps", ("%s maps to %q, want :%s"):format(lhs, rhs, want))
+    end
+  end
+  for _, lhs in ipairs({ "<leader>df", "<leader>dF" }) do
+    local rhs = vim.fn.maparg(lhs, "n")
+    if rhs ~= "" then
+      t.fail("treesitter:keymaps", ("%s maps to %q; it was removed"):format(lhs, rhs))
+    end
+  end
+  -- ]o stays vim-unimpaired's option toggle; ]s and ]z are Vim's spell and fold motions
+  for _, lhs in ipairs({ "]o", "]s", "]z" }) do
+    if vim.fn.maparg(lhs, "n", false, true).buffer == 1 then
+      t.fail("treesitter:keymaps", ("%s has a buffer-local mapping; the textobjects move was removed"):format(lhs))
+    end
+  end
+  for _, lhs in ipairs({ "]d", "[d" }) do
+    local desc = vim.fn.maparg(lhs, "n", false, true).desc or ""
+    if not desc:find("diagnostic", 1, true) then
+      t.fail("treesitter:keymaps", ("%s is %q, want the built-in diagnostic jump"):format(lhs, desc))
+    end
+  end
+end
+
 ---@type SmokeCase[]
 local cases = {
   {
@@ -206,6 +242,7 @@ local cases = {
         t.fail("python:textobjects", ("vaf from line 12 selected %d-%d, want 10-13 (%s)"):format(s, e, tostring(err)))
       end
       vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      treesitter_checks(t)
 
       -- a restarted server must get the same settings as the first start
       local before = vim.lsp.get_clients({ bufnr = 0, name = "basedpyright" })[1]
@@ -404,6 +441,10 @@ local cases = {
       then
         t.fail("markdown:glow", ":Glow, <leader>mg or <Leader>p still exists; glow.nvim was removed")
       end
+      -- markdown stays unfolded (vim-markdown.lua disables its folding; treesitter folds skip it)
+      if vim.wo.foldmethod ~= "manual" then
+        t.fail("markdown:folds", ("foldmethod=%s, want manual"):format(vim.wo.foldmethod))
+      end
     end,
   },
   {
@@ -413,6 +454,11 @@ local cases = {
     clients = {},
     lang = "sql",
     check = function(buf, t)
+      -- sql has no textobjects query, so its ftplugin keeps `]]` (next BEGIN)
+      local brackets = vim.fn.maparg("]]", "n", false, true)
+      if brackets.buffer ~= 1 or not (brackets.rhs or ""):find("search(", 1, true) then
+        t.fail("sql:keymaps", ("]] is %s, want the sql ftplugin's search"):format(vim.inspect(brackets.rhs)))
+      end
       local function text()
         return table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), "\n")
       end

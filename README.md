@@ -27,8 +27,9 @@ Markdown development.
 
 ### Requirements
 
-- **Neovim:** v0.11+ (0.12 after the treesitter cutover; `scripts/versions.env` holds the enforced minimum)
-- **Node.js:** v18+ (for LSP servers)
+- **Neovim:** v0.12.6 (`init.lua` refuses anything older than 0.12; `scripts/versions.env` holds the enforced minimum)
+- **tree-sitter CLI** 0.26.1 or later and a C compiler, to build parsers: `brew install tree-sitter-cli`
+- **Node.js:** v20+ (for LSP servers and markdownlint)
 - **CLI Tools:**
 
   ```bash

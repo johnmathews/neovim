@@ -217,32 +217,39 @@ other `gr*` defaults work and `gi` is Vim's "insert where insert mode last stopp
 
 ### Text Objects & Navigation
 
-| Key  | Mode   | Description                     |
-| ---- | ------ | ------------------------------- |
-| `af` | Normal | Select outer function           |
-| `if` | Normal | Select inner function           |
-| `ac` | Normal | Select outer class              |
-| `ic` | Normal | Select inner class              |
-| `]m` | Normal | Jump to next function start     |
-| `[m` | Normal | Jump to previous function start |
-| `]]` | Normal | Jump to next class start        |
-| `[[` | Normal | Jump to previous class start    |
+Buffer-local, and only in buffers whose language has a textobjects query (Python, Lua, JavaScript, TypeScript, Bash
+and others). Elsewhere a filetype plugin's own `]]` and `[[` stay, for example SQL's jump to the next `BEGIN`.
+
+| Key  | Mode            | Description                     |
+| ---- | --------------- | ------------------------------- |
+| `af` | Visual, Pending | Select outer function           |
+| `if` | Visual, Pending | Select inner function           |
+| `ac` | Visual, Pending | Select outer class              |
+| `ic` | Visual, Pending | Select inner class              |
+| `]m` | Normal, Visual, Pending | Jump to next function start     |
+| `[m` | Normal, Visual, Pending | Jump to previous function start |
+| `]M` | Normal, Visual, Pending | Jump to next function end       |
+| `[M` | Normal, Visual, Pending | Jump to previous function end   |
+| `]]` | Normal, Visual, Pending | Jump to next class start        |
+| `[[` | Normal, Visual, Pending | Jump to previous class start    |
+| `][` | Normal, Visual, Pending | Jump to next class end          |
+| `[]` | Normal, Visual, Pending | Jump to previous class end      |
+
+`]d`, `[d`, `]s` and `]z` are Neovim's built-in diagnostic, spell and fold jumps, and `]o` is vim-unimpaired's.
 
 ### Text Object Operations
 
-| Key           | Mode   | Description              |
-| ------------- | ------ | ------------------------ |
-| `<leader>tsa` | Normal | Swap next parameter      |
-| `<leader>tsA` | Normal | Swap previous parameter  |
-| `<leader>df`  | Normal | Peek function definition |
-| `<leader>dF`  | Normal | Peek class definition    |
+| Key           | Mode   | Description             |
+| ------------- | ------ | ----------------------- |
+| `<leader>tsa` | Normal | Swap next parameter     |
+| `<leader>tsA` | Normal | Swap previous parameter |
 
 ### Treesitter Tools
 
-| Key          | Mode   | Description                                 |
-| ------------ | ------ | ------------------------------------------- |
-| `<leader>tp` | Normal | Treesitter Playground (inspect syntax tree) |
-| `<leader>tc` | Normal | Treesitter: Show item under cursor          |
+| Key          | Mode   | Description                                    |
+| ------------ | ------ | ---------------------------------------------- |
+| `<leader>tp` | Normal | Inspect the syntax tree (`:InspectTree`)       |
+| `<leader>tc` | Normal | Highlight groups under the cursor (`:Inspect`) |
 
 ---
 

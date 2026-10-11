@@ -1,3 +1,10 @@
+-- This config needs Neovim 0.12 (nvim-treesitter's main branch, aerial). Stop before
+-- lazy.nvim loads: on an older Neovim it would install plugins and rewrite lazy-lock.json.
+if vim.fn.has("nvim-0.12") == 0 then
+  vim.notify("config requires Neovim 0.12.6, see docs/UPGRADE-0.12.md", vim.log.levels.ERROR)
+  return
+end
+
 -- Faster Lua module loading (Nvim ≥ 0.9)
 pcall(vim.loader.enable)
 

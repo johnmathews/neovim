@@ -11,20 +11,6 @@
 --   finding  finding ID, and the unit planned to fix it
 --   nvim     only on these versions ("0.12" matches 0.12.x); omit for every version
 return {
-  -- F30: zsh gets no treesitter parser (W12)
-  { id = "zsh:treesitter", match = "highlighter not active (want parser bash)", finding = "F30 (W12)" },
-  { id = "zsh:textobjects", match = "is not mapped in mode", finding = "F30 (W12)" },
-
-  -- F3: the installed nvim-treesitter master branch breaks on 0.12 (W12)
-  { id = "*:folds", match = "no folds computed", finding = "F3 (W12)", nvim = "0.12" },
-  { id = "python:textobjects", match = "vaf from line 12 selected 12-12", finding = "F3 (W12)", nvim = "0.12" },
-  {
-    id = "*:messages",
-    match = "treesitter.lua:197: attempt to call method 'range'",
-    finding = "F3 (W12)",
-    nvim = "0.12",
-  },
-
   -- F4: the installed aerial and rainbow-delimiters throw on every buffer on 0.12 (W13)
   {
     id = "*:messages",
