@@ -56,6 +56,36 @@ green through W15.
 - nvim-ts-context-commentstring removed: `main`'s jsx query keeps the commentstring metadata native `gc` reads.
 - `scripts/sync-plugins` deletes the stale parser directories itself; W17 drops its separate `rm -rf` step.
 
+## Wrap-up review (/done)
+
+Two independent passes ran before the final push: a docs-versus-code audit and a code review. Both found real problems.
+
+- **The tools phase hid failed installs** (confirmed). A parser that failed to build, or a Mason install that hung, still
+  left the phase at exit 0, so `scripts/sync-plugins` would have printed OK. The red run reproduced it: a missing
+  `fish.so` with `CC=false` exited 0. The fix needed a second look. `nvim-treesitter.get_installed()` also counts query
+  directories, so a language whose parser is gone but whose queries remain counts as installed and `install()` skips it.
+  That is also how a half-installed machine stays broken. The bootstrap and `lua/plugins/treesitter.lua` now compute
+  missing parsers from `get_installed("parsers")` and force their rebuild. The bootstrap then fails on any parser or
+  Mason package (servers plus the list `lua/plugins/mason.lua` now exports) that is still not installed. After the fix
+  the same run fails with "parser not installed: fish", and with a working compiler it rebuilds `fish.so`.
+- **The reinstall deleted before it knew it could clone** (confirmed by reading). A plugin lazy could not move is now
+  moved aside and put back if the reinstall fails; lazy.nvim itself is never touched, since the running process uses it.
+  A full sync of the Mac snapshot reinstalled winresizer this way and left no leftovers.
+- **A failed sync left the lockfile rewritten** (confirmed with a fake `nvim` that rewrites it and fails): the script now
+  puts the committed `lazy-lock.json` back on failure, so a retry needs no manual `git checkout`.
+- **Docs drift the unit work missed** (confirmed): the demo guides still described a Telescope `gd` and the unmapped
+  `gr`/`gi`, so two of them were archived and four corrected. Also fixed: plugin and file counts in TESTING.md and
+  README, the xfail wording now that the list is empty, Harpoon's load time, the AGENTS OS line, and a missing
+  `bootstrap-linux` section in TESTING.md. One CI defect came out of it: the failure upload globbed the self-test logs
+  inside `SMOKE_HOME`, but gate-selftest writes them beside it.
+
+## What is deliberately not done
+
+- W17 and the tag are the owner's.
+- Mason package versions stay unpinned (above).
+- The Mason branch of the new install check was not driven red: making one Mason install fail on demand needs a broken
+  registry or network. Its success branch ran on every bootstrap since.
+
 ## Left for later
 
 - W17 itself: the owner's per-machine cutover, the `pre-nvim-0.12` tag, and archiving `docs/UPGRADE-0.12.md` once every
