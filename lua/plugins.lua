@@ -145,7 +145,7 @@ return lazy.setup({
   {
     "ThePrimeagen/harpoon",
     dependencies = "nvim-lua/plenary.nvim",
-    keys = { "ga", "gh", "gn", "gp" }, -- Lazy-load on harpoon keybinds
+    keys = { "gm", "gh", "gn", "gp" }, -- Lazy-load on harpoon keybinds
     config = function()
       require("plugins.harpoon")
     end,

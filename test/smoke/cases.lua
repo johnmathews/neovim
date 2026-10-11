@@ -233,6 +233,151 @@ local function plugin_checks(buf, t)
   vim.api.nvim_win_set_cursor(0, { 1, 0 })
 end
 
+-- Keymap docs against the running config (F20, F16, #7). docs/KEYMAPS.md is written by hand;
+-- this keeps it honest in both directions: every documented key resolves with maparg in its
+-- documented modes, and every mapping with a desc under the main prefixes is documented.
+-- Runs in the Python buffer, so buffer-local maps (LSP, textobjects, gitsigns) are there.
+
+-- Documented keys that are Vim motions or commands rather than mappings
+local doc_builtins = { ["gd"] = true, ["gD"] = true, ["<C-o>"] = true }
+
+local doc_modes = { normal = "n", insert = "i", visual = "x", pending = "o", operator = "o", terminal = "t" }
+
+---Raw bytes of a documented key, with <Leader> and <LocalLeader> expanded.
+---@param key string
+---@return string
+local function key_raw(key)
+  local k = key:gsub("<[Ll]eader>", vim.g.mapleader or "\\")
+  k = k:gsub("<[Ll]ocal[Ll]eader>", vim.g.maplocalleader or "\\")
+  return vim.keycode(k)
+end
+
+---Rows of every Key | Mode | ... table in docs/KEYMAPS.md:
+---{ keys = {...}, modes = {...}, line = n, section = "<## heading>" }
+local function doc_rows()
+  local rows = {}
+  local path = vim.fn.stdpath("config") .. "/docs/KEYMAPS.md"
+  local in_table = false
+  local section = ""
+  for lnum, line in ipairs(vim.fn.readfile(path)) do
+    local cells = vim.split(line, "|", { plain = true })
+    section = line:match("^## (.+)") or section
+    if line:match("^|%s*Key%s*|%s*Mode%s*|") then
+      in_table = true
+    elseif not line:match("^|") then
+      in_table = false
+    elseif in_table and not line:match("^|%s*%-") then
+      local keys = {}
+      -- code spans: `x` or `` x `` (for keys that contain a backtick)
+      for span in (cells[2] or ""):gmatch("``(.-)``") do
+        table.insert(keys, vim.trim(span))
+      end
+      if #keys == 0 then
+        for span in (cells[2] or ""):gmatch("`([^`]+)`") do
+          table.insert(keys, span)
+        end
+      end
+      local modes = {}
+      for word in (cells[3] or ""):lower():gmatch("%a+") do
+        if doc_modes[word] then
+          table.insert(modes, doc_modes[word])
+        end
+      end
+      table.insert(rows, { keys = keys, modes = modes, line = lnum, section = section })
+    end
+  end
+  return rows
+end
+
+---@param buf integer
+---@param t table
+---@param markdown boolean true in the Markdown buffer: check the doc's Markdown section and
+---  the buffer's own maps; false in the Python buffer: everything else, and the global maps
+local function keymap_doc_checks(buf, t, markdown)
+  if not markdown then
+    -- gitsigns attaches asynchronously; its maps are part of what the doc lists
+    vim.wait(10000, function()
+      return vim.fn.maparg("<Leader>shp", "n") ~= ""
+    end, 100)
+
+    -- #7: the hunk actions call gitsigns instead of typing keys into the buffer
+    for _, mode in ipairs({ "n", "x" }) do
+      for _, lhs in ipairs({ "<Leader>shs", "<Leader>shr" }) do
+        local m = vim.fn.maparg(lhs, mode, false, true)
+        if not m.callback then
+          t.fail("keymaps:gitsigns", ("%s (%s) maps to %s, want a gitsigns call"):format(lhs, mode, vim.inspect(m.rhs)))
+        end
+      end
+    end
+  end
+
+  local documented = {}
+  for _, row in ipairs(doc_rows()) do
+    for _, key in ipairs(row.keys) do
+      if not key:find("{", 1, true) then
+        documented[key_raw(key)] = true
+        if not doc_builtins[key] and (row.section == "Markdown") == markdown then
+          for _, mode in ipairs(row.modes) do
+            if vim.fn.maparg(key, mode) == "" then
+              t.fail(
+                "keymaps:documented",
+                ("KEYMAPS.md:%d documents %s in mode %s, but it is not mapped"):format(row.line, key, mode)
+              )
+            end
+          end
+        end
+      end
+    end
+  end
+
+  local leader, localleader = vim.g.mapleader or "\\", vim.g.maplocalleader or "\\"
+  local function prefixed(raw)
+    if raw == leader or raw == localleader then
+      return false -- the leader key itself, which the doc's header names
+    end
+    local name = vim.fn.keytrans(raw)
+    return raw:sub(1, #leader) == leader
+      or raw:sub(1, #localleader) == localleader
+      or raw:sub(1, 1) == "\t"
+      or raw:sub(1, 1) == "g"
+      or name:match("^<F%d+>") ~= nil
+  end
+  local seen = {}
+  for _, mode in ipairs({ "n", "x" }) do
+    local maps = vim.api.nvim_buf_get_keymap(buf, mode)
+    if not markdown then
+      maps = vim.list_extend(maps, vim.api.nvim_get_keymap(mode))
+    end
+    for _, m in ipairs(maps) do
+      local raw = m.lhsraw or vim.keycode(m.lhs)
+      local name = vim.fn.keytrans(raw)
+      local trigger = (m.desc or ""):find("^which%-key%-trigger") ~= nil
+      if m.desc and not trigger and prefixed(raw) and not documented[raw] and not seen[name] then
+        seen[name] = true
+        t.fail("keymaps:undocumented", ("%s (%s, %q) is mapped but not in KEYMAPS.md"):format(name, mode, m.desc))
+      end
+    end
+  end
+  if markdown then
+    return
+  end
+
+  -- which-key labels (lua/plugins/whichkey.lua) name real mappings
+  local wk = vim.fn.readfile(vim.fn.stdpath("config") .. "/lua/plugins/whichkey.lua")
+  for lnum, line in ipairs(wk) do
+    local lhs = line:match('^%s*{%s*"([^"]+)",%s*desc%s*=')
+    if lhs and not doc_builtins[lhs] then
+      local mapped = false
+      for _, mode in ipairs({ "n", "x", "o" }) do
+        mapped = mapped or vim.fn.maparg(lhs, mode) ~= ""
+      end
+      if not mapped then
+        t.fail("keymaps:whichkey", ("whichkey.lua:%d labels %s, which is not mapped"):format(lnum, lhs))
+      end
+    end
+  end
+end
+
 ---@type SmokeCase[]
 local cases = {
   {
@@ -294,6 +439,7 @@ local cases = {
       vim.api.nvim_win_set_cursor(0, { 1, 0 })
       treesitter_checks(t)
       plugin_checks(buf, t)
+      keymap_doc_checks(buf, t, false)
 
       -- a restarted server must get the same settings as the first start
       local before = vim.lsp.get_clients({ bufnr = 0, name = "basedpyright" })[1]
@@ -500,6 +646,7 @@ local cases = {
       if vim.wo.foldmethod ~= "manual" then
         t.fail("markdown:folds", ("foldmethod=%s, want manual"):format(vim.wo.foldmethod))
       end
+      keymap_doc_checks(buf, t, true)
     end,
   },
   {

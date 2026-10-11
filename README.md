@@ -1,7 +1,7 @@
 # Neovim Configuration
 
-A robust, performant Neovim configuration optimized for Python, JavaScript/TypeScript, Lua, Bash, SQL, YAML, and
-Markdown development.
+A robust, performant Neovim configuration optimized for Python, JavaScript/TypeScript, Lua, Bash, SQL, YAML, and Markdown
+development.
 
 **Version:** 1.2.0  
 **Last Updated:** 2025-11-08  
@@ -36,8 +36,8 @@ Markdown development.
   brew install luacheck stylua ripgrep fd
   ```
 
-- **Optional:** the Python provider, for Python plugins such as vim-mundo. Install it with
-  `uv tool install pynvim`; `init.lua` uses that interpreter when it exists. The Node provider is disabled.
+- **Optional:** the Python provider, for Python plugins such as vim-mundo. Install it with `uv tool install pynvim`;
+  `init.lua` uses that interpreter when it exists. The Node provider is disabled.
 
 ### Installation
 
@@ -61,7 +61,8 @@ nvim
 2. **Check health:** `:checkhealth` or run `./scripts/health-check`
 3. **View keymaps:** `<Tab>tk` or see [KEYMAPS.md](docs/KEYMAPS.md)
 4. **Configure LSP:** See [LSP.md](docs/LSP.md) for language server setup
-5. **Run the smoke gate:** `./scripts/smoke --seed-from ~/.local/share/nvim` opens a buffer per language in an isolated Neovim
+5. **Run the smoke gate:** `./scripts/smoke --seed-from ~/.local/share/nvim` opens a buffer per language in an isolated
+   Neovim
 
 ---
 
@@ -81,8 +82,11 @@ nvim
 | `<Tab>tk` | Search keymaps                   |
 | `<Tab>tc` | Command history                  |
 | `<Tab>gc` | Git commits                      |
-| `<Tab>gb` | Git branches                     |
+| `<Tab>gb` | Git commits of the current file  |
+| `<Tab>gr` | Git branches                     |
 | `<Tab>z`  | Resume last search               |
+
+The full, checked list is in [docs/KEYMAPS.md](docs/KEYMAPS.md); the tables here are a tour.
 
 **Telescope Extensions:**
 
@@ -90,8 +94,8 @@ nvim
 - `live_grep_args` - Pass arguments to ripgrep (e.g., `--no-ignore`, `-tpy`)
 - `smart_history` - Persistent search history
 
-Entering a file buffer moves the working directory to its project root (the nearest `.git`, `Makefile`,
-`package.json` or similar; `lua/autocmd.lua`). `<Tab>p` searches saved sessions (`:AutoSession search`).
+Entering a file buffer moves the working directory to its project root (the nearest `.git`, `Makefile`, `package.json` or
+similar; `lua/autocmd.lua`). `<Tab>p` searches saved sessions (`:AutoSession search`).
 
 ### 2. LSP (Language Server Protocol)
 
@@ -99,54 +103,56 @@ Entering a file buffer moves the working directory to its project root (the near
 JavaScript/TypeScript (ts_ls), Bash and zsh (bashls), YAML (yamlls), JSON (jsonls), Docker (dockerls), TOML (taplo),
 Markdown (marksman). SQL has no server on purpose. See `docs/LSP.md`.
 
-| Keymap       | Function                 |
-| ------------ | ------------------------ |
-| `K`          | Hover documentation      |
-| `gd`         | Go to definition         |
-| `gD`         | Go to declaration        |
-| `grr`        | References (Telescope)   |
-| `gri`        | Implementation (Telescope) |
-| `grn`        | Rename symbol            |
-| `gra`        | Code actions             |
-| `<leader>cf` | Format document          |
-| `<leader>cl` | Run linter               |
-| `<leader>cL` | LSP panel (Trouble)      |
-| `[d`         | Previous diagnostic      |
-| `]d`         | Next diagnostic          |
+| Keymap       | Function                       |
+| ------------ | ------------------------------ |
+| `K`          | Hover documentation            |
+| `gd`         | Go to definition               |
+| `gD`         | Go to declaration              |
+| `grr`        | References (Telescope)         |
+| `gri`        | Implementation (Telescope)     |
+| `grn`        | Rename symbol                  |
+| `gra`        | Code actions                   |
+| `<leader>cf` | Format document                |
+| `<leader>cl` | Run linter                     |
+| `<leader>cL` | LSP panel (Trouble)            |
+| `[d`         | Previous diagnostic (built-in) |
+| `]d`         | Next diagnostic (built-in)     |
 
 **LSP Documentation:** See [LSP.md](docs/LSP.md) for detailed server configurations and troubleshooting.
 
 ### 3. Git Integration (Gitsigns)
 
-| Keymap       | Function           |
-| ------------ | ------------------ |
-| `<leader>sb` | Blame current line |
-| `<leader>sS` | Stage buffer       |
-| `<leader>su` | Undo stage hunk    |
-| `<leader>sr` | Reset hunk         |
-| `<leader>sp` | Preview hunk       |
-| `]c`         | Next git hunk      |
-| `[c`         | Previous git hunk  |
+| Keymap        | Function                         |
+| ------------- | -------------------------------- |
+| `<leader>sb`  | Toggle blame of the current line |
+| `<leader>sS`  | Stage buffer                     |
+| `<leader>shs` | Stage hunk (Visual: the lines)   |
+| `<leader>shu` | Undo stage hunk                  |
+| `<leader>shr` | Reset hunk (Visual: the lines)   |
+| `<leader>shp` | Preview hunk                     |
+| `]c`          | Next git hunk                    |
+| `[c`          | Previous git hunk                |
 
-**Visual Indicators:**
+**Sign column:**
 
-- `|` - Added or changed line
-- `_` - Deleted line
-- `~` - Changed line number
+- `│` - Added or changed line
+- `_` - Deleted line (`‾` when the deletion is at the top)
+- `~` - Changed line with a deletion after it
 
 ### 4. Navigation & Motion
 
 **Leap Motion:**
 
-- `s` - Jump forward by 2-character search
-- `S` - Jump backward by 2-character search
+- `s` - Jump anywhere in the window by a 2-character search (Normal, Visual, Operator-pending)
+- `S` - The same, into another window
 - Type 2 characters → see labeled jump points → press label
 
 **Harpoon (Quick Marks):**
 
-- `<leader>ha` - Add file to harpoon
-- `<leader>hh` - Toggle harpoon menu
-- `<leader>h1-4` - Jump to harpooned file 1-4
+- `gm` - Add file to harpoon
+- `gh` - Toggle harpoon menu
+- `gn` / `gp` - Next / previous harpooned file
+- `<Tab>1` to `<Tab>5` - Jump to harpooned file 1-5
 
 **Marks:**
 
@@ -161,14 +167,14 @@ Markdown (marksman). SQL has no server on purpose. See `docs/LSP.md`.
 
 **Prefix:** `<C-w>` (Control+W, then see which-key options)
 
-| Keymap       | Function                       |
-| ------------ | ------------------------------ |
-| `<C-w>s`     | Horizontal split               |
-| `<C-w>v`     | Vertical split                 |
-| `<C-w>H`     | Rotate layout counterclockwise |
-| `<C-w>J/K/L` | Rotate layout other directions |
-| `<C-w>q`     | Close window                   |
-| `<C-w>=`     | Equalize window sizes          |
+| Keymap       | Function                              |
+| ------------ | ------------------------------------- |
+| `<C-w>s`     | Horizontal split                      |
+| `<C-w>v`     | Vertical split                        |
+| `<C-w>H`     | Move window to the far left           |
+| `<C-w>J/K/L` | Move window to the bottom, top, right |
+| `<C-w>q`     | Close window                          |
+| `<C-w>=`     | Equalize window sizes                 |
 
 ### 6. Markdown Authoring
 
@@ -177,8 +183,8 @@ Markdown (marksman). SQL has no server on purpose. See `docs/LSP.md`.
 | `<leader>mp` | Toggle Markdown Print Mode (no hard wraps, for Typora and print) |
 | `<leader>X`  | Open the current file in Typora (macOS)                          |
 
-Print Mode is described in `docs/MARKDOWN-FORMATTING.md`. The in-editor Glow preview was removed with glow.nvim, which
-is archived.
+Print Mode is described in `docs/MARKDOWN-FORMATTING.md`. The in-editor Glow preview was removed with glow.nvim, which is
+archived.
 
 ---
 
@@ -264,8 +270,8 @@ What each script checks, and how to read its output, is in [docs/TESTING.md](doc
 - Lualine, noice and nvim-notify (load on `VeryLazy`)
 - Harpoon (loads on keypress)
 
-Telescope and LuaSnip declare lazy triggers but load at startup anyway: auto-session depends on Telescope, and
-`init.lua` loads the custom snippets. Mason's tool installer checks its list on every start.
+Telescope and LuaSnip declare lazy triggers but load at startup anyway: auto-session depends on Telescope, and `init.lua`
+loads the custom snippets. Mason's tool installer checks its list on every start.
 
 **Performance Guide:** See [docs/PERFORMANCE.md](docs/PERFORMANCE.md) for detailed analysis and optimization tips.
 
@@ -273,16 +279,16 @@ Telescope and LuaSnip declare lazy triggers but load at startup anyway: auto-ses
 
 ## 📚 Documentation
 
-| Document                                                      | Purpose                                              |
-| ------------------------------------------------------------- | ---------------------------------------------------- |
-| [AGENTS.md](AGENTS.md)                                        | Architecture, design principles, conventions         |
-| [CHANGELOG.md](docs/CHANGELOG.md)                             | Version history and change tracking                  |
-| [KEYMAPS.md](docs/KEYMAPS.md)                                 | Complete keymap reference (searchable via `<Tab>tk`) |
-| [LSP.md](docs/LSP.md)                                         | LSP servers, formatters, linters                     |
-| [PERFORMANCE.md](docs/PERFORMANCE.md)                         | Startup analysis and optimization                    |
-| [MARKDOWN-FORMATTING.md](docs/MARKDOWN-FORMATTING.md)         | Markdown formatting, linting and print mode          |
-| [TESTING.md](docs/TESTING.md)                                 | Smoke gate, quality gate, health check, git hooks    |
-| [docs/archive/](docs/archive/)                                | Superseded docs (test results, improvement log)      |
+| Document                                              | Purpose                                              |
+| ----------------------------------------------------- | ---------------------------------------------------- |
+| [AGENTS.md](AGENTS.md)                                | Architecture, design principles, conventions         |
+| [CHANGELOG.md](docs/CHANGELOG.md)                     | Version history and change tracking                  |
+| [KEYMAPS.md](docs/KEYMAPS.md)                         | Complete keymap reference (searchable via `<Tab>tk`) |
+| [LSP.md](docs/LSP.md)                                 | LSP servers, formatters, linters                     |
+| [PERFORMANCE.md](docs/PERFORMANCE.md)                 | Startup analysis and optimization                    |
+| [MARKDOWN-FORMATTING.md](docs/MARKDOWN-FORMATTING.md) | Markdown formatting, linting and print mode          |
+| [TESTING.md](docs/TESTING.md)                         | Smoke gate, quality gate, health check, git hooks    |
+| [docs/archive/](docs/archive/)                        | Superseded docs (test results, improvement log)      |
 
 ---
 
@@ -346,8 +352,8 @@ Telescope and LuaSnip declare lazy triggers but load at startup anyway: auto-ses
 
 ### Git Hooks (Automatic Quality Assurance)
 
-`./scripts/install-hooks` sets `core.hooksPath` to `scripts/`, so every worktree runs its own hooks. The smoke gate
-needs a one-time `./scripts/smoke --seed-from ~/.local/share/nvim` per Neovim version.
+`./scripts/install-hooks` sets `core.hooksPath` to `scripts/`, so every worktree runs its own hooks. The smoke gate needs
+a one-time `./scripts/smoke --seed-from ~/.local/share/nvim` per Neovim version.
 
 **Pre-commit hook** (runs before each commit):
 
