@@ -218,6 +218,13 @@ local function plugin_checks(buf, t)
   if package.loaded["dressing"] then
     t.fail("python:ui-select", "dressing.nvim is loaded; telescope-ui-select replaces it")
   end
+  -- Telescope's history database lives in this Neovim's data dir (F35): a hard-coded
+  -- ~/.local/share path breaks fresh machines and escapes the gate's sandbox
+  local history = vim.tbl_get(require("telescope.config").values, "history", "path") or ""
+  local data = vim.fn.stdpath("data")
+  if vim.fn.fnamemodify(history, ":p"):sub(1, #data) ~= data then
+    t.fail("python:telescope", ("history.path is %s, want a file under %s"):format(history, data))
+  end
   vim.wait(1000, function()
     return vim.bo.filetype == "python"
   end, 50)
