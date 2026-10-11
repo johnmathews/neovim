@@ -24,6 +24,9 @@ Cleanup after the first `:checkhealth` on 0.12.6.
   - vim.lsp: yamlls and marksman list only the filetypes Neovim sets (`after/lsp/yamlls.lua`, new
     `after/lsp/marksman.lua`);
   - vim.lsp: every client asks for utf-16 positions, so ruff and basedpyright no longer mix encodings on Python buffers.
+- `scripts/sync-plugins` killed mid-run (a timeout, Ctrl-C, a closed terminal) left `lazy-lock.json` modified. Bash ran
+  its EXIT trap with `$?` = 0, so the restore was skipped and every retry refused the uncommitted lockfile. It now puts
+  the lockfile back and exits 129, 130 or 143; gate-selftest's `sync-killed` case covers it.
 
 ## [2.0.0] - 2026-10-11
 

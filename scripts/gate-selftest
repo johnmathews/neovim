@@ -188,6 +188,55 @@ gate_case hc-old-tree-sitter "tree-sitter 0.25.0 is older than the required 0.26
   env VERSIONS_ENV="$(versions_file ts-min TREE_SITTER_MIN=0.26.1)" PATH="$WORK/old-tree-sitter:$PATH" \
   "$REPO/scripts/health-check" --isolated
 
+# sync-plugins killed mid-run must put the committed lazy-lock.json back: a timeout or
+# Ctrl-C signals the whole process group, and a lockfile left modified makes every retry
+# refuse. A Neovim stand-in reports a version and the config and data dirs, then its
+# plugin phase rewrites the lockfile and runs until it is killed.
+if selected gates sync-killed; then
+  log="$HOME_DIR.selftest-sync-killed.log"
+  copy_repo synckill
+  git -C "$WORK/synckill" add -A
+  git -C "$WORK/synckill" -c user.name=gate-selftest -c user.email=gate-selftest@localhost commit -qm base
+  sync_repo="$(cd "$WORK/synckill" && pwd -P)"
+  mkdir -p "$WORK/sync-nvim"
+  cat >"$WORK/sync-nvim/nvim" <<EOF
+#!/bin/sh
+case "\$*" in
+  --version*) echo "NVIM v99.0.0"; exit 0 ;;
+  *--clean*) printf '%s\n%s' "$sync_repo" "$WORK/sync-data"; exit 0 ;;
+esac
+echo '{}' >>"$sync_repo/lazy-lock.json"
+touch "$WORK/sync-dirty"
+exec sleep 60
+EOF
+  chmod +x "$WORK/sync-nvim/nvim"
+  rc=0
+  # job control gives the background job its own process group, as timeout(1) and a
+  # terminal do, so the kill below reaches the stand-in as well as the script
+  set -m
+  NVIM="$WORK/sync-nvim/nvim" "$sync_repo/scripts/sync-plugins" >"$log" 2>&1 &
+  pid=$!
+  set +m
+  for _ in $(seq 1 100); do
+    [ -e "$WORK/sync-dirty" ] && break
+    sleep 0.2
+  done
+  kill -TERM -- "-$pid" 2>/dev/null
+  wait "$pid" || rc=$?
+  if [ ! -e "$WORK/sync-dirty" ]; then
+    echo "FAIL  sync-killed: the stand-in never reached the plugin phase (log: $log)"
+    FAILED=1
+  elif ! git -C "$sync_repo" diff --quiet -- lazy-lock.json; then
+    echo "FAIL  sync-killed: exit $rc, lazy-lock.json left modified (log: $log)"
+    FAILED=1
+  elif [ "$rc" -eq 0 ]; then
+    echo "FAIL  sync-killed: lazy-lock.json put back, but exit 0 (log: $log)"
+    FAILED=1
+  else
+    echo "ok    sync-killed: exit $rc, lazy-lock.json put back"
+  fi
+fi
+
 if [ "$FAILED" -eq 0 ]; then
   echo "gate-selftest: every case was caught"
 else

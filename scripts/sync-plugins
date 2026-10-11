@@ -22,7 +22,8 @@
 # Usage: scripts/sync-plugins
 # Environment: NVIM selects the binary (default: nvim on PATH); VERSIONS_ENV overrides
 #              scripts/versions.env; XDG_* and NVIM_APPNAME as Neovim reads them.
-# Exit codes: 0 in sync, 1 a step failed, 2 refused (prerequisite or precondition).
+# Exit codes: 0 in sync, 1 a step failed, 2 refused (prerequisite or precondition),
+#             129/130/143 killed by SIGHUP/SIGINT/SIGTERM (the lockfile is put back).
 
 set -euo pipefail
 
@@ -98,6 +99,11 @@ restore_lockfile() {
   exit "$rc"
 }
 trap restore_lockfile EXIT
+# A signal (a timeout killing the process group, Ctrl-C, a closed terminal) runs the EXIT
+# trap with $? = 0, which skipped the restore. Exiting 128+N here gives it the real status.
+trap 'exit 129' HUP
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 # run_phase NAME: one Neovim process running a phase of test/smoke/bootstrap.lua
 # (plugins: restore to the lockfile; tools: Mason packages, then parsers)
