@@ -196,7 +196,9 @@ git push --no-verify
 `quality-gate` with stylua or luacheck missing from `PATH`, `quality-gate` on a copy with an `error()` in
 `lua/options.lua`, `quality-gate` with `GIT_DIR` exported (as git does for hooks) on a copy with a formatting break, and
 `health-check` with an `nvim` shim reporting 0.11.6 or a `tree-sitter` shim reporting 0.25.0 against a stricter
-`versions.env`. Each must exit 1 with the matching message.
+`versions.env`. Each must exit 1 with the matching message. The `sync-killed` case runs `sync-plugins` with a Neovim
+stand-in that rewrites `lazy-lock.json`, kills its process group mid-run, and requires a non-zero exit with the committed
+lockfile back in place.
 
 ---
 
@@ -399,8 +401,9 @@ the committed lockfile back and restores again. A plugin lazy cannot move (local
 submodule) is moved aside and installed again at its pin; the old checkout comes back if the reinstall fails. It then
 deletes the parser binaries nvim-treesitter `master` left in `lazy/nvim-treesitter/parser*`, installs the Mason packages
 and parsers and checks each one is installed (a parser whose build failed fails the run), runs `Lazy clean`, and fails if
-`lazy-lock.json` changed. A failed run puts the committed `lazy-lock.json` back, so a retry needs no clean-up. Exit
-codes: `0` in sync, `1` a step failed, `2` refused.
+`lazy-lock.json` changed. A failed or killed run (a timeout, Ctrl-C, a closed terminal) puts the committed
+`lazy-lock.json` back, so a retry needs no clean-up. Exit codes: `0` in sync, `1` a step failed, `2` refused, `129`,
+`130` or `143` killed by SIGHUP, SIGINT or SIGTERM.
 
 ---
 
