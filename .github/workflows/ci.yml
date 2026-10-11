@@ -1,0 +1,81 @@
+# Linux parity gate for this Neovim config: bootstrap a fresh Ubuntu runner the way a
+# Linux VM is bootstrapped, then lint and run the smoke gate and its self-test.
+# docs/TESTING.md, section "Continuous Integration", describes each step.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Mondays 06:00 UTC: the same gate with --strict, so plugin deprecations stay visible
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: smoke (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      # outside the checkout (stylua and the gate's tree copy walk it), and without ".."
+      # (upload-artifact rejects relative segments)
+      SMOKE_HOME: ${{ github.workspace }}-smoke-home
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Bootstrap (scripts/bootstrap-linux)
+        run: scripts/bootstrap-linux
+
+      # the runner's Neovim config is this checkout, as ~/.config/nvim is on a VM
+      - name: Link the checkout as ~/.config/nvim
+        run: mkdir -p ~/.config && ln -sfn "$GITHUB_WORKSPACE" ~/.config/nvim
+
+      - name: Cache the data dir's plugins, Mason packages and parsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.local/share/nvim
+          key: nvim-data-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lazy-lock.json', 'scripts/versions.env', 'lua/plugins/mason.lua', 'lua/plugins/lsp.lua', 'lua/plugins/treesitter.lua') }}
+
+      - name: Sync plugins (scripts/sync-plugins)
+        run: scripts/sync-plugins
+
+      - name: Lint
+        run: |
+          stylua --check .
+          luacheck lua/ after/ test/smoke
+
+      - name: Smoke gate (seeded from the synced data dir)
+        run: scripts/smoke --seed-from ~/.local/share/nvim
+
+      - name: Smoke gate, strict (weekly)
+        if: github.event_name == 'schedule'
+        run: scripts/smoke --strict
+
+      - name: Gate self-test
+        run: scripts/gate-selftest
+
+      - name: Upload the smoke report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: smoke-${{ matrix.os }}
+          path: |
+            ${{ env.SMOKE_HOME }}/report.json
+            ${{ env.SMOKE_HOME }}/summary.txt
+            ${{ env.SMOKE_HOME }}/stderr.log
+            ${{ env.SMOKE_HOME }}/bootstrap-*.log
+            ${{ env.SMOKE_HOME }}.selftest-*.log
+            ${{ env.SMOKE_HOME }}/state/nvim/lsp.log
+          if-no-files-found: ignore

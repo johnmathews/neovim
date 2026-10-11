@@ -12,27 +12,32 @@ mason.setup({
 })
 
 -- Ensure non-LSP tools are installed (formatters/linters/dap/etc.)
+local tools = {
+  -- formatters
+  "stylua", -- Lua
+  "shfmt", -- Shell
+  "prettierd", -- Markdown
+  "biome", -- JS/TS/JSON
+  "ruff", -- Python
+  "sqlfluff", -- SQL
+  "yamlfmt", -- YAML
+  "jq", -- JSON
+  -- linters
+  "eslint_d",
+  "mypy",
+  "markdownlint",
+  "shellcheck", -- run by bashls (sh, bash, zsh)
+  "jsonlint",
+}
+
 local ok_mti, mti = pcall(require, "mason-tool-installer")
 if ok_mti then
   mti.setup({
-    ensure_installed = {
-      -- formatters
-      "stylua", -- Lua
-      "shfmt", -- Shell
-      "prettierd", -- Markdown
-      "biome", -- JS/TS/JSON
-      "ruff", -- Python
-      "sqlfluff", -- SQL
-      "yamlfmt", -- YAML
-      "jq", -- JSON
-      -- linters
-      "eslint_d",
-      "mypy",
-      "markdownlint",
-      "shellcheck", -- run by bashls (sh, bash) and nvim-lint (zsh)
-      "jsonlint",
-    },
+    ensure_installed = tools,
     auto_update = false,
     run_on_start = true,
   })
 end
+
+-- scripts/sync-plugins and the smoke bootstrap check these are installed
+return { tools = tools }

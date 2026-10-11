@@ -100,6 +100,10 @@ telescope.load_extension("harpoon")
 telescope.load_extension("live_grep_args")
 telescope.load_extension("smart_history")
 
+-- smart_history's database, in this Neovim's data dir; sqlite cannot create the directory
+local history_db = vim.fn.stdpath("data") .. "/databases/telescope_history.sqlite3"
+vim.fn.mkdir(vim.fn.fnamemodify(history_db, ":h"), "p")
+
 -- Custom actions
 local transform_mod = require("telescope.actions.mt").transform_mod
 local nvb_actions = transform_mod({
@@ -153,7 +157,7 @@ telescope.setup({
     entry_prefix = "   ",
     path_display = { "truncate" },
     history = {
-      path = "~/.local/share/nvim/databases/telescope_history.sqlite3",
+      path = history_db,
       limit = 100,
     },
 
@@ -257,8 +261,18 @@ telescope.setup({
       override_file_sorter = true, -- override the file sorter
       case_mode = "smart_case", -- or "ignore_case" or "respect_case"
     },
+    -- vim.ui.select (code actions, pickers from plugins) in a small dropdown
+    ["ui-select"] = {
+      require("telescope.themes").get_dropdown({
+        layout_config = { width = 0.5 },
+        previewer = false,
+      }),
+    },
   },
 })
+
+-- after setup, so the extension gets its options above
+telescope.load_extension("ui-select")
 
 local M = {}
 

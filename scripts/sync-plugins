@@ -1,0 +1,157 @@
+#!/usr/bin/env bash
+# Bring this machine's plugins, Mason packages and treesitter parsers in line with the
+# config: restore every plugin to its lazy-lock.json commit, install what the config asks
+# for, remove what it no longer uses, and check the lockfile is unchanged. macOS, Linux, CI.
+#
+# It works on the config Neovim would load (${XDG_CONFIG_HOME:-~/.config}/nvim, or
+# NVIM_APPNAME), which must be this checkout, and on that config's data directory.
+#
+# Steps:
+#   1. prerequisites: Neovim >= NVIM_MIN, tree-sitter >= TREE_SITTER_MIN, a C compiler, git
+#   2. refuse uncommitted lazy-lock.json changes (step 4 restores the committed file)
+#   3. restore plugins (a first start installs missing ones, and lazy then rewrites the
+#      lockfile from whatever commits it found installed)
+#   4. git checkout the committed lazy-lock.json and restore again, now from the real pins
+#   5. delete the parser binaries nvim-treesitter master built, which would load ahead of
+#      main's (F17). Only after the restore: master tracks parser/.gitignore, so deleting
+#      the directories first leaves local changes and lazy refuses to move the plugin.
+#   6. install the Mason packages and the parsers lua/plugins/treesitter.lua lists
+#   7. remove plugins the config no longer uses (Lazy clean)
+#   8. git diff --exit-code lazy-lock.json
+#
+# Usage: scripts/sync-plugins
+# Environment: NVIM selects the binary (default: nvim on PATH); VERSIONS_ENV overrides
+#              scripts/versions.env; XDG_* and NVIM_APPNAME as Neovim reads them.
+# Exit codes: 0 in sync, 1 a step failed, 2 refused (prerequisite or precondition).
+
+set -euo pipefail
+
+say() { echo "sync-plugins: $*"; }
+refuse() {
+  echo "sync-plugins: $*" >&2
+  exit 2
+}
+fail() {
+  echo "sync-plugins: FAILED: $*" >&2
+  exit 1
+}
+
+case "${1:-}" in
+  "") ;;
+  -h | --help) sed -n '2,/^# Exit codes:/p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+  *) refuse "unknown option: $1 (see --help)" ;;
+esac
+
+# Git exports GIT_DIR and GIT_INDEX_FILE to hooks; with them set, git commands here
+# would act on the committing repository instead of the paths they are given.
+# shellcheck disable=SC2046 # word splitting is intended: one variable name per word
+unset $(git rev-parse --local-env-vars 2>/dev/null)
+REPO="$(cd "$(dirname "$0")/.." && pwd -P)"
+VERSIONS_ENV="${VERSIONS_ENV:-$REPO/scripts/versions.env}"
+# shellcheck source-path=SCRIPTDIR source=versions.env
+. "$VERSIONS_ENV" || refuse "cannot read $VERSIONS_ENV"
+NVIM="${NVIM:-nvim}"
+
+version_lt() {
+  [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$1" "$2" | sort -V | head -1)" = "$1" ]
+}
+
+# --- 1. prerequisites -------------------------------------------------------------
+
+command -v "$NVIM" >/dev/null 2>&1 || refuse "nvim not found ($NVIM)"
+NVIM_VERSION="$("$NVIM" --version | head -1 | sed -n 's/^NVIM v\([0-9][0-9.]*\).*/\1/p')"
+[ -n "$NVIM_VERSION" ] || refuse "cannot read the version of $NVIM"
+version_lt "$NVIM_VERSION" "$NVIM_MIN" && refuse "Neovim $NVIM_VERSION is older than the required $NVIM_MIN"
+command -v tree-sitter >/dev/null 2>&1 || refuse "the tree-sitter CLI is not on PATH (needed to build parsers)"
+TS_VERSION="$(tree-sitter --version | awk '{print $2}')"
+if [ -n "$TREE_SITTER_MIN" ] && version_lt "$TS_VERSION" "$TREE_SITTER_MIN"; then
+  refuse "tree-sitter $TS_VERSION is older than the required $TREE_SITTER_MIN"
+fi
+command -v cc >/dev/null 2>&1 || refuse "no C compiler (cc) on PATH (needed to build parsers)"
+command -v git >/dev/null 2>&1 || refuse "git is not on PATH"
+
+# The config and data dirs Neovim itself would use.
+paths="$("$NVIM" --clean --headless \
+  +'lua io.stdout:write(vim.fn.stdpath("config") .. "\n" .. vim.fn.stdpath("data"))' +qa 2>/dev/null)" ||
+  refuse "cannot ask $NVIM for its config and data directories"
+CONFIG_DIR="$(printf '%s\n' "$paths" | sed -n 1p)"
+DATA_DIR="$(printf '%s\n' "$paths" | sed -n 2p)"
+[ -n "$CONFIG_DIR" ] && [ -n "$DATA_DIR" ] || refuse "cannot read Neovim's config and data directories"
+if [ ! -d "$CONFIG_DIR" ] || [ "$(cd "$CONFIG_DIR" && pwd -P)" != "$REPO" ]; then
+  refuse "Neovim loads the config at $CONFIG_DIR, not this checkout ($REPO). Run the copy there, or point" \
+    "XDG_CONFIG_HOME (or NVIM_APPNAME) at this checkout."
+fi
+say "Neovim $NVIM_VERSION, tree-sitter $TS_VERSION, config $CONFIG_DIR, data $DATA_DIR"
+
+# --- 2. the lockfile must be the committed one --------------------------------------
+
+git -C "$REPO" diff --quiet -- lazy-lock.json ||
+  refuse "lazy-lock.json has uncommitted changes. Commit them, or discard them: git -C $REPO checkout -- lazy-lock.json"
+
+# From here on lazy may rewrite the lockfile. It was the committed one a moment ago, so a
+# failed run puts it back, and the retry does not trip over the check above.
+restore_lockfile() {
+  local rc=$?
+  if [ "$rc" -ne 0 ] && ! git -C "$REPO" diff --quiet -- lazy-lock.json; then
+    git -C "$REPO" checkout -- lazy-lock.json && echo "sync-plugins: put the committed lazy-lock.json back" >&2
+  fi
+  exit "$rc"
+}
+trap restore_lockfile EXIT
+
+# run_phase NAME: one Neovim process running a phase of test/smoke/bootstrap.lua
+# (plugins: restore to the lockfile; tools: Mason packages, then parsers)
+run_phase() {
+  local rc=0
+  SMOKE_BOOTSTRAP_PHASE="$1" "$NVIM" --headless -c "luafile $REPO/test/smoke/bootstrap.lua" </dev/null || rc=$?
+  return "$rc"
+}
+
+# --- 3 and 4. restore, twice ---------------------------------------------------------
+
+ts="$DATA_DIR/lazy/nvim-treesitter"
+# On master, parser/ and parser-info/ hold tracked files. If they were deleted (an older
+# version of the upgrade notes said to), lazy sees local changes and will not check out main.
+if [ -f "$ts/lua/nvim-treesitter/configs.lua" ]; then
+  deleted="$(git -C "$ts" ls-files --deleted -- parser parser-info)"
+  if [ -n "$deleted" ]; then
+    say "putting back nvim-treesitter master's tracked files so lazy can move it to main: $(echo "$deleted" | tr '\n' ' ')"
+    git -C "$ts" checkout -- parser parser-info
+  fi
+fi
+
+say "restoring plugins (installs missing ones)"
+run_phase plugins || fail "plugin restore"
+if ! git -C "$REPO" diff --quiet -- lazy-lock.json; then
+  say "lazy rewrote lazy-lock.json from the installed commits; restoring again from the committed file"
+  git -C "$REPO" checkout -- lazy-lock.json
+  run_phase plugins || fail "plugin restore"
+fi
+
+# --- 5. stale master parsers (F17) -------------------------------------------------
+
+[ -f "$ts/lua/nvim-treesitter/configs.lua" ] && fail "nvim-treesitter is still on master after the restore"
+for dir in "$ts/parser" "$ts/parser-info"; do
+  if [ -e "$dir" ]; then
+    say "removing $dir (left by nvim-treesitter master; it would load ahead of main's parsers)"
+    rm -rf "$dir"
+  fi
+done
+
+# --- 6. Mason packages and parsers ---------------------------------------------------
+
+say "installing Mason packages and treesitter parsers"
+run_phase tools || fail "Mason packages or parsers"
+
+# --- 7. clean ------------------------------------------------------------------------
+
+say "removing plugins the config no longer uses"
+"$NVIM" --headless -c 'lua require("lazy").clean({ wait = true, show = false })' -c 'qall!' </dev/null ||
+  fail "Lazy clean"
+
+# --- 8. the lockfile is unchanged ------------------------------------------------------
+
+if ! git -C "$REPO" diff --exit-code -- lazy-lock.json; then
+  fail "lazy-lock.json changed (diff above): an installed plugin is not at its locked commit"
+fi
+say "OK: plugins at their lazy-lock.json commits, Mason packages and parsers installed"

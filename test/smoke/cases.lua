@@ -147,6 +147,237 @@ local function inert_checks(t)
   end
 end
 
+-- nvim-treesitter `main` (F2, F3, F24): textobject maps are buffer-local, folds use the
+-- native foldexpr, and the master-era maps are gone, so the built-in motions come back.
+local function treesitter_checks(t)
+  local m = vim.fn.maparg("]m", "n", false, true)
+  if m.buffer ~= 1 or not m.callback then
+    t.fail("python:textobjects", ("]m is %s, want a buffer-local textobjects mapping"):format(vim.inspect(m)))
+  end
+  if vim.wo.foldexpr ~= "v:lua.vim.treesitter.foldexpr()" then
+    t.fail("python:folds", ("foldexpr=%s, want v:lua.vim.treesitter.foldexpr()"):format(vim.wo.foldexpr))
+  end
+  for lhs, want in pairs({ ["<leader>tc"] = "Inspect<CR>", ["<leader>tp"] = "InspectTree<CR>" }) do
+    local rhs = vim.fn.maparg(lhs, "n")
+    if not rhs:find(want, 1, true) then
+      t.fail("treesitter:keymaps", ("%s maps to %q, want :%s"):format(lhs, rhs, want))
+    end
+  end
+  for _, lhs in ipairs({ "<leader>df", "<leader>dF" }) do
+    local rhs = vim.fn.maparg(lhs, "n")
+    if rhs ~= "" then
+      t.fail("treesitter:keymaps", ("%s maps to %q; it was removed"):format(lhs, rhs))
+    end
+  end
+  -- ]o stays vim-unimpaired's option toggle; ]s and ]z are Vim's spell and fold motions
+  for _, lhs in ipairs({ "]o", "]s", "]z" }) do
+    if vim.fn.maparg(lhs, "n", false, true).buffer == 1 then
+      t.fail("treesitter:keymaps", ("%s has a buffer-local mapping; the textobjects move was removed"):format(lhs))
+    end
+  end
+  for _, lhs in ipairs({ "]d", "[d" }) do
+    local desc = vim.fn.maparg(lhs, "n", false, true).desc or ""
+    if not desc:find("diagnostic", 1, true) then
+      t.fail("treesitter:keymaps", ("%s is %q, want the built-in diagnostic jump"):format(lhs, desc))
+    end
+  end
+end
+
+-- Plugin pins (F4, F18): aerial outlines the buffer on 0.12, and vim.ui.select is Telescope's
+-- (telescope-ui-select replaced dressing.nvim).
+local function plugin_checks(buf, t)
+  local okA, aerial = pcall(require, "aerial")
+  if not okA then
+    t.fail("python:aerial", "aerial.nvim is not available: " .. tostring(aerial))
+  else
+    local symbols = 0
+    vim.wait(10000, function()
+      symbols = #(require("aerial.data").get_or_create(buf).items or {})
+      return symbols > 0
+    end, 200)
+    if symbols == 0 then
+      t.fail("python:aerial", "aerial found no symbols in test_sample.py")
+    end
+  end
+
+  -- `gra` on the unused `import os` (ruff offers fixes); dressing sent code actions to its own window
+  vim.api.nvim_win_set_cursor(0, { 6, 7 })
+  pcall(vim.api.nvim_feedkeys, "gra", "mx", false)
+  local opened = vim.wait(10000, function()
+    return vim.bo.filetype == "TelescopePrompt"
+  end, 50)
+  if opened then
+    -- close it as a user does. Telescope enters insert mode by feeding "A", which waits in
+    -- the typeahead; closing any other way leaves it for the next case's keys to trigger.
+    pcall(vim.api.nvim_feedkeys, vim.keycode("<Esc><Esc>"), "mx", false)
+  else
+    t.fail("python:ui-select", ("gra opened filetype %q, want a Telescope picker"):format(vim.bo.filetype))
+    vim.cmd("stopinsert")
+    vim.cmd("silent! close")
+  end
+  if package.loaded["dressing"] then
+    t.fail("python:ui-select", "dressing.nvim is loaded; telescope-ui-select replaces it")
+  end
+  -- Telescope's history database lives in this Neovim's data dir (F35): a hard-coded
+  -- ~/.local/share path breaks fresh machines and escapes the gate's sandbox
+  local history = vim.tbl_get(require("telescope.config").values, "history", "path") or ""
+  local data = vim.fn.stdpath("data")
+  if vim.fn.fnamemodify(history, ":p"):sub(1, #data) ~= data then
+    t.fail("python:telescope", ("history.path is %s, want a file under %s"):format(history, data))
+  end
+  vim.wait(1000, function()
+    return vim.bo.filetype == "python"
+  end, 50)
+  vim.cmd("stopinsert")
+  vim.cmd("silent buffer " .. buf)
+  vim.api.nvim_win_set_cursor(0, { 1, 0 })
+end
+
+-- Keymap docs against the running config (F20, F16, #7). docs/KEYMAPS.md is written by hand;
+-- this keeps it honest in both directions: every documented key resolves with maparg in its
+-- documented modes, and every mapping with a desc under the main prefixes is documented.
+-- Runs in the Python buffer, so buffer-local maps (LSP, textobjects, gitsigns) are there.
+
+-- Documented keys that are Vim commands rather than mappings
+local doc_builtins = { ["<C-o>"] = true }
+
+local doc_modes = { normal = "n", insert = "i", visual = "x", pending = "o", operator = "o", terminal = "t" }
+
+---Raw bytes of a documented key, with <Leader> and <LocalLeader> expanded.
+---@param key string
+---@return string
+local function key_raw(key)
+  local k = key:gsub("<[Ll]eader>", vim.g.mapleader or "\\")
+  k = k:gsub("<[Ll]ocal[Ll]eader>", vim.g.maplocalleader or "\\")
+  return vim.keycode(k)
+end
+
+---Rows of every Key | Mode | ... table in docs/KEYMAPS.md:
+---{ keys = {...}, modes = {...}, line = n, section = "<## heading>" }
+local function doc_rows()
+  local rows = {}
+  local path = vim.fn.stdpath("config") .. "/docs/KEYMAPS.md"
+  local in_table = false
+  local section = ""
+  for lnum, line in ipairs(vim.fn.readfile(path)) do
+    local cells = vim.split(line, "|", { plain = true })
+    section = line:match("^## (.+)") or section
+    if line:match("^|%s*Key%s*|%s*Mode%s*|") then
+      in_table = true
+    elseif not line:match("^|") then
+      in_table = false
+    elseif in_table and not line:match("^|%s*%-") then
+      local keys = {}
+      -- code spans: `x` or `` x `` (for keys that contain a backtick)
+      for span in (cells[2] or ""):gmatch("``(.-)``") do
+        table.insert(keys, vim.trim(span))
+      end
+      if #keys == 0 then
+        for span in (cells[2] or ""):gmatch("`([^`]+)`") do
+          table.insert(keys, span)
+        end
+      end
+      local modes = {}
+      for word in (cells[3] or ""):lower():gmatch("%a+") do
+        if doc_modes[word] then
+          table.insert(modes, doc_modes[word])
+        end
+      end
+      table.insert(rows, { keys = keys, modes = modes, line = lnum, section = section })
+    end
+  end
+  return rows
+end
+
+---@param buf integer
+---@param t table
+---@param markdown boolean true in the Markdown buffer: check the doc's Markdown section and
+---  the buffer's own maps; false in the Python buffer: everything else, and the global maps
+local function keymap_doc_checks(buf, t, markdown)
+  if not markdown then
+    -- gitsigns attaches asynchronously; its maps are part of what the doc lists
+    vim.wait(10000, function()
+      return vim.fn.maparg("<Leader>shp", "n") ~= ""
+    end, 100)
+
+    -- #7: the hunk actions call gitsigns instead of typing keys into the buffer
+    for _, mode in ipairs({ "n", "x" }) do
+      for _, lhs in ipairs({ "<Leader>shs", "<Leader>shr" }) do
+        local m = vim.fn.maparg(lhs, mode, false, true)
+        if not m.callback then
+          t.fail("keymaps:gitsigns", ("%s (%s) maps to %s, want a gitsigns call"):format(lhs, mode, vim.inspect(m.rhs)))
+        end
+      end
+    end
+  end
+
+  local documented = {}
+  for _, row in ipairs(doc_rows()) do
+    for _, key in ipairs(row.keys) do
+      if not key:find("{", 1, true) then
+        documented[key_raw(key)] = true
+        if not doc_builtins[key] and (row.section == "Markdown") == markdown then
+          for _, mode in ipairs(row.modes) do
+            if vim.fn.maparg(key, mode) == "" then
+              t.fail(
+                "keymaps:documented",
+                ("KEYMAPS.md:%d documents %s in mode %s, but it is not mapped"):format(row.line, key, mode)
+              )
+            end
+          end
+        end
+      end
+    end
+  end
+
+  local leader, localleader = vim.g.mapleader or "\\", vim.g.maplocalleader or "\\"
+  local function prefixed(raw)
+    if raw == leader or raw == localleader then
+      return false -- the leader key itself, which the doc's header names
+    end
+    local name = vim.fn.keytrans(raw)
+    return raw:sub(1, #leader) == leader
+      or raw:sub(1, #localleader) == localleader
+      or raw:sub(1, 1) == "\t"
+      or raw:sub(1, 1) == "g"
+      or name:match("^<F%d+>") ~= nil
+  end
+  local seen = {}
+  for _, mode in ipairs({ "n", "x" }) do
+    local maps = vim.api.nvim_buf_get_keymap(buf, mode)
+    if not markdown then
+      maps = vim.list_extend(maps, vim.api.nvim_get_keymap(mode))
+    end
+    for _, m in ipairs(maps) do
+      local raw = m.lhsraw or vim.keycode(m.lhs)
+      local name = vim.fn.keytrans(raw)
+      local trigger = (m.desc or ""):find("^which%-key%-trigger") ~= nil
+      if m.desc and not trigger and prefixed(raw) and not documented[raw] and not seen[name] then
+        seen[name] = true
+        t.fail("keymaps:undocumented", ("%s (%s, %q) is mapped but not in KEYMAPS.md"):format(name, mode, m.desc))
+      end
+    end
+  end
+  if markdown then
+    return
+  end
+
+  -- which-key labels (lua/plugins/whichkey.lua) name real mappings
+  local wk = vim.fn.readfile(vim.fn.stdpath("config") .. "/lua/plugins/whichkey.lua")
+  for lnum, line in ipairs(wk) do
+    local lhs = line:match('^%s*{%s*"([^"]+)",%s*desc%s*=')
+    if lhs and not doc_builtins[lhs] then
+      local mapped = false
+      for _, mode in ipairs({ "n", "x", "o" }) do
+        mapped = mapped or vim.fn.maparg(lhs, mode) ~= ""
+      end
+      if not mapped then
+        t.fail("keymaps:whichkey", ("whichkey.lua:%d labels %s, which is not mapped"):format(lnum, lhs))
+      end
+    end
+  end
+end
+
 ---@type SmokeCase[]
 local cases = {
   {
@@ -157,8 +388,10 @@ local cases = {
     textobjects = true,
     folds = true,
     settings = { basedpyright = { ["basedpyright.analysis.typeCheckingMode"] = "basic" } },
-    -- ruff runs as an LSP server only, so there is no nvim-lint "ruff" namespace
-    diags = { ["lsp:basedpyright"] = 4, ["lsp:ruff"] = 4, ruff = false },
+    -- ruff runs as an LSP server only, so there is no nvim-lint "ruff" namespace. Its count
+    -- is not pinned: ruff's default rules grow between releases (0.17 adds PIE790, giving 5),
+    -- and python:duplicates already catches a second owner.
+    diags = { ["lsp:basedpyright"] = 4, ["lsp:ruff"] = true, ruff = false },
     requests = {
       { method = "textDocument/definition", line = 35, col = 13, expect_line = 10 },
       { method = "textDocument/hover", line = 35, col = 13 },
@@ -204,6 +437,9 @@ local cases = {
         t.fail("python:textobjects", ("vaf from line 12 selected %d-%d, want 10-13 (%s)"):format(s, e, tostring(err)))
       end
       vim.api.nvim_win_set_cursor(0, { 1, 0 })
+      treesitter_checks(t)
+      plugin_checks(buf, t)
+      keymap_doc_checks(buf, t, false)
 
       -- a restarted server must get the same settings as the first start
       local before = vim.lsp.get_clients({ bufnr = 0, name = "basedpyright" })[1]
@@ -330,6 +566,9 @@ local cases = {
       -- bo.commentstring metadata, which native gc reads before 'commentstring'
       comment_check(t, 10, "^{/%* <span>{upper}</span> %*/}$")
       comment_check(t, 7, "^// const upper")
+      if package.loaded["ts_context_commentstring"] then
+        t.fail("tsx:comment", "nvim-ts-context-commentstring is loaded; the jsx query's metadata replaces it")
+      end
       vim.cmd("silent edit!")
     end,
   },
@@ -348,7 +587,8 @@ local cases = {
     clients = { "bashls" },
     lang = "bash",
     textobjects = true,
-    diags = { shellcheck_zsh = 3 },
+    -- bash-language-server 5.8+ shellchecks zsh too (as bash), so it owns zsh like sh and bash
+    diags = { ["lsp:bashls"] = 3, shellcheck_zsh = false },
   },
   {
     name = "yaml",
@@ -402,6 +642,11 @@ local cases = {
       then
         t.fail("markdown:glow", ":Glow, <leader>mg or <Leader>p still exists; glow.nvim was removed")
       end
+      -- markdown stays unfolded (vim-markdown.lua disables its folding; treesitter folds skip it)
+      if vim.wo.foldmethod ~= "manual" then
+        t.fail("markdown:folds", ("foldmethod=%s, want manual"):format(vim.wo.foldmethod))
+      end
+      keymap_doc_checks(buf, t, true)
     end,
   },
   {
@@ -411,6 +656,11 @@ local cases = {
     clients = {},
     lang = "sql",
     check = function(buf, t)
+      -- sql has no textobjects query, so its ftplugin keeps `]]` (next BEGIN)
+      local brackets = vim.fn.maparg("]]", "n", false, true)
+      if brackets.buffer ~= 1 or not (brackets.rhs or ""):find("search(", 1, true) then
+        t.fail("sql:keymaps", ("]] is %s, want the sql ftplugin's search"):format(vim.inspect(brackets.rhs)))
+      end
       local function text()
         return table.concat(vim.api.nvim_buf_get_lines(buf, 0, -1, false), "\n")
       end

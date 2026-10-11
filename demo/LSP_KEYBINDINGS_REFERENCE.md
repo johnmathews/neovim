@@ -1,6 +1,6 @@
 # LSP Keybindings Reference - Complete
 
-This document shows all LSP-related keybindings available in Neovim v0.11+.
+This document shows all LSP-related keybindings available in this config on Neovim 0.12.
 
 ## Quick Help
 
@@ -8,44 +8,41 @@ This document shows all LSP-related keybindings available in Neovim v0.11+.
 
 Press `\` (LocalLeader) to see LocalLeader bindings.
 
-## Built-in Neovim v0.11+ LSP Keybindings
+## LSP Keybindings (Neovim 0.12 defaults and this config)
 
-These are **standard Neovim keybindings** that come with Neovim 0.11+ when LSP is configured.
+Most are Neovim 0.12's default LSP keys; `gd`, `gD`, `grr` and `gri` are set by this config (`lua/mappings.lua`). The
+checked reference is `docs/KEYMAPS.md`.
 
 ### Go-to Navigation (`g` prefix)
 
-| Key | Action | Behavior |
-|---|---|---|
-| `gd` | **Go to Definition** | Open Telescope picker, jumps through imports to actual definition |
-| `gD` | **Go to Declaration** | Jump to where symbol was declared (built-in) |
-| `gi` | **Go to Implementation** | Open Telescope picker to find implementations |
-| `grt` | **Go to Type Definition** | Jump to type definition (built-in) |
+| Key   | Action                    | Behavior                                                                |
+| ----- | ------------------------- | ----------------------------------------------------------------------- |
+| `gd`  | **Go to Definition**      | `vim.lsp.buf.definition()`; with several results, a quickfix list       |
+| `gD`  | **Go to Declaration**     | `vim.lsp.buf.declaration()`                                             |
+| `gri` | **Go to Implementation**  | Telescope implementations picker (jumps straight there if there is one) |
+| `grt` | **Go to Type Definition** | Jump to type definition (built-in)                                      |
 
 **Example:**
+
 ```
 main.py:22  calculate_total(numbers)
             ↑ cursor here, press gd
-# Opens Telescope picker showing:
-#   calculator.py:24  def calculate_total(...)  ← select this
 calculator.py:24  def calculate_total(...)
-                  ↑ jumps here (actual definition, not import)
+                  ↑ jumps here: the server resolves the import to the definition
 ```
 
-**Why Telescope for gd/gi?** 
-- The built-in `gd` would jump to import statement
-- Telescope picker resolves through imports to actual definitions
-- If multiple definitions found, you can choose which one
-- Press `<Esc>` to cancel the picker
+`gd` asks the language server, so it lands on the definition rather than the import line. `<C-o>` jumps back.
 
 ### References & Refactoring (`gr` prefix)
 
-| Key | Action | Behavior |
-|---|---|---|
-| `gr` | **Show References** | Open quickfix list with all usages |
-| `grn` | **Rename Symbol** | Rename variable/function workspace-wide |
-| `gra` | **Code Actions** | Show available refactoring/fixes |
+| Key   | Action              | Behavior                                                                     |
+| ----- | ------------------- | ---------------------------------------------------------------------------- |
+| `grr` | **Show References** | Telescope references picker (jumps straight there if there is one other use) |
+| `grn` | **Rename Symbol**   | Rename variable/function workspace-wide                                      |
+| `gra` | **Code Actions**    | Show available refactoring/fixes                                             |
 
 **Example:**
+
 ```
 calculator.py:14  def add(a, b):
                   ↑ cursor here, press grn
@@ -58,11 +55,12 @@ Result: Updates function name in:
 
 ### Documentation & Information
 
-| Key | Action | Behavior |
-|---|---|---|
+| Key | Action                  | Behavior                        |
+| --- | ----------------------- | ------------------------------- |
 | `K` | **Hover Documentation** | Show docstring/type info inline |
 
 **Example:**
+
 ```python
 result = add(100, 50)
          ↑ cursor here, press K
@@ -76,11 +74,12 @@ These are custom bindings added for convenience.
 
 ### Inlay Hints
 
-| Key | Mode | Action |
-|---|---|---|
+| Key          | Mode   | Action             |
+| ------------ | ------ | ------------------ |
 | `<leader>li` | Normal | Toggle inlay hints |
 
 Shows type annotations inline (when enabled):
+
 ```python
 def add(a: int | float, b: int | float) -> int | float:
             ^^^^^^^^^^^^^^^^^              ^^^^^^^^^^
@@ -89,8 +88,8 @@ def add(a: int | float, b: int | float) -> int | float:
 
 ### LSP Server Management
 
-| Key | Mode | Action |
-|---|---|---|
+| Key    | Mode   | Action             |
+| ------ | ------ | ------------------ |
 | `<F4>` | Normal | Restart LSP server |
 
 Useful when LSP gets stuck or needs to re-index files.
@@ -101,14 +100,15 @@ These use Telescope for searchable/filterable results.
 
 ### LocalLeader (`\` key) Bindings
 
-| Key | Action | Benefits |
-|---|---|---|
-| `\r` | Find References (Telescope) | Searchable list of all usages |
-| `\d` | Find Definitions (Telescope) | Searchable list of all definitions |
-| `\i` | Find Implementations (Telescope) | Searchable list of implementations |
-| `\t` | Show Active Tools | Lists active LSP/formatters/linters |
+| Key  | Action                           | Benefits                            |
+| ---- | -------------------------------- | ----------------------------------- |
+| `\r` | Find References (Telescope)      | Searchable list of all usages       |
+| `\d` | Find Definitions (Telescope)     | Searchable list of all definitions  |
+| `\i` | Find Implementations (Telescope) | Searchable list of implementations  |
+| `\t` | Show Active Tools                | Lists active LSP/formatters/linters |
 
 **Example:**
+
 ```
 main.py:22  calculate_total(numbers)
             ↑ cursor here, press \r
@@ -123,64 +123,57 @@ main.py:22  calculate_total(numbers)
 
 ### Selection Objects
 
-| Key | Action | Example |
-|---|---|---|
-| `af` | Select outer function | `vaf` = select entire function |
+| Key  | Action                | Example                           |
+| ---- | --------------------- | --------------------------------- |
+| `af` | Select outer function | `vaf` = select entire function    |
 | `if` | Select inner function | `vif` = select function body only |
-| `ac` | Select outer class | `vac` = select entire class |
-| `ic` | Select inner class | `vic` = select class body only |
+| `ac` | Select outer class    | `vac` = select entire class       |
+| `ic` | Select inner class    | `vic` = select class body only    |
 
 ### Navigation Objects
 
-| Key | Action |
-|---|---|
-| `]m` | Jump to next function start |
+| Key  | Action                          |
+| ---- | ------------------------------- |
+| `]m` | Jump to next function start     |
 | `[m` | Jump to previous function start |
-| `]]` | Jump to next class start |
-| `[[` | Jump to previous class start |
-| `]M` | Jump to next function end |
-| `[M` | Jump to previous function end |
+| `]]` | Jump to next class start        |
+| `[[` | Jump to previous class start    |
+| `]M` | Jump to next function end       |
+| `[M` | Jump to previous function end   |
 
 ## Treesitter Operations
 
 ### Parameter Swapping
 
-| Key | Action | Example |
-|---|---|---|
-| `<leader>tsa` | Swap next parameter | `func(a, b, c)` → `func(a, c, b)` |
+| Key           | Action                  | Example                           |
+| ------------- | ----------------------- | --------------------------------- |
+| `<leader>tsa` | Swap next parameter     | `func(a, b, c)` → `func(a, c, b)` |
 | `<leader>tsA` | Swap previous parameter | `func(a, b, c)` → `func(b, a, c)` |
-
-### Peek Definition
-
-| Key | Action |
-|---|---|
-| `<leader>df` | Peek function definition (without jumping) |
-| `<leader>dF` | Peek class definition |
 
 ## Diagnostics
 
-| Key | Action |
-|---|---|
-| `<Tab>dd` | Cycle diagnostic display modes |
-| `<leader>ta` | Show active LSP/formatters/linters for buffer |
+| Key              | Action                                        |
+| ---------------- | --------------------------------------------- |
+| `<LocalLeader>s` | Cycle diagnostic display modes                |
+| `<LocalLeader>t` | Show active LSP/formatters/linters for buffer |
 
 ## Quick Reference Table (All LSP Keys)
 
-| Category | Keys | Type |
-|---|---|---|
-| **Go-to** | `gd`, `gD`, `gri`, `grt` | Built-in |
-| **References** | `gr`, `grn`, `gra` | Built-in |
-| **Info** | `K` | Built-in |
-| **Hints** | `<leader>li` | Custom |
-| **LSP Mgmt** | `<F4>`, `<Tab>dd`, `<leader>ta` | Custom |
-| **Telescope** | `\r`, `\d`, `\i`, `\t` | Custom |
-| **Treesitter** | `af`, `if`, `ac`, `ic`, `]m`, `[m`, `]]`, `[[` | Treesitter |
-| **Swap** | `<leader>tsa`, `<leader>tsA` | Treesitter |
-| **Peek** | `<leader>df`, `<leader>dF` | Treesitter |
+| Category       | Keys                                           | Type                |
+| -------------- | ---------------------------------------------- | ------------------- |
+| **Go-to**      | `gd`, `gD`, `gri`, `grt`                       | Built-in and config |
+| **References** | `grr`, `grn`, `gra`                            | Built-in and config |
+| **Info**       | `K`                                            | Built-in            |
+| **Hints**      | `<leader>li`                                   | Custom              |
+| **LSP Mgmt**   | `<F4>`, `<LocalLeader>s`, `<LocalLeader>t`     | Custom              |
+| **Telescope**  | `\r`, `\d`, `\i`, `\t`                         | Custom              |
+| **Treesitter** | `af`, `if`, `ac`, `ic`, `]m`, `[m`, `]]`, `[[` | Treesitter          |
+| **Swap**       | `<leader>tsa`, `<leader>tsA`                   | Treesitter          |
 
 ## How to Discover Keybindings
 
 ### 1. In Neovim
+
 ```vim
 # Show Leader key bindings
 :help which-key
@@ -192,6 +185,7 @@ main.py:22  calculate_total(numbers)
 ```
 
 ### 2. Using which-key Popup
+
 - Press `<Space>` → shows all `<leader>` bindings
 - Press `\` → shows all `<LocalLeader>` bindings
 - Press `g` → shows all `g` prefix bindings
@@ -200,15 +194,17 @@ main.py:22  calculate_total(numbers)
 ## Tips & Best Practices
 
 ✅ **Combine keybindings:**
+
 ```
 gd             # Jump to definition
 <C-o>          # Go back (standard Vim jump list)
-gr             # See where it's called from
+grr            # See where it's called from
 grn            # Rename it everywhere
 gd             # Jump to updated definition
 ```
 
 ✅ **Use Telescope for complex searches:**
+
 ```
 \r             # Find all references (then filter with /)
 \d             # Find all definitions (then jump to right one)
@@ -216,25 +212,28 @@ gd             # Jump to updated definition
 ```
 
 ✅ **Understand the difference:**
+
 - `gd` = Jump to first definition
-- `gr` = List all references
+- `grr` = List all references
 - `grn` = Rename everywhere
 - `\d` = Searchable definition list (Telescope)
 
 ## Troubleshooting
 
 **Keybinding doesn't work:**
+
 1. Check `:LspInfo` - LSP must be attached
 2. Try `<F4>` to restart LSP
 3. Make sure you're not in insert mode (use `<Esc>` first)
 
 **which-key doesn't show descriptions:**
+
 1. Press `<Space>` and wait (not <Space> and release immediately)
 2. Check which-key is loaded: `:lua require('which-key')`
 3. Press `<F1>` inside which-key popup for more help
 
 **References show wrong locations:**
+
 1. LSP may still be indexing (wait a moment)
 2. Try `<F4>` to restart LSP
 3. Check `:LspInfo` for any errors
-

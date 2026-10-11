@@ -7,7 +7,8 @@
 # every message printed along the way. It never touches ~/.local/share/nvim.
 #
 # Usage: scripts/smoke [options]
-#   --seed-from DIR   clone DIR/lazy and DIR/mason into SMOKE_HOME (e.g. ~/.local/share/nvim)
+#   --seed-from DIR   clone DIR/lazy, DIR/mason and DIR/site (parsers) into SMOKE_HOME
+#                     (e.g. ~/.local/share/nvim)
 #   --bootstrap       restore plugins from lazy-lock.json, install Mason tools and parsers (network)
 #   --startup-only    check startup only (init, messages, tools); open no buffers
 #   --only LIST       comma-separated case names from test/smoke/cases.lua (e.g. python,lua)
@@ -15,6 +16,8 @@
 #   --fresh           delete SMOKE_HOME before running
 #   --strict          plugin deprecations fail instead of warn
 #   --no-xfail        ignore test/smoke/xfail.lua (shows every known failure)
+#   --expect-guard    with a Neovim older than 0.12: pass only if init.lua stops at its version
+#                     guard (exactly one ERROR, lazy.nvim never loaded, lazy-lock.json untouched)
 #   --home DIR        same as SMOKE_HOME=DIR
 #   --nvim PATH       same as NVIM=PATH
 #   --timeout SECS    watchdog timeout (default 300, or SMOKE_TIMEOUT)
@@ -43,6 +46,7 @@ FIXTURE=""
 FRESH=0
 STRICT=0
 NO_XFAIL=0
+EXPECT_GUARD=0
 TIMEOUT="${SMOKE_TIMEOUT:-300}"
 NVIM="${NVIM:-nvim}"
 HOME_ARG=""
@@ -57,6 +61,7 @@ while [ $# -gt 0 ]; do
     --fresh) FRESH=1; shift ;;
     --strict) STRICT=1; shift ;;
     --no-xfail) NO_XFAIL=1; shift ;;
+    --expect-guard) EXPECT_GUARD=1; shift ;;
     --home) HOME_ARG="${2:?--home needs a directory}"; shift 2 ;;
     --nvim) NVIM="${2:?--nvim needs a path}"; shift 2 ;;
     --timeout) TIMEOUT="${2:?--timeout needs seconds}"; shift 2 ;;
@@ -125,7 +130,8 @@ clone_tree() {
 
 if [ -n "$SEED_FROM" ]; then
   [ -d "$SEED_FROM/lazy" ] || die "--seed-from: $SEED_FROM/lazy does not exist"
-  for dir in lazy mason; do
+  # site/ holds the parsers nvim-treesitter main builds
+  for dir in lazy mason site; do
     if [ -d "$SEED_FROM/$dir" ] && [ ! -d "$DATA/$dir" ]; then
       echo "smoke: seeding $DATA/$dir from $SEED_FROM/$dir"
       clone_tree "$SEED_FROM/$dir" "$DATA/$dir"
@@ -202,6 +208,15 @@ run_nvim() {
   fi
   return "$rc"
 }
+
+if [ "$EXPECT_GUARD" -eq 1 ]; then
+  echo "smoke: nvim $NVIM_VERSION  home=$SMOKE_HOME  expecting the version guard"
+  rc=0
+  run_nvim "$SMOKE_STDERR" --headless -c "luafile $CFG/test/smoke/guard.lua" || rc=$?
+  [ "$rc" -eq 3 ] && { echo "smoke: TIMEOUT after ${TIMEOUT}s" >&2; exit 3; }
+  [ "$rc" -le 1 ] || { echo "smoke: unexpected nvim exit code $rc" >&2; exit 2; }
+  exit "$rc"
+fi
 
 if [ "$BOOTSTRAP" -eq 1 ]; then
   echo "smoke: bootstrapping $SMOKE_HOME with $NVIM (v$NVIM_VERSION)"

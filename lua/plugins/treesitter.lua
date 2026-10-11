@@ -1,20 +1,19 @@
--- Treesitter: Advanced syntax highlighting and text objects
+-- Treesitter: highlighting, folds, indent and text objects (nvim-treesitter `main` branch).
+-- `main` needs Neovim 0.12, plus the tree-sitter CLI (0.26.1+) and a C compiler to build
+-- parsers. It has no modules: each buffer is started by the FileType autocmd below.
 
--- Skip the deprecated context_commentstring treesitter module so it never
--- attaches (it errors on startup). ts_context_commentstring is configured
--- directly in plugins/comment.lua instead. Must be set before setup/attach.
-vim.g.skip_ts_context_commentstring_module = true
-
-local status_ok, _ = pcall(require, "nvim-treesitter.configs")
-if not status_ok then
-  return
+local ok, ts = pcall(require, "nvim-treesitter")
+if not ok or type(ts.install) ~= "function" then
+  vim.notify(
+    "nvim-treesitter `main` not found (is the old `master` branch still checked out?). Run scripts/sync-plugins.",
+    vim.log.levels.ERROR
+  )
+  return {}
 end
 
--- NOTE: `latex` is intentionally omitted. Its parser is marked
--- `requires_generate_from_grammar`, so it needs the `tree-sitter` CLI to build
--- and errors on startup when the CLI is absent (e.g. fresh Linux VMs). LaTeX
--- highlighting is unused here and no plugin depends on this parser, so we skip it.
-local ensure_installed = {
+-- `latex` is left out: nothing here uses its highlighting (vimtex has its own syntax).
+local parsers = {
+  "bash",
   "css",
   "fish",
   "html",
@@ -24,121 +23,122 @@ local ensure_installed = {
   "markdown",
   "markdown_inline",
   "python",
-  "toml",
   "query",
+  "sql",
+  "toml",
   "tsx",
   "typescript",
+  "vim",
+  "vimdoc",
   "yaml",
 }
 
-require("nvim-treesitter.configs").setup({
-  sync_install = false,
-  ignore_install = {},
-  autopairs = {
-    enable = true,
-  },
-  -- NOTE: `context_commentstring` is intentionally NOT configured here. The
-  -- old nvim-treesitter module is deprecated and errors on attach. It is now
-  -- configured via `require("ts_context_commentstring").setup {}` in
-  -- plugins/comment.lua, with `vim.g.skip_ts_context_commentstring_module`
-  -- set to skip the legacy module entirely.
-  fold = {
-    enable = true,
-  },
-  highlight = {
-    enable = true,
-    disable = { "" },
-    additional_vim_regex_highlighting = false,
-  },
-  -- https://github.com/nvim-treesitter/nvim-treesitter-textobjects
-  textobjects = {
-    lsp_interop = {
-      enable = true,
-      border = "none",
-      floating_preview_opts = {},
-      peek_definition_code = {
-        ["<leader>df"] = "@function.outer",
-        ["<leader>dF"] = "@class.outer",
-      },
-    },
-    select = {
-      enable = true,
-      lookahead = true,
-      keymaps = {
-        ["af"] = "@function.outer",
-        ["if"] = "@function.inner",
-        ["ac"] = "@class.outer",
-        ["ic"] = { query = "@class.inner", desc = "Select inner part of a class region" },
-      },
-    },
-    swap = {
-      enable = true,
-      swap_next = {
-        ["<leader>tsa"] = "@parameter.inner",
-      },
-      swap_previous = {
-        ["<leader>tsA"] = "@parameter.inner",
-      },
-    },
-    move = {
-      enable = true,
-      set_jumps = true, -- whether to set jumps in the jumplist
-      goto_next_start = {
-        ["]m"] = "@function.outer",
-        ["]]"] = { query = "@class.outer", desc = "Next class start" },
-        --
-        -- You can use regex matching (i.e. lua pattern) and/or pass a list in a "query" key to group multiple queires.
-        ["]o"] = "@loop.*",
-        -- ["]o"] = { query = { "@loop.inner", "@loop.outer" } }
-        --
-        -- You can pass a query group to use query from `queries/<lang>/<query_group>.scm file in your runtime path.
-        -- Below example nvim-treesitter's `locals.scm` and `folds.scm`. They also provide highlights.scm and indent.scm.
-        ["]s"] = { query = "@scope", query_group = "locals", desc = "Next scope" },
-        ["]z"] = { query = "@fold", query_group = "folds", desc = "Next fold" },
-      },
-      goto_next_end = {
-        ["]M"] = "@function.outer",
-        ["]["] = "@class.outer",
-      },
-      goto_previous_start = {
-        ["[m"] = "@function.outer",
-        ["[["] = "@class.outer",
-      },
-      goto_previous_end = {
-        ["[M"] = "@function.outer",
-        ["[]"] = "@class.outer",
-      },
-      -- Below will go to either the start or the end, whichever is closer.
-      -- Use if you want more granular movements
-      -- Make it even more gradual by adding multiple queries and regex.
-      goto_next = {
-        ["]d"] = "@conditional.outer",
-      },
-      goto_previous = {
-        ["[d"] = "@conditional.outer",
-      },
-    },
-  },
-  rainbow = {
-    enable = true,
-    extended_mode = true, -- Also highlight non-bracket delimiters like html tags, boolean or table: lang -> boolean
-    max_file_lines = nil, -- Do not enable for files with more than n lines, int
-  },
-  indent = {
-    enable = true, -- experimental
-    disable = { "yaml" },
-  },
-  ensure_installed = ensure_installed,
-  auto_install = true,
-  query_linter = {
-    enable = true,
-    use_virtual_text = true,
-    lint_events = { "BufWrite", "CursorHold" },
-  },
+-- Install what is missing. Building a parser needs the tree-sitter CLI. Only built parsers
+-- count: get_installed() also lists query directories, so a language whose parser is gone
+-- would look installed, and force makes install() rebuild it.
+local installed = {}
+for _, lang in ipairs(ts.get_installed("parsers")) do
+  installed[lang] = true
+end
+local missing = vim.tbl_filter(function(lang)
+  return not installed[lang]
+end, parsers)
+if #missing > 0 then
+  if vim.fn.executable("tree-sitter") == 1 then
+    ts.install(missing, { force = true })
+  else
+    vim.notify(
+      "tree-sitter CLI not found: cannot install treesitter parsers " .. table.concat(missing, ", "),
+      vim.log.levels.WARN
+    )
+  end
+end
+
+-- zsh has no parser of its own; the bash parser is close enough.
+vim.treesitter.language.register("bash", { "zsh" })
+
+-- yaml and markdown keep their runtime indent scripts
+local no_ts_indent = { yaml = true, markdown = true }
+-- folds only where they were enabled before; markdown stays unfolded (vim-markdown.lua)
+local fold_filetypes = { python = true, yaml = true, lua = true }
+
+-- https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+local textobjects_ok, textobjects = pcall(require, "nvim-treesitter-textobjects")
+if textobjects_ok then
+  textobjects.setup({
+    select = { lookahead = true },
+    move = { set_jumps = true }, -- whether to set jumps in the jumplist
+  })
+end
+
+local selects = {
+  { "af", "@function.outer", "Function (outer)" },
+  { "if", "@function.inner", "Function (inner)" },
+  { "ac", "@class.outer", "Class (outer)" },
+  { "ic", "@class.inner", "Class (inner)" },
+}
+
+local moves = {
+  { "]m", "goto_next_start", "@function.outer", "Next function start" },
+  { "]]", "goto_next_start", "@class.outer", "Next class start" },
+  { "]M", "goto_next_end", "@function.outer", "Next function end" },
+  { "][", "goto_next_end", "@class.outer", "Next class end" },
+  { "[m", "goto_previous_start", "@function.outer", "Previous function start" },
+  { "[[", "goto_previous_start", "@class.outer", "Previous class start" },
+  { "[M", "goto_previous_end", "@function.outer", "Previous function end" },
+  { "[]", "goto_previous_end", "@class.outer", "Previous class end" },
+}
+
+---Buffer-local textobject maps, so a runtime ftplugin's `]]` or `]m` cannot shadow them.
+---@param buf integer
+local function map_textobjects(buf)
+  local select = require("nvim-treesitter-textobjects.select")
+  local move = require("nvim-treesitter-textobjects.move")
+  local swap = require("nvim-treesitter-textobjects.swap")
+  for _, s in ipairs(selects) do
+    vim.keymap.set({ "x", "o" }, s[1], function()
+      select.select_textobject(s[2], "textobjects")
+    end, { buffer = buf, desc = s[3] })
+  end
+  for _, m in ipairs(moves) do
+    vim.keymap.set({ "n", "x", "o" }, m[1], function()
+      move[m[2]](m[3], "textobjects")
+    end, { buffer = buf, desc = m[4] })
+  end
+  vim.keymap.set("n", "<leader>tsa", function()
+    swap.swap_next("@parameter.inner")
+  end, { buffer = buf, desc = "Swap next parameter" })
+  vim.keymap.set("n", "<leader>tsA", function()
+    swap.swap_previous("@parameter.inner")
+  end, { buffer = buf, desc = "Swap previous parameter" })
+end
+
+vim.api.nvim_create_autocmd("FileType", {
+  group = vim.api.nvim_create_augroup("UserTreesitter", { clear = true }),
+  callback = function(args)
+    local lang = vim.treesitter.language.get_lang(args.match)
+    if not lang or not vim.treesitter.language.add(lang) then
+      return
+    end
+    if not pcall(vim.treesitter.start, args.buf, lang) then
+      return
+    end
+    if fold_filetypes[args.match] and vim.api.nvim_get_current_buf() == args.buf then
+      vim.wo[0][0].foldmethod = "expr"
+      vim.wo[0][0].foldexpr = "v:lua.vim.treesitter.foldexpr()"
+      vim.wo[0][0].foldlevel = 99
+    end
+    if not no_ts_indent[args.match] then
+      vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+    end
+    -- only where a textobjects query exists; elsewhere the ftplugin's maps stay (sql `]]`)
+    if textobjects_ok and vim.treesitter.query.get(lang, "textobjects") then
+      map_textobjects(args.buf)
+    end
+  end,
 })
 
-local parser_config = require("nvim-treesitter.parsers").get_parser_configs()
-parser_config.tsx.filetype_to_parsername = { "javascript", "typescript.tsx" }
+vim.keymap.set("n", "<leader>tc", "<cmd>Inspect<CR>", { desc = "Treesitter: highlight groups under cursor" })
+vim.keymap.set("n", "<leader>tp", "<cmd>InspectTree<CR>", { desc = "Treesitter: inspect syntax tree" })
 
-local map = vim.api.nvim_set_keymap
-map("n", "<leader>tc", ":TSHighlightCapturesUnderCursor<CR>", KeymapOptions("Treesitter item under cursor"))
+return { parsers = parsers }

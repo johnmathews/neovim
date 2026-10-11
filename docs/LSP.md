@@ -8,24 +8,24 @@ Complete reference for Language Server Protocol (LSP), formatters, and linters c
 
 ## How Servers Start
 
-LSP servers use Neovim's native configuration (`vim.lsp.config` and `vim.lsp.enable`, Neovim 0.11+). nvim-lspconfig
-only supplies a default config file per server (`lsp/<server>.lua` on the runtimepath). Its old
-`require("lspconfig")[server].setup()` framework is deprecated and is not used.
+LSP servers use Neovim's native configuration (`vim.lsp.config` and `vim.lsp.enable`). nvim-lspconfig only supplies a
+default config file per server (`lsp/<server>.lua` on the runtimepath). Its old `require("lspconfig")[server].setup()`
+framework is deprecated and is not used.
 
 `lua/plugins/lsp.lua` does four things:
 
 1. `vim.lsp.config("*", { capabilities = ... })` gives every server the nvim-cmp completion capabilities.
 2. One `LspAttach` autocmd (augroup `UserLspAttach`) runs for every client that attaches (see below).
-3. `mason-lspconfig.setup({ ensure_installed = servers, automatic_enable = false })` makes Mason install the servers.
-   It does not start them.
+3. `mason-lspconfig.setup({ ensure_installed = servers, automatic_enable = false })` makes Mason install the servers. It
+   does not start them.
 4. `vim.lsp.enable(servers)` starts exactly the servers in the list, on every machine.
 
 The enabled servers are an explicit list, so the set that starts does not depend on what Mason happens to hold:
 
 `lua_ls`, `basedpyright`, `ruff`, `ts_ls`, `bashls`, `yamlls`, `jsonls`, `dockerls`, `taplo`, `marksman`.
 
-Everything else Mason may have installed (html, jinja_lsp, lemminx, clangd, rust_analyzer, svelte, bicep, sqls, and
-the stylua, eslint and biome servers) stays off. SQL deliberately has no LSP: vim-dadbod completes and sqlfluff formats.
+Everything else Mason may have installed (html, jinja_lsp, lemminx, clangd, rust_analyzer, svelte, bicep, sqls, and the
+stylua, eslint and biome servers) stays off. SQL deliberately has no LSP: vim-dadbod completes and sqlfluff formats.
 
 ### Merge order
 
@@ -37,21 +37,21 @@ A server's final config is merged, later winning, from:
 
 Each file in `after/lsp/` returns only the fields it changes:
 
-| File | Overrides |
-| --- | --- |
-| `after/lsp/basedpyright.lua` | `typeCheckingMode = "basic"`, auto-import completions, push diagnostics (F31) |
-| `after/lsp/bashls.lua` | filetypes `sh`, `bash`, `zsh`; glob pattern; shellcheck `-x` |
-| `after/lsp/lua_ls.lua` | LuaJIT runtime, Neovim globals, hints, no telemetry |
-| `after/lsp/yamlls.lua` | validation on, formatting off (conform owns YAML formatting), no key-order warnings |
+| File                         | Overrides                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------------- |
+| `after/lsp/basedpyright.lua` | `typeCheckingMode = "basic"`, auto-import completions, push diagnostics (F31)       |
+| `after/lsp/bashls.lua`       | filetypes `sh`, `bash`, `zsh`; glob pattern; shellcheck `-x`                        |
+| `after/lsp/lua_ls.lua`       | LuaJIT runtime, Neovim globals, hints, no telemetry                                 |
+| `after/lsp/yamlls.lua`       | validation on, formatting off (conform owns YAML formatting), no key-order warnings |
 
-Root detection and single-file support come from nvim-lspconfig's defaults. Inspect the merged result of a running
-client with `:lua vim.print(vim.lsp.get_clients({ bufnr = 0 })[1].config.settings)`.
+Root detection and single-file support come from nvim-lspconfig's defaults. Inspect the merged result of a running client
+with `:lua vim.print(vim.lsp.get_clients({ bufnr = 0 })[1].config.settings)`.
 
 ### LspAttach
 
 The `LspAttach` autocmd replaces per-server `on_attach` functions. An `on_attach` in a server's config would replace the
-one nvim-lspconfig ships for that server (basedpyright has one), so this config never sets one. For each attaching
-client it:
+one nvim-lspconfig ships for that server (basedpyright has one), so this config never sets one. For each attaching client
+it:
 
 - attaches nvim-navic (breadcrumbs) when the client supports `textDocument/documentSymbol`
 - maps `<leader>li` (toggle inlay hints) buffer-locally when the client supports `textDocument/inlayHint`
@@ -67,30 +67,30 @@ border. Diagnostic floats also set `float.border` in `vim.diagnostic.config`.
 
 ## Quick Reference
 
-One owner per job: each language has one LSP server set, one formatter chain and one linter, so a finding is not
-reported twice by tools that check the same thing. (JSON is the exception: jsonls and jsonlint can both flag a syntax
-error such as a trailing comma.)
+One owner per job: each language has one LSP server set, one formatter chain and one linter, so a finding is not reported
+twice by tools that check the same thing. (JSON is the exception: jsonls and jsonlint can both flag a syntax error such
+as a trailing comma.)
 
-| Language       | LSP Server          | Formatter           | Linter            |
-| -------------- | ------------------- | ------------------- | ----------------- |
-| **Lua**        | lua_ls              | stylua              | luacheck          |
-| **Python**     | basedpyright + ruff | ruff_format         | ruff (LSP)        |
-| **JavaScript** | ts_ls               | biome               | eslint_d          |
-| **TypeScript** | ts_ls               | biome               | eslint_d          |
-| **Shell/Bash** | bashls              | shfmt               | shellcheck (via bashls) |
-| **Zsh**        | bashls              | shfmt               | shellcheck (nvim-lint, bash mode) |
-| **JSON**       | jsonls              | biome, jq           | jsonlint          |
-| **YAML**       | yamlls              | yamlfmt             | yamlls            |
-| **TOML**       | taplo               | taplo               | taplo             |
-| **Markdown**   | marksman            | prettierd           | markdownlint      |
-| **Docker**     | dockerls            | dockerls (LSP fallback) | dockerls      |
-| **SQL**        | -                   | sqlfluff            | -                 |
+| Language       | LSP Server          | Formatter               | Linter                             |
+| -------------- | ------------------- | ----------------------- | ---------------------------------- |
+| **Lua**        | lua_ls              | stylua                  | luacheck                           |
+| **Python**     | basedpyright + ruff | ruff_format             | ruff (LSP)                         |
+| **JavaScript** | ts_ls               | biome                   | eslint_d                           |
+| **TypeScript** | ts_ls               | biome                   | eslint_d                           |
+| **Shell/Bash** | bashls              | shfmt                   | shellcheck (via bashls)            |
+| **Zsh**        | bashls              | shfmt                   | shellcheck (via bashls, bash mode) |
+| **JSON**       | jsonls              | biome, jq               | jsonlint                           |
+| **YAML**       | yamlls              | yamlfmt                 | yamlls                             |
+| **TOML**       | taplo               | taplo                   | taplo                              |
+| **Markdown**   | marksman            | prettierd               | markdownlint                       |
+| **Docker**     | dockerls            | dockerls (LSP fallback) | dockerls                           |
+| **SQL**        | -                   | sqlfluff                | -                                  |
 
-Python lint comes from the ruff LSP server and sh/bash lint from bashls, so nvim-lint runs neither. Zsh is the one
-shell nvim-lint covers, because bashls does not shellcheck it. The smoke gate (`test/smoke/cases.lua`) asserts the
-diagnostic sources for Python, Lua, Bash, Zsh and Markdown, where a second owner has bitten before: nvim-lint
-running ruff or shellcheck next to the LSP server turns it red. The JavaScript, TypeScript, JSON and YAML cases only
-assert the LSP server's diagnostics, and TOML, Docker and SQL have no diagnostic expectation.
+Python lint comes from the ruff LSP server and sh, bash and zsh lint from bashls, so nvim-lint runs neither. The smoke
+gate (`test/smoke/cases.lua`) asserts the diagnostic sources for Python, Lua, Bash, Zsh and Markdown, where a second
+owner has bitten before: nvim-lint running ruff or shellcheck next to the LSP server turns it red. The JavaScript,
+TypeScript, JSON and YAML cases only assert the LSP server's diagnostics, and TOML, Docker and SQL have no diagnostic
+expectation.
 
 ---
 
@@ -100,8 +100,8 @@ assert the LSP server's diagnostics, and TOML, Docker and SQL have no diagnostic
 
 - **basedpyright**: types, hover, completions, go to definition and rename. Mode `basic` (`after/lsp/basedpyright.lua`).
   basedpyright reads `basedpyright.*` settings only; `python.*` analysis settings do nothing. It also pushes its
-  diagnostics: the override turns off dynamic registration of pull diagnostics, which Neovim 0.12 would otherwise
-  accept and which sometimes left a buffer with none of basedpyright's diagnostics.
+  diagnostics: the override turns off dynamic registration of pull diagnostics, which Neovim 0.12 would otherwise accept
+  and which sometimes left a buffer with none of basedpyright's diagnostics.
 - **ruff** (LSP): lint diagnostics and quick fixes.
 - **ruff_format** (conform): formatting, on save.
 - **mypy** is installed by Mason for per-project use and is not wired in.
@@ -119,10 +119,10 @@ assert the LSP server's diagnostics, and TOML, Docker and SQL have no diagnostic
 
 ### Shell
 
-- **bashls**: attaches to sh, bash and zsh (`after/lsp/bashls.lua`) and runs shellcheck itself when it is on `PATH`, for
-  sh and bash only. Its findings come with code actions.
-- **shellcheck_zsh** (nvim-lint): shellcheck in bash mode (`--shell=bash`) for zsh, which bashls does not shellcheck. It
-  is a copy of nvim-lint's shellcheck linter, so sh and bash keep the stock arguments.
+- **bashls**: attaches to sh, bash and zsh (`after/lsp/bashls.lua`) and runs shellcheck itself when it is on `PATH`. Its
+  findings come with code actions. From bash-language-server 5.8 it also shellchecks zsh, as bash (a `.zsh` file, a zsh
+  shebang or a `# shellcheck shell=` directive); 5.6 does not, so update it with `:MasonInstall bash-language-server` if
+  zsh files show no shellcheck findings.
 - **shfmt** (conform): formatting for sh and zsh.
 
 ### SQL
@@ -152,56 +152,27 @@ All LSP servers, formatters and linters are installed by **Mason** (`:Mason`).
 - Formatters and linters: `lua/plugins/mason.lua`, installed through mason-tool-installer on startup.
 - luacheck comes from the system (`brew install luacheck`); Mason installs markdownlint.
 
-| Component  | Location                          | Description                         |
-| ---------- | --------------------------------- | ----------------------------------- |
+| Component  | Location                          | Description                          |
+| ---------- | --------------------------------- | ------------------------------------ |
 | LSP setup  | `lua/plugins/lsp.lua`             | Capabilities, LspAttach, enable list |
-| Overrides  | `after/lsp/<server>.lua`          | Per-server settings                 |
-| Mason      | `lua/plugins/mason.lua`           | Tool installation                   |
-| Formatters | `lua/plugins/conform.lua`         | conform.nvim setup                  |
-| Linters    | `lua/plugins/nvim-lint.lua`       | nvim-lint setup                     |
-| Keymaps    | `lua/mappings.lua` + plugin files | LSP/format/lint keybinds            |
+| Overrides  | `after/lsp/<server>.lua`          | Per-server settings                  |
+| Mason      | `lua/plugins/mason.lua`           | Tool installation                    |
+| Formatters | `lua/plugins/conform.lua`         | conform.nvim setup                   |
+| Linters    | `lua/plugins/nvim-lint.lua`       | nvim-lint setup                      |
+| Keymaps    | `lua/mappings.lua` + plugin files | LSP/format/lint keybinds             |
 
 ---
 
 ## Keybindings
 
-### LSP Navigation (Built-in Neovim v0.11+)
+The LSP, formatting and linting keys are listed in [KEYMAPS.md](KEYMAPS.md), under "LSP & Code Actions" and "Formatting &
+Linting". That file is the one keymap reference, and the smoke gate checks it against the running config. In short:
+Neovim 0.12's built-in `gr*` keys and `K`, with `grr` and `gri` opening Telescope pickers and `gra` a Telescope dropdown;
+`<leader>li` toggles inlay hints where a server supports them; `<F4>` restarts the servers.
 
-| Key          | Action                                   |
-| ------------ | ---------------------------------------- |
-| `gd`         | Go to definition                         |
-| `gD`         | Go to declaration                        |
-| `gra`        | Code actions (quick fix, refactor, etc.) |
-| `grn`        | Rename symbol (workspace-wide)           |
-| `grt`        | Go to type definition                    |
-| `K`          | Hover documentation                      |
-| `<leader>li` | Toggle inlay hints (buffers whose server supports them) |
-| `<F4>`       | Restart LSP (`:LspRestart`)              |
-
-### Telescope-based LSP Navigation
-
-| Key              | Action                                               |
-| ---------------- | ---------------------------------------------------- |
-| `grr`            | Show references (Telescope picker)                   |
-| `gri`            | Go to implementation (Telescope picker)              |
-| `<LocalLeader>r` | Telescope: List all references                       |
-| `<LocalLeader>d` | Telescope: List all definitions                      |
-| `<LocalLeader>i` | Telescope: List all implementations                  |
-| `<Tab>b`         | Telescope: Workspace symbols (search across project) |
-
-### Formatting and Linting
-
-| Key          | Action                   |
-| ------------ | ------------------------ |
-| `<leader>cf` | Format file or selection |
-| `<leader>cl` | Run linter manually      |
-| `<leader>cL` | LSP panel (Trouble)      |
-
-Format on save runs every formatter in the Quick Reference except sqlfluff, and skips files over 200 KB. When a
-filetype has no conform formatter, both `<leader>cf` and format on save fall back to the LSP server
+Format on save runs every formatter in the Quick Reference except sqlfluff, and skips files over 200 KB. When a filetype
+has no conform formatter, both `<leader>cf` and format on save fall back to the LSP server
 (`default_format_opts = { lsp_format = "fallback" }`).
-
-The full keymap reference is `docs/KEYMAPS.md`.
 
 ---
 
@@ -237,8 +208,8 @@ for example `python.analysis.*` for basedpyright.
 ## Adding a New Language
 
 1. **Server:** add it to the `servers` list in `lua/plugins/lsp.lua`. That installs it through Mason and enables it.
-2. **Overrides (optional):** create `after/lsp/<server>.lua` returning only the fields that differ from
-   nvim-lspconfig's `lsp/<server>.lua`.
+2. **Overrides (optional):** create `after/lsp/<server>.lua` returning only the fields that differ from nvim-lspconfig's
+   `lsp/<server>.lua`.
 3. **Formatter (optional):** add it to `formatters_by_ft` in `lua/plugins/conform.lua`, and to the Mason list in
    `lua/plugins/mason.lua`.
 4. **Linter (optional):** add it to `linters_by_ft` in `lua/plugins/nvim-lint.lua`, and to the Mason list. Do not lint

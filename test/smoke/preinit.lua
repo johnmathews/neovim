@@ -120,3 +120,39 @@ vim.deprecate = function(name, alternative, version, plugin, backtrace)
   end
   return result
 end
+
+-- A headless Linux runner (CI, a container) has no display and no clipboard tool, so
+-- the first yank into the unnamedplus register prints "clipboard: No provider". Give
+-- such a sandbox an in-memory clipboard; wherever a real provider exists, it is used.
+-- The test must not call provider#clipboard#Executable(): sourcing the provider caches
+-- its answer, and a g:clipboard set afterwards is ignored.
+local function has_tool(names)
+  for _, name in ipairs(names) do
+    if vim.fn.executable(name) == 1 then
+      return true
+    end
+  end
+  return false
+end
+local headless_linux = vim.fn.has("mac") == 0
+  and not (vim.env.WAYLAND_DISPLAY and has_tool({ "wl-copy" }))
+  and not (vim.env.DISPLAY and has_tool({ "xclip", "xsel" }))
+  and not vim.env.TMUX
+if headless_linux then
+  local registers = { ["+"] = { { "" }, "v" }, ["*"] = { { "" }, "v" } }
+  local function copy(reg)
+    return function(lines, regtype)
+      registers[reg] = { lines, regtype }
+    end
+  end
+  local function paste(reg)
+    return function()
+      return registers[reg]
+    end
+  end
+  vim.g.clipboard = {
+    name = "smoke-memory",
+    copy = { ["+"] = copy("+"), ["*"] = copy("*") },
+    paste = { ["+"] = paste("+"), ["*"] = paste("*") },
+  }
+end

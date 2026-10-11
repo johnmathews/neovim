@@ -15,7 +15,7 @@ which_key.add({
   { "<Tab>g", group = "Git" },
   { "<Tab>t", group = "Tools" },
 
-  -- LSP keybindings (Neovim v0.11+ built-in + Telescope overrides)
+  -- LSP keybindings (Neovim 0.12 built-in + Telescope overrides)
   { "g", group = "Go-to / LSP" },
   { "gd", desc = "Go to definition" },
   { "gD", desc = "Go to declaration" },
@@ -38,15 +38,12 @@ which_key.add({
   { "<leader>cf", desc = "Format" },
   { "<leader>cl", desc = "Lint" },
   { "<leader>li", desc = "Toggle inlay hints" },
-  { "<leader>d", group = "Peek definition (Treesitter)" },
-  { "<leader>df", desc = "Peek function definition" },
-  { "<leader>dF", desc = "Peek class definition" },
   { "<leader>m", group = "Markdown" },
   { "<leader>s", group = "Source (Git)" },
   { "<leader>sh", group = "Hunk" },
   { "<leader>t", group = "Treesitter" },
-  { "<leader>tc", desc = "Show item under cursor" },
-  { "<leader>tp", desc = "Playground" },
+  { "<leader>tc", desc = "Highlight groups under cursor" },
+  { "<leader>tp", desc = "Inspect syntax tree" },
   { "<leader>ts", group = "Swap parameter" },
   { "<leader>tsa", desc = "Swap next" },
   { "<leader>tsA", desc = "Swap previous" },

@@ -8,6 +8,15 @@ if not vim.uv.fs_stat(lazypath) then
     "--branch=stable", -- latest stable release
     lazypath,
   })
+  -- Check out the commit lazy-lock.json pins, as lazy does for every other plugin. lazy
+  -- records the commit it finds installed, so the stable branch would rewrite the entry (F33).
+  local okl, lock = pcall(function()
+    return vim.json.decode(table.concat(vim.fn.readfile(vim.fn.stdpath("config") .. "/lazy-lock.json"), "\n"))
+  end)
+  local commit = okl and vim.tbl_get(lock, "lazy.nvim", "commit")
+  if commit then
+    vim.fn.system({ "git", "-C", lazypath, "checkout", "--quiet", commit })
+  end
 end
 vim.opt.rtp:prepend(lazypath)
 
@@ -55,11 +64,21 @@ return lazy.setup({
     end,
   },
 
+  -- vim.ui.select in a Telescope dropdown (code actions included); vim.ui.input stays native,
+  -- and noice renders it
   {
-    "stevearc/dressing.nvim",
-    event = "VeryLazy",
-    config = function()
-      require("plugins.dressing")
+    "nvim-telescope/telescope-ui-select.nvim",
+    lazy = true, -- telescope.lua loads the extension
+    init = function()
+      -- Until Telescope has loaded (it loads at startup, through auto-session), the first
+      -- vim.ui.select loads it. If the extension did not take over, fall back to the native one.
+      local native_select = vim.ui.select
+      ---@diagnostic disable-next-line: duplicate-set-field
+      vim.ui.select = function(...)
+        vim.ui.select = native_select
+        require("telescope")
+        return vim.ui.select(...)
+      end
     end,
   },
 
@@ -126,7 +145,7 @@ return lazy.setup({
   {
     "ThePrimeagen/harpoon",
     dependencies = "nvim-lua/plenary.nvim",
-    keys = { "ga", "gh", "gn", "gp" }, -- Lazy-load on harpoon keybinds
+    keys = { "gm", "gh", "gn", "gp" }, -- Lazy-load on harpoon keybinds
     config = function()
       require("plugins.harpoon")
     end,
@@ -141,27 +160,6 @@ return lazy.setup({
     event = "VeryLazy", -- Defer statusline to after UI is ready
     config = function()
       require("plugins.lualine")
-    end,
-  },
-
-  -- comments: Neovim's native gc, with the commentstring of the treesitter node under the cursor
-  {
-    "JoosepAlviste/nvim-ts-context-commentstring",
-    lazy = true, -- loaded by the first commentstring lookup below
-    init = function()
-      -- Skip the deprecated nvim-treesitter context_commentstring module (it errors
-      -- on attach) and configure ts_context_commentstring the modern way instead.
-      vim.g.skip_ts_context_commentstring_module = true
-      -- https://github.com/JoosepAlviste/nvim-ts-context-commentstring/wiki/Integrations
-      local get_option = vim.filetype.get_option
-      ---@diagnostic disable-next-line: duplicate-set-field
-      vim.filetype.get_option = function(filetype, option)
-        return option == "commentstring" and require("ts_context_commentstring.internal").calculate_commentstring()
-          or get_option(filetype, option)
-      end
-    end,
-    config = function()
-      require("plugins.comment")
     end,
   },
 
@@ -281,7 +279,6 @@ return lazy.setup({
   -- use instead of LSPSaga outline
   {
     "stevearc/aerial.nvim",
-    enabled = vim.fn.has("nvim-0.12") == 1,
     opts = {},
     config = function()
       require("plugins.aerial")
@@ -352,19 +349,18 @@ return lazy.setup({
   },
   {
     "nvim-treesitter/nvim-treesitter",
+    branch = "main",
+    lazy = false, -- `main` does not support lazy-loading
     build = ":TSUpdate",
     config = function()
       require("plugins.treesitter")
     end,
     dependencies = {
       -- https://github.com/nvim-treesitter/nvim-treesitter-textobjects
-      "nvim-treesitter/nvim-treesitter-textobjects",
-      -- this is an (unmaintained) treesitter plugin.
-      -- config is in the `rainbow` attribute in treesitter.lua
+      { "nvim-treesitter/nvim-treesitter-textobjects", branch = "main" },
       "HiPhish/rainbow-delimiters.nvim",
       -- "p00f/nvim-ts-rainbow",
     },
-    event = "BufReadPre",
   },
   {
     "nvim-treesitter/nvim-treesitter-context",
@@ -372,7 +368,6 @@ return lazy.setup({
   },
 
   -- autoclose and autorename html tags (html,tsx,vue,svelte,php,rescript)
-  -- this is a treesitter plugin. config is the `autotag` attribute in treesitter.lua
   {
     "windwp/nvim-ts-autotag",
     config = function()

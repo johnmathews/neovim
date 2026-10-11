@@ -69,8 +69,14 @@ require("gitsigns").setup({
     end, { expr = true, desc = "GitSigns: navigate hunk" })
 
     -- Actions
-    map({ "n", "v" }, "<Leader>shs", "Gitsigns: stage_hunk<CR>")
-    map({ "n", "v" }, "<Leader>shr", "Gitsigns: reset_hunk<CR>")
+    map("n", "<Leader>shs", gs.stage_hunk, KeymapOptions("GitSigns: Stage hunk"))
+    map("n", "<Leader>shr", gs.reset_hunk, KeymapOptions("GitSigns: Reset hunk"))
+    map("v", "<Leader>shs", function()
+      gs.stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
+    end, KeymapOptions("GitSigns: Stage selected lines"))
+    map("v", "<Leader>shr", function()
+      gs.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
+    end, KeymapOptions("GitSigns: Reset selected lines"))
     map("n", "<Leader>sS", gs.stage_buffer, KeymapOptions("GitSigns: Stage buffer"))
     map("n", "<Leader>shu", gs.undo_stage_hunk, KeymapOptions("GitSigns: Unstage hunk"))
     map("n", "<Leader>shR", gs.reset_buffer, KeymapOptions("GitSigns: Reset buffer"))

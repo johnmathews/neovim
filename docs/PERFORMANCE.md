@@ -1,7 +1,8 @@
 # Neovim Startup Performance
 
-**Measured:** 2026-10-10, Neovim 0.11.6 and 0.12.6, macOS (Apple silicon), load average about 6
-**Startup:** about 140 ms headless (median of 10), under the 150 ms target
+**Measured:** 2026-10-11, Neovim 0.12.6 after the cutover, macOS (Apple silicon), on a busy machine (load average 88
+to 122)  
+**Startup:** 125 ms (health-check, median of 5) to 144 ms (median of 10) headless, under the 150 ms target
 
 ---
 
@@ -22,7 +23,8 @@ loading:
 - `io.popen("command -v neovim-node-host")`, up to twice, for a Node host that no plugin uses.
 
 The Python host is now the `pynvim` tool from `uv tool install pynvim`, found by path with no subprocess, and the Node
-provider is disabled. An interleaved A/B test (10 runs of each config, alternating, isolated data directories):
+provider is disabled. An interleaved A/B test on 2026-10-10 (10 runs of each config, alternating, isolated data
+directories, load average about 6):
 
 | Neovim | Before (median) | After (median) |
 | ------ | --------------- | -------------- |
@@ -36,23 +38,26 @@ after `lua/plugins/lsp.lua`.
 
 ## Where the Time Goes Now
 
-One `--startuptime` profile on 0.11.6 (total 143 ms; inclusive times, so nested entries overlap):
+One `--startuptime` profile on 0.12.6 after the cutover (2026-10-11, `init.lua` 128 ms; inclusive times, so nested
+entries overlap):
 
-| Time (ms) | Component                                   |
-| --------- | ------------------------------------------- |
-| 112.6     | `require('plugins')` (lazy.nvim and every non-lazy plugin's config) |
-| 17.7      | `require('plugins.mason')`                  |
-| 15.6      | `require('plugins.telescope')`              |
-| 10.0      | `require('mason-lspconfig')`                |
-| 9.1       | `require('luasnip.loaders.from_lua')` (custom snippets) |
-| 6.7       | `require('plugins.lsp')`                    |
-| 5.9       | `asyncrun.vim/plugin/asyncrun.vim`          |
+| Time (ms) | Component                                                           |
+| --------- | ------------------------------------------------------------------- |
+| 105.4     | `require('plugins')` (lazy.nvim and every non-lazy plugin's config) |
+| 20.8      | `require('plugins.mason')`                                          |
+| 14.4      | `require('plugins.telescope')`                                      |
+| 13.7      | `require('mason-lspconfig')`                                        |
+| 12.8      | `require('plugins.lsp')`                                            |
+| 10.3      | `require('luasnip.loaders.from_lua')` (custom snippets)             |
+| 8.2       | `require('telescope._extensions.harpoon')`                          |
 
-0.12.6 shows the same order, a little slower per entry in a single profile (128 ms for `plugins`). The profile predates
-the removal of project.nvim: 10 ms of the 15.6 ms for `plugins.telescope` was its telescope extension.
+nvim-treesitter `main` loads at startup (`lazy = false`) but costs little: with every parser installed it starts no
+install task, and each buffer starts treesitter in a `FileType` autocmd. The order matches the 0.11.6 profile from before
+the cutover (`plugins` 112.6 ms, `plugins.mason` 17.7 ms, `plugins.telescope` 15.6 ms, of which 10 ms was project.nvim's
+extension, since removed).
 
-**Note:** headless startup fires neither `UIEnter` nor `VeryLazy`, so noice, lualine and the other `VeryLazy` plugins
-are not in these numbers. They load after the first screen is drawn.
+**Note:** headless startup fires neither `UIEnter` nor `VeryLazy`, so noice, lualine and the other `VeryLazy` plugins are
+not in these numbers. They load after the first screen is drawn.
 
 ---
 
