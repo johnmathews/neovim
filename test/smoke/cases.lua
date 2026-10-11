@@ -438,7 +438,8 @@ local cases = {
     clients = { "bashls" },
     lang = "bash",
     textobjects = true,
-    diags = { shellcheck_zsh = 3 },
+    -- bash-language-server 5.8+ shellchecks zsh too (as bash), so it owns zsh like sh and bash
+    diags = { ["lsp:bashls"] = 3, shellcheck_zsh = false },
   },
   {
     name = "yaml",

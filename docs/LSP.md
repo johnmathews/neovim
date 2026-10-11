@@ -78,7 +78,7 @@ error such as a trailing comma.)
 | **JavaScript** | ts_ls               | biome               | eslint_d          |
 | **TypeScript** | ts_ls               | biome               | eslint_d          |
 | **Shell/Bash** | bashls              | shfmt               | shellcheck (via bashls) |
-| **Zsh**        | bashls              | shfmt               | shellcheck (nvim-lint, bash mode) |
+| **Zsh**        | bashls              | shfmt               | shellcheck (via bashls, bash mode) |
 | **JSON**       | jsonls              | biome, jq           | jsonlint          |
 | **YAML**       | yamlls              | yamlfmt             | yamlls            |
 | **TOML**       | taplo               | taplo               | taplo             |
@@ -86,10 +86,9 @@ error such as a trailing comma.)
 | **Docker**     | dockerls            | dockerls (LSP fallback) | dockerls      |
 | **SQL**        | -                   | sqlfluff            | -                 |
 
-Python lint comes from the ruff LSP server and sh/bash lint from bashls, so nvim-lint runs neither. Zsh is the one
-shell nvim-lint covers, because bashls does not shellcheck it. The smoke gate (`test/smoke/cases.lua`) asserts the
-diagnostic sources for Python, Lua, Bash, Zsh and Markdown, where a second owner has bitten before: nvim-lint
-running ruff or shellcheck next to the LSP server turns it red. The JavaScript, TypeScript, JSON and YAML cases only
+Python lint comes from the ruff LSP server and sh, bash and zsh lint from bashls, so nvim-lint runs neither. The smoke
+gate (`test/smoke/cases.lua`) asserts the diagnostic sources for Python, Lua, Bash, Zsh and Markdown, where a second
+owner has bitten before: nvim-lint running ruff or shellcheck next to the LSP server turns it red. The JavaScript, TypeScript, JSON and YAML cases only
 assert the LSP server's diagnostics, and TOML, Docker and SQL have no diagnostic expectation.
 
 ---
@@ -119,10 +118,10 @@ assert the LSP server's diagnostics, and TOML, Docker and SQL have no diagnostic
 
 ### Shell
 
-- **bashls**: attaches to sh, bash and zsh (`after/lsp/bashls.lua`) and runs shellcheck itself when it is on `PATH`, for
-  sh and bash only. Its findings come with code actions.
-- **shellcheck_zsh** (nvim-lint): shellcheck in bash mode (`--shell=bash`) for zsh, which bashls does not shellcheck. It
-  is a copy of nvim-lint's shellcheck linter, so sh and bash keep the stock arguments.
+- **bashls**: attaches to sh, bash and zsh (`after/lsp/bashls.lua`) and runs shellcheck itself when it is on `PATH`.
+  Its findings come with code actions. From bash-language-server 5.8 it also shellchecks zsh, as bash (a `.zsh` file,
+  a zsh shebang or a `# shellcheck shell=` directive); 5.6 does not, so update it with `:MasonInstall
+  bash-language-server` if zsh files show no shellcheck findings.
 - **shfmt** (conform): formatting for sh and zsh.
 
 ### SQL

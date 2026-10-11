@@ -23,17 +23,6 @@ local function stop_timer(timer, bufnr, timers)
   timers[bufnr] = nil
 end
 
--- Configure shellcheck for zsh files to use bash mode
--- (shellcheck doesn't natively support zsh, so we treat it as bash)
--- A copy, so the shared shellcheck linter keeps its own args. nvim-lint parses json1.
-lint.linters.shellcheck_zsh = vim.tbl_extend("force", {}, lint.linters.shellcheck, {
-  args = {
-    "--format=json1",
-    "--shell=bash", -- Force bash mode for zsh files
-    "-",
-  },
-})
-
 -- Configure markdownlint to use project-specific config with global fallback
 -- Suppresses MD013 (line length) when markdown print mode is active
 -- nvim-lint wants `args` as a list, so the whole linter is a function that builds a copy
@@ -56,7 +45,7 @@ lint.linters.markdownlint = function()
   return vim.tbl_extend("force", {}, markdownlint, { args = args })
 end
 
--- Python (ruff) and sh/bash (shellcheck) are linted by their LSP servers, not here
+-- Python (ruff) and sh/bash/zsh (shellcheck) are linted by their LSP servers, not here
 local lint_timers = {}
 lint.linters_by_ft = {
   javascript = { "eslint_d" },
@@ -64,7 +53,6 @@ lint.linters_by_ft = {
   lua = { "luacheck" },
   markdown = { "markdownlint" },
   typescript = { "eslint_d" },
-  zsh = { "shellcheck_zsh" },
 }
 
 -- Run linters on keystroke (real-time feedback) and on save

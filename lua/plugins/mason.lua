@@ -29,7 +29,7 @@ if ok_mti then
       "eslint_d",
       "mypy",
       "markdownlint",
-      "shellcheck", -- run by bashls (sh, bash) and nvim-lint (zsh)
+      "shellcheck", -- run by bashls (sh, bash, zsh)
       "jsonlint",
     },
     auto_update = false,
