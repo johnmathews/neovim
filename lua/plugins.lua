@@ -594,4 +594,8 @@ return lazy.setup({
     --   }
     -- end,
   },
+}, {
+  -- No plugin here installs from luarocks; with rocks on, :checkhealth lazy warns about the
+  -- system's Lua 5.4 not being the 5.1 luarocks would need.
+  rocks = { enabled = false },
 })

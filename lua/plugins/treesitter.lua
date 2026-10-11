@@ -24,6 +24,7 @@ local parsers = {
   "markdown_inline",
   "python",
   "query",
+  "regex", -- noice highlights regex patterns in the command line with it
   "sql",
   "toml",
   "tsx",

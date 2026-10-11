@@ -619,20 +619,41 @@ local cases = {
     lang = "markdown",
     diags = { markdownlint = 3 },
     check = function(buf, t)
-      -- <leader>x opens the file in the default app through vim.ui.open (stubbed here)
-      local opened
-      local real_open = vim.ui.open
+      -- <leader>F reveals the file in Finder (`open -R`; elsewhere vim.ui.open on its folder),
+      -- both stubbed here
+      local called
+      local real_system, real_open = vim.system, vim.ui.open
+      vim.system = function(cmd)
+        called = table.concat(cmd, " ")
+        return { wait = function() end }
+      end
       vim.ui.open = function(path)
-        opened = path
+        called = "ui.open " .. path
         return nil, nil
       end
-      local ok, err = pcall(vim.api.nvim_feedkeys, vim.keycode("<leader>x"), "mx", false)
-      vim.ui.open = real_open
-      local want = vim.api.nvim_buf_get_name(buf)
+      local ok, err = pcall(vim.api.nvim_feedkeys, vim.keycode("<leader>F"), "mx", false)
+      vim.system, vim.ui.open = real_system, real_open
+      local file = vim.fn.resolve(vim.api.nvim_buf_get_name(buf))
+      local want = vim.fn.has("mac") == 1 and ("open -R " .. file) or ("ui.open " .. vim.fn.fnamemodify(file, ":h"))
       if not ok then
-        t.fail("markdown:open", "<leader>x raised: " .. tostring(err))
-      elseif opened == nil or vim.fn.resolve(opened) ~= vim.fn.resolve(want) then
-        t.fail("markdown:open", ("<leader>x called vim.ui.open(%s), want %s"):format(tostring(opened), want))
+        t.fail("markdown:open", "<leader>F raised: " .. tostring(err))
+      elseif called ~= want then
+        t.fail("markdown:open", ("<leader>F ran %s, want %s"):format(tostring(called), want))
+      end
+      -- <leader>x is only Trouble's prefix (a mapping on it would make <leader>xx wait), and
+      -- <leader>X (Typora) exists in Markdown buffers only
+      if vim.fn.maparg("<leader>x", "n") ~= "" then
+        t.fail(
+          "markdown:open",
+          ("<leader>x maps to %q; it is Trouble's prefix"):format(vim.fn.maparg("<leader>x", "n"))
+        )
+      end
+      local typora = vim.fn.maparg("<leader>X", "n", false, true)
+      if typora.buffer ~= 1 or not (typora.desc or ""):find("Typora", 1, true) then
+        t.fail(
+          "markdown:open",
+          ("<leader>X is %s, want a buffer-local Typora mapping"):format(vim.inspect(typora.desc))
+        )
       end
       -- glow.nvim is gone, with its :Glow command and preview keys
       if

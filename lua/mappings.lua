@@ -115,14 +115,12 @@ map(
   KeymapOptions("Get current highlight group")
 )
 
--- open the current file in the default app
+-- reveal the current file in Finder (Linux: open its folder in the file manager)
 -- gx is mapped to open a url using the open-browser plugin
-vim.keymap.set("n", "<leader>x", function()
-  vim.ui.open(vim.fn.expand("%:p"))
-end, KeymapOptions("Open current file in default app"))
-
--- open the current file in Typora (macOS) - sibling to <leader>x (default app)
-map("n", "<leader>X", ":lua Functions.open_in_typora()<CR>", KeymapOptions("Open current file in Typora"))
+-- <leader>x is Trouble's prefix; <leader>X (Typora) is mapped in Markdown buffers (ftplugin/markdown.vim)
+vim.keymap.set("n", "<leader>F", function()
+  Functions.reveal_in_finder()
+end, KeymapOptions("Reveal current file in Finder"))
 
 -- Split navigations
 map("n", "<C-H>", "<C-W><C-H>", default_options)

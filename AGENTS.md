@@ -49,8 +49,8 @@ Agents must:
 - **Required CLIs:** `stylua`, `luacheck`, `ripgrep`, `fd`, `node` 20 or later (markdownlint-cli needs it), the
   `tree-sitter` CLI 0.26.1 or later and a C compiler (nvim-treesitter's `main` branch builds parsers with both)
   - Install luacheck: `brew install luacheck` (macOS)
-- **Optional CLIs:** `uv` (the Python provider: `uv tool install pynvim`) and Typora (macOS, `<leader>X`). Formatters,
-  linters and LSP servers come from Mason (`lua/plugins/mason.lua`, `lua/plugins/lsp.lua`).
+- **Optional CLIs:** `uv` (the Python provider: `uv tool install pynvim`) and Typora (macOS, `<leader>X` in Markdown
+  buffers). Formatters, linters and LSP servers come from Mason (`lua/plugins/mason.lua`, `lua/plugins/lsp.lua`).
 - **Python:** used for data and scripting. The Python provider is the `pynvim` tool from `uv tool install pynvim`
   (`$UV_TOOL_DIR/pynvim`, default `~/.local/share/uv/tools/pynvim`), set in `init.lua`. The Node provider is disabled.
 - **Preferred shell:** zsh

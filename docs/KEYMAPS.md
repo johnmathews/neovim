@@ -190,6 +190,8 @@ GitSigns keys are buffer-local: they exist in buffers inside a git repository, t
 
 ### Trouble
 
+`<leader>x` is Trouble's prefix and does nothing on its own.
+
 | Key          | Mode   | Description                                    |
 | ------------ | ------ | ---------------------------------------------- |
 | `<leader>xx` | Normal | Diagnostics (Trouble)                          |
@@ -290,6 +292,7 @@ others). Elsewhere a filetype plugin's own `]]` and `[[` stay, for example SQL's
 | Key          | Mode          | Description                                          |
 | ------------ | ------------- | ---------------------------------------------------- |
 | `<leader>mp` | Normal        | Toggle Markdown Print Mode (see below)               |
+| `<leader>X`  | Normal        | Open the file in Typora (macOS)                      |
 | `<leader>mt` | Normal/Visual | Title Case the line (or selection)                   |
 | `<leader>mb` | Normal/Visual | Bold the word (or selection)                         |
 | `<leader>mi` | Normal/Visual | Italicise the word (or selection)                    |
@@ -338,15 +341,14 @@ Toggle back to terminal mode before committing to keep diffs clean.
 
 ### Utilities
 
-| Key               | Mode   | Description                             |
-| ----------------- | ------ | --------------------------------------- |
-| `wc`              | Normal | Get highlight group under cursor        |
-| `<leader>x`       | Normal | Open current file in default app        |
-| `<leader>X`       | Normal | Open current file in Typora (macOS)     |
-| `<C-p>`           | Normal | Jump forward in jump list               |
-| `<localleader>fs` | Normal | Search sessions (`:AutoSession search`) |
-| `<leader>mm`      | Normal | Toggle the minimap (mini.map)           |
-| `<leader>mr`      | Normal | Refresh the minimap                     |
+| Key               | Mode   | Description                                            |
+| ----------------- | ------ | ------------------------------------------------------ |
+| `wc`              | Normal | Get highlight group under cursor                       |
+| `<leader>F`       | Normal | Reveal current file in Finder (Linux: open its folder) |
+| `<C-p>`           | Normal | Jump forward in jump list                              |
+| `<localleader>fs` | Normal | Search sessions (`:AutoSession search`)                |
+| `<leader>mm`      | Normal | Toggle the minimap (mini.map)                          |
+| `<leader>mr`      | Normal | Refresh the minimap                                    |
 
 ### Debug Print Helpers (filetype plugins)
 
