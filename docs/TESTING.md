@@ -197,7 +197,7 @@ The gate never writes to `~/.local/share/nvim` and refuses a `SMOKE_HOME` that r
 **First run, once per Neovim version:**
 
 ```bash
-./scripts/smoke --seed-from ~/.local/share/nvim   # APFS/reflink clone of this machine's lazy/ and mason/
+./scripts/smoke --seed-from ~/.local/share/nvim   # APFS/reflink clone of this machine's lazy/, mason/ and site/
 ./scripts/smoke --bootstrap                       # or: install from lazy-lock.json and Mason (network, for CI)
 ```
 
@@ -339,17 +339,30 @@ cat startup.log | awk '{if ($2 > 1) print $0}' | head -20
 on every push to `main`, on demand (`workflow_dispatch`), and weekly. Each run uses a fresh runner, on two legs:
 `ubuntu-latest` (x86_64) and `ubuntu-24.04-arm` (aarch64).
 
-1. `scripts/bootstrap-linux` installs what a Linux VM gets: Neovim, the tree-sitter CLI, stylua, uv and the apt
-   toolchain, at the versions in `scripts/versions.env`.
-2. The smoke home's `data/` directory (plugins, Mason packages, parsers) is cached. The key covers `lazy-lock.json`,
-   `scripts/versions.env` and the Mason, LSP and treesitter plugin files, so any change to them starts clean.
-3. `stylua --check .` and `luacheck lua/ after/ test/smoke`.
-4. `scripts/smoke --bootstrap`, then `scripts/smoke`. The weekly run adds `scripts/smoke --strict`, so plugin
+1. `scripts/bootstrap-linux` installs what a Linux VM gets: Neovim, the tree-sitter CLI, stylua, uv, node when the
+   runner's is too old, and the apt toolchain, at the versions in `scripts/versions.env`.
+2. The checkout is linked as `~/.config/nvim`, and the data dir `~/.local/share/nvim` (plugins, Mason packages,
+   parsers) is restored from the cache. The key covers `lazy-lock.json`, `scripts/versions.env` and the Mason, LSP and
+   treesitter plugin files, so any change to them starts clean.
+3. `scripts/sync-plugins`, as on a VM (below).
+4. `stylua --check .` and `luacheck lua/ after/ test/smoke`.
+5. `scripts/smoke --seed-from ~/.local/share/nvim`. The weekly run adds `scripts/smoke --strict`, so plugin
    deprecations stay visible.
-5. `scripts/gate-selftest`.
+6. `scripts/gate-selftest`.
 
 When a step fails, the run uploads the smoke home's report, summary, logs and LSP log as an artifact named
 `smoke-<runner>`.
+
+## Plugin Sync (`./scripts/sync-plugins`)
+
+Brings a machine's plugins, Mason packages and parsers in line with the config, on macOS, Linux and CI. It works on
+the config Neovim loads (`~/.config/nvim`), which must be this checkout, and refuses to run from anywhere else, and
+it refuses an uncommitted `lazy-lock.json`. It restores every plugin to its locked commit, twice if needed: a start
+that installs a missing plugin makes lazy rewrite every lockfile entry from the commits it found installed, so the
+script puts the committed lockfile back and restores again. A plugin lazy cannot move (local changes, a checkout that
+fails on a new submodule) is removed and installed again at its pin. It then deletes the parser binaries
+nvim-treesitter `master` left in `lazy/nvim-treesitter/parser*`, installs the Mason packages and parsers, runs `Lazy
+clean`, and fails if `lazy-lock.json` changed. Exit codes: `0` in sync, `1` a step failed, `2` refused.
 
 ---
 

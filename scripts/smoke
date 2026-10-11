@@ -7,7 +7,8 @@
 # every message printed along the way. It never touches ~/.local/share/nvim.
 #
 # Usage: scripts/smoke [options]
-#   --seed-from DIR   clone DIR/lazy and DIR/mason into SMOKE_HOME (e.g. ~/.local/share/nvim)
+#   --seed-from DIR   clone DIR/lazy, DIR/mason and DIR/site (parsers) into SMOKE_HOME
+#                     (e.g. ~/.local/share/nvim)
 #   --bootstrap       restore plugins from lazy-lock.json, install Mason tools and parsers (network)
 #   --startup-only    check startup only (init, messages, tools); open no buffers
 #   --only LIST       comma-separated case names from test/smoke/cases.lua (e.g. python,lua)
@@ -129,7 +130,8 @@ clone_tree() {
 
 if [ -n "$SEED_FROM" ]; then
   [ -d "$SEED_FROM/lazy" ] || die "--seed-from: $SEED_FROM/lazy does not exist"
-  for dir in lazy mason; do
+  # site/ holds the parsers nvim-treesitter main builds
+  for dir in lazy mason site; do
     if [ -d "$SEED_FROM/$dir" ] && [ ! -d "$DATA/$dir" ]; then
       echo "smoke: seeding $DATA/$dir from $SEED_FROM/$dir"
       clone_tree "$SEED_FROM/$dir" "$DATA/$dir"

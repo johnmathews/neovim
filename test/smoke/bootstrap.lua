@@ -1,7 +1,8 @@
--- Smoke gate bootstrap, run by `scripts/smoke --bootstrap` inside SMOKE_HOME, in two
--- Nvim processes (SMOKE_BOOTSTRAP_PHASE), because a restore swaps plugin code on disk
--- that the running process has already loaded:
---   plugins  restore every plugin to its lazy-lock.json commit
+-- Smoke gate bootstrap, run by `scripts/smoke --bootstrap` inside SMOKE_HOME and by
+-- scripts/sync-plugins on a real data dir, in two Nvim processes (SMOKE_BOOTSTRAP_PHASE),
+-- because a restore swaps plugin code on disk that the running process has already loaded:
+--   plugins  restore every plugin to its lazy-lock.json commit, reinstalling any plugin
+--            lazy could not move there
 --   tools    install the Mason packages the config asks for (LSP servers and tools),
 --            then the treesitter parsers lua/plugins/treesitter.lua lists
 -- Exits 0 on success, 1 if any step failed. Needs network.
@@ -16,19 +17,58 @@ local function step_failed(msg)
 end
 
 local function restore_plugins()
+  local lockfile = vim.fn.stdpath("config") .. "/lazy-lock.json"
+  local Lock, Git = require("lazy.manage.lock"), require("lazy.manage.git")
   -- Installing a missing plugin at startup made lazy rewrite every lockfile entry from the
   -- installed commits, so a plugin installed at another commit would be "restored" to itself.
   -- Restore from the repository's lockfile instead, and make lazy read it again.
   local repo_lock = (vim.env.SMOKE_REPO or "") .. "/lazy-lock.json"
   if vim.fn.filereadable(repo_lock) == 1 then
-    vim.fn.writefile(vim.fn.readfile(repo_lock, "b"), vim.fn.stdpath("config") .. "/lazy-lock.json", "b")
-    require("lazy.manage.lock")._loaded = false
+    vim.fn.writefile(vim.fn.readfile(repo_lock, "b"), lockfile, "b")
+    Lock._loaded = false
   end
+  -- The pins, read now: every restore ends by rewriting the lockfile from the installed commits.
+  local pinned_text = vim.fn.readfile(lockfile, "b")
+  local okp, pinned = pcall(vim.json.decode, table.concat(pinned_text, "\n"))
+  if not okp or type(pinned) ~= "table" then
+    step_failed("cannot read " .. lockfile)
+    return
+  end
+
+  -- plugins that are missing or not at their pinned commit
+  local function off_pin()
+    local off = {}
+    for _, plugin in pairs(require("lazy.core.config").plugins) do
+      local pin = pinned[plugin.name]
+      if not plugin._.installed then
+        table.insert(off, { plugin = plugin, have = "not installed", want = pin and pin.commit or "?" })
+      elseif pin and not plugin._.is_local then
+        local info = Git.info(plugin.dir)
+        if not info or info.commit ~= pin.commit then
+          table.insert(off, { plugin = plugin, have = info and info.commit or "?", want = pin.commit })
+        end
+      end
+    end
+    return off
+  end
+
   log("restoring plugins from lazy-lock.json")
   require("lazy").restore({ wait = true, show = false })
-  for _, plugin in pairs(require("lazy.core.config").plugins) do
-    if not plugin._.installed then
-      step_failed("plugin not installed: " .. plugin.name)
+
+  -- lazy reports a plugin it could not move (local changes, a checkout that fails on a new
+  -- submodule) and carries on. Do what it advises by hand: remove the plugin, install it again.
+  local off = off_pin()
+  if #off > 0 then
+    vim.fn.writefile(pinned_text, lockfile, "b")
+    Lock._loaded = false
+    for _, o in ipairs(off) do
+      log(("reinstalling %s: lazy left it at %s, lazy-lock.json pins %s"):format(o.plugin.name, o.have, o.want))
+      vim.fn.delete(o.plugin.dir, "rf")
+    end
+    require("lazy.core.plugin").update_state()
+    require("lazy.manage").install({ wait = true, show = false, lockfile = true })
+    for _, o in ipairs(off_pin()) do
+      step_failed(("%s is at %s, lazy-lock.json pins %s"):format(o.plugin.name, o.have, o.want))
     end
   end
 end
