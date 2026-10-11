@@ -193,7 +193,7 @@ Markdown (marksman). SQL has no server on purpose. See `docs/LSP.md`.
 | Keymap       | Function                                                         |
 | ------------ | ---------------------------------------------------------------- |
 | `<leader>mp` | Toggle Markdown Print Mode (no hard wraps, for Typora and print) |
-| `<leader>X`  | Open the current file in Typora (macOS)                          |
+| `<leader>X`  | Open the current file in Typora (macOS, Markdown buffers only)   |
 
 Print Mode is described in `docs/MARKDOWN-FORMATTING.md`. The in-editor Glow preview was removed with glow.nvim, which is
 archived.

@@ -16,9 +16,11 @@ vim.diagnostic.config({
 
 -- Capabilities (nvim-cmp) for every server
 local ok_cmp, cmp_lsp = pcall(require, "cmp_nvim_lsp")
-if ok_cmp then
-  vim.lsp.config("*", { capabilities = cmp_lsp.default_capabilities() })
-end
+local capabilities = ok_cmp and cmp_lsp.default_capabilities() or {}
+-- One position encoding for every server. Offered utf-8, ruff takes it while basedpyright stays
+-- on utf-16, and :checkhealth vim.lsp warns about buffers with mixed encodings.
+capabilities.general = { positionEncodings = { "utf-16" } }
+vim.lsp.config("*", { capabilities = capabilities })
 
 -- Replaces a per-server on_attach: an on_attach in a server config would replace the one
 -- nvim-lspconfig ships for that server (basedpyright defines one).

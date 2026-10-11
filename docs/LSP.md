@@ -14,7 +14,9 @@ framework is deprecated and is not used.
 
 `lua/plugins/lsp.lua` does four things:
 
-1. `vim.lsp.config("*", { capabilities = ... })` gives every server the nvim-cmp completion capabilities.
+1. `vim.lsp.config("*", { capabilities = ... })` gives every server the nvim-cmp completion capabilities and asks for
+   utf-16 positions, so every client on a buffer agrees (ruff would otherwise pick utf-8 next to basedpyright's utf-16,
+   which `:checkhealth vim.lsp` warns about).
 2. One `LspAttach` autocmd (augroup `UserLspAttach`) runs for every client that attaches (see below).
 3. `mason-lspconfig.setup({ ensure_installed = servers, automatic_enable = false })` makes Mason install the servers. It
    does not start them.
@@ -37,12 +39,13 @@ A server's final config is merged, later winning, from:
 
 Each file in `after/lsp/` returns only the fields it changes:
 
-| File                         | Overrides                                                                           |
-| ---------------------------- | ----------------------------------------------------------------------------------- |
-| `after/lsp/basedpyright.lua` | `typeCheckingMode = "basic"`, auto-import completions, push diagnostics (F31)       |
-| `after/lsp/bashls.lua`       | filetypes `sh`, `bash`, `zsh`; glob pattern; shellcheck `-x`                        |
-| `after/lsp/lua_ls.lua`       | LuaJIT runtime, Neovim globals, hints, no telemetry                                 |
-| `after/lsp/yamlls.lua`       | validation on, formatting off (conform owns YAML formatting), no key-order warnings |
+| File                         | Overrides                                                                                     |
+| ---------------------------- | --------------------------------------------------------------------------------------------- |
+| `after/lsp/basedpyright.lua` | `typeCheckingMode = "basic"`, auto-import completions, push diagnostics (F31)                 |
+| `after/lsp/bashls.lua`       | filetypes `sh`, `bash`, `zsh`; glob pattern; shellcheck `-x`                                  |
+| `after/lsp/lua_ls.lua`       | LuaJIT runtime, Neovim globals, hints, no telemetry                                           |
+| `after/lsp/marksman.lua`     | filetypes `markdown` only                                                                     |
+| `after/lsp/yamlls.lua`       | filetypes `yaml` only; validation on, formatting off (conform owns it), no key-order warnings |
 
 Root detection and single-file support come from nvim-lspconfig's defaults. Inspect the merged result of a running client
 with `:lua vim.print(vim.lsp.get_clients({ bufnr = 0 })[1].config.settings)`.
@@ -136,7 +139,7 @@ expectation.
 ### JSON, YAML, TOML, Docker, Markdown
 
 - **jsonls**, **yamlls** (formatting off), **taplo**, **dockerls** and **marksman** run with nvim-lspconfig's defaults
-  apart from the yamlls override.
+  apart from the yamlls and marksman overrides.
 - Formatting comes from conform (`lua/plugins/conform.lua`), linting from nvim-lint (`lua/plugins/nvim-lint.lua`).
 - YAML formats with yamlfmt only. yamlls has formatting off, so there is no LSP formatter to fall back to.
 - **markdownlint** reads the nearest `.markdownlint.json` above the file, else the config's own. In markdown print mode

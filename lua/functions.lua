@@ -93,6 +93,27 @@ M.open_in_typora = function()
   end)
 end
 
+-- reveal the current buffer's file in Finder, selected (`open -R`); elsewhere open its
+-- folder with the system's file manager (vim.ui.open)
+M.reveal_in_finder = function()
+  local filepath = vim.fn.expand("%:p")
+  if filepath == "" then
+    vim.notify("No file in the current buffer", vim.log.levels.WARN)
+    return
+  end
+  if vim.fn.has("mac") ~= 1 then
+    vim.ui.open(vim.fn.fnamemodify(filepath, ":h"))
+    return
+  end
+  vim.system({ "open", "-R", filepath }, {}, function(obj)
+    if obj.code ~= 0 then
+      vim.schedule(function()
+        vim.notify("Finder failed to open:\n" .. (obj.stderr or ""), vim.log.levels.ERROR)
+      end)
+    end
+  end)
+end
+
 -- toggle the quickfix window
 vim.cmd([[
   function! ToggleQuickFix()

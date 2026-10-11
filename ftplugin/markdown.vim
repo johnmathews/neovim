@@ -79,4 +79,9 @@ lua << EOF
     require("conform").format({ async = false, lsp_format = "fallback" })
     require("lint").try_lint()
   end, { buffer = true, desc = "Toggle Markdown Print Mode" })
+
+  -- open this file in Typora (macOS)
+  vim.keymap.set("n", "<leader>X", function()
+    Functions.open_in_typora()
+  end, { buffer = true, desc = "Open current file in Typora" })
 EOF

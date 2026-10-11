@@ -7,6 +7,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+Cleanup after the first `:checkhealth` on 0.12.6.
+
+### Changed
+
+- **`<leader>F`** reveals the current file in Finder (`open -R`); on Linux it opens the file's folder with `vim.ui.open`.
+- **`<leader>X`** (Typora) is buffer-local to Markdown buffers (`ftplugin/markdown.vim`), no longer global.
+- **`<leader>x`** is now only Trouble's prefix (`<leader>xx`, `xX`, `xL`, `xQ`); the "open in default app" mapping is
+  gone.
+
+### Fixed
+
+- `:checkhealth` warnings:
+  - noice: the `regex` parser is in the treesitter list (19 parsers);
+  - lazy: luarocks support is off (`rocks = { enabled = false }`), since no plugin needs it;
+  - vim.lsp: yamlls and marksman list only the filetypes Neovim sets (`after/lsp/yamlls.lua`, new
+    `after/lsp/marksman.lua`);
+  - vim.lsp: every client asks for utf-16 positions, so ruff and basedpyright no longer mix encodings on Python buffers.
+
 ## [2.0.0] - 2026-10-11
 
 The Neovim 0.12 release: Stage B of the upgrade (the cutover) and Stage A (everything that worked on both versions).
