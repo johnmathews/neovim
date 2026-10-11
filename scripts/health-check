@@ -1,16 +1,41 @@
 #!/usr/bin/env bash
 # Health check automation script for Neovim config
-# Runs 8 comprehensive checks:
-#   - Neovim version verification
-#   - CLI tools presence (luacheck, stylua, rg, fd, node)
-#   - Luacheck linting (lua/ directory)
-#   - Neovim load test (10s timeout)
-#   - Startup performance (<150ms target, warn 150-500ms, fail >500ms)
+# Runs 9 comprehensive checks and exits 1 if any of them fails:
+#   - Neovim version against scripts/versions.env (NVIM_MIN fails, NVIM_PIN warns)
+#   - CLI tools presence (tree-sitter when required, cc, curl, tar, git, stylua, luacheck, rg, fd, node >= NODE_MIN)
+#   - Luacheck linting (lua/, after/, test/smoke/)
+#   - Neovim load test (scripts/smoke --startup-only, isolated)
+#   - Startup performance (median of 5 runs after a warm-up; fail >500ms, warn >150ms)
+#   - :checkhealth vim.deprecated vim.lsp (fail on ERROR)
 #   - Plugin directory verification (lazy.nvim)
 #   - Config file structure (init.lua, options.lua, mappings.lua, plugins.lua, autocmd.lua)
 #   - Documentation files (AGENTS.md, KEYMAPS.md, LSP.md, PERFORMANCE.md)
+#
+# Usage: scripts/health-check [--isolated]
+#   --isolated  measure startup and run :checkhealth in the smoke environment
+#               (SMOKE_HOME) instead of this machine's real config and data dirs
+# Environment: VERSIONS_ENV overrides scripts/versions.env, NVIM selects the binary.
 
-set -e
+# Git exports GIT_DIR and GIT_INDEX_FILE to hooks; with them set, git commands here
+# would act on the committing repository instead of the paths they are given.
+# shellcheck disable=SC2046 # word splitting is intended: one variable name per word
+unset $(git rev-parse --local-env-vars 2>/dev/null)
+REPO="$(cd "$(dirname "$0")/.." && pwd -P)" || exit 1
+cd "$REPO" || exit 1
+
+ISOLATED=0
+for arg in "$@"; do
+  case "$arg" in
+    --isolated) ISOLATED=1 ;;
+    -h | --help) sed -n '2,/^# Environment:/p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    *) echo "health-check: unknown option $arg" >&2; exit 2 ;;
+  esac
+done
+
+VERSIONS_ENV="${VERSIONS_ENV:-$REPO/scripts/versions.env}"
+# shellcheck source-path=SCRIPTDIR source=versions.env
+. "$VERSIONS_ENV" || { echo "health-check: cannot read $VERSIONS_ENV" >&2; exit 2; }
+NVIM="${NVIM:-nvim}"
 
 echo "🏥 Neovim Configuration Health Check"
 echo "===================================="
@@ -23,114 +48,207 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+FAILURES=0
+fail() {
+  echo -e "   ${RED}✗ $*${NC}"
+  FAILURES=$((FAILURES + 1))
+}
+warn() {
+  echo -e "   ${YELLOW}⚠ $*${NC}"
+}
+ok() {
+  echo -e "   ${GREEN}✓${NC} $*"
+}
+
+# version_lt A B: true when version A is older than B (vim.version.lt in a clean nvim).
+# A comparison that cannot run is a failure, never a pass.
+version_lt() {
+  local out
+  out="$("$NVIM" --clean --headless \
+    +"lua io.stdout:write(vim.version.lt(vim.version.parse('$1'), vim.version.parse('$2')) and 'lt' or 'ge')" \
+    +qa 2>/dev/null)"
+  case "$out" in
+    lt) return 0 ;;
+    ge) return 1 ;;
+    *)
+      fail "cannot compare versions $1 and $2 with $NVIM"
+      return 1
+      ;;
+  esac
+}
+
 # Check 1: Neovim version
 echo -e "${BLUE}1. Checking Neovim version...${NC}"
-if command -v nvim &>/dev/null; then
-  NVIM_VERSION=$(nvim --version | head -1)
-  echo "   $NVIM_VERSION"
-  echo -e "   ${GREEN}✓ Neovim is installed${NC}"
+if command -v "$NVIM" &>/dev/null; then
+  NVIM_VERSION_LINE=$("$NVIM" --version | head -1)
+  NVIM_VERSION="$(echo "$NVIM_VERSION_LINE" | sed -n 's/^NVIM v\([0-9][0-9.]*\).*/\1/p')"
+  echo "   $NVIM_VERSION_LINE"
+  if [ -z "$NVIM_VERSION" ]; then
+    fail "cannot read the Neovim version"
+  elif version_lt "$NVIM_VERSION" "$NVIM_MIN"; then
+    fail "Neovim $NVIM_VERSION is older than the required $NVIM_MIN (scripts/versions.env)"
+  elif [ "$NVIM_VERSION" != "$NVIM_PIN" ]; then
+    warn "Neovim $NVIM_VERSION differs from the pinned $NVIM_PIN"
+  else
+    ok "Neovim $NVIM_VERSION (pinned $NVIM_PIN)"
+  fi
 else
-  echo -e "   ${RED}✗ Neovim not found${NC}"
+  fail "Neovim not found"
+  echo ""
+  echo -e "${RED}❌ Health check failed: $FAILURES problem(s)${NC}"
   exit 1
 fi
 echo ""
 
 # Check 2: Required CLIs
 echo -e "${BLUE}2. Checking required CLI tools...${NC}"
-REQUIRED_TOOLS=("luacheck" "stylua" "rg" "fd" "node")
+REQUIRED_TOOLS=("cc" "curl" "tar" "git" "luacheck" "stylua" "rg" "fd" "node")
+[ -n "$TREE_SITTER_MIN" ] && REQUIRED_TOOLS=("tree-sitter" "${REQUIRED_TOOLS[@]}")
 for tool in "${REQUIRED_TOOLS[@]}"; do
   if command -v "$tool" &>/dev/null; then
     VERSION=$("$tool" --version 2>&1 | head -1 || echo "installed")
-    echo -e "   ${GREEN}✓${NC} $tool: $VERSION"
+    ok "$tool: $VERSION"
   else
-    echo -e "   ${YELLOW}⚠${NC} $tool: not found"
+    fail "$tool: not found"
   fi
 done
+if command -v node &>/dev/null; then
+  NODE_VERSION="$(node --version | sed 's/^v//')"
+  version_lt "$NODE_VERSION" "$NODE_MIN" && fail "node $NODE_VERSION is older than the required $NODE_MIN"
+fi
+if [ -n "$TREE_SITTER_MIN" ] && command -v tree-sitter &>/dev/null; then
+  TS_VERSION="$(tree-sitter --version | sed -n 's/^tree-sitter \([0-9][0-9.]*\).*/\1/p')"
+  if [ -z "$TS_VERSION" ] || version_lt "$TS_VERSION" "$TREE_SITTER_MIN"; then
+    fail "tree-sitter ${TS_VERSION:-?} is older than the required $TREE_SITTER_MIN"
+  fi
+fi
 echo ""
 
 # Check 3: Luacheck
 echo -e "${BLUE}3. Running luacheck...${NC}"
-cd "$(dirname "$0")/.." || exit 1
-if luacheck lua/ --quiet; then
-  WARNINGS=$(luacheck lua/ 2>&1 | grep "warnings / " | grep -oE "[0-9]+ warnings" || echo "0 warnings")
-  echo -e "   ${GREEN}✓ Luacheck passed${NC} ($WARNINGS)"
+LINT_DIRS=()
+for dir in lua after test/smoke; do
+  [ -d "$dir" ] && LINT_DIRS+=("$dir/")
+done
+if ! command -v luacheck &>/dev/null; then
+  fail "luacheck not installed"
+elif luacheck "${LINT_DIRS[@]}" --quiet; then
+  WARNINGS=$(luacheck "${LINT_DIRS[@]}" 2>&1 | grep "warnings / " | grep -oE "[0-9]+ warnings" || echo "0 warnings")
+  ok "Luacheck passed ($WARNINGS)"
 else
-  echo -e "   ${RED}✗ Luacheck failed${NC}"
-  echo "   Run: luacheck lua/ (for details)"
+  fail "Luacheck failed"
+  echo "   Run: luacheck ${LINT_DIRS[*]} (for details)"
 fi
 echo ""
 
 # Check 4: Neovim loads successfully
-echo -e "${BLUE}4. Testing Neovim loads...${NC}"
-if timeout 10 nvim --headless "+lua print('Health check: OK')" +qa 2>&1 | grep -q "OK"; then
-  echo -e "   ${GREEN}✓ Neovim loads successfully${NC}"
+echo -e "${BLUE}4. Testing Neovim loads (scripts/smoke --startup-only)...${NC}"
+SMOKE_LOG="$(mktemp)"
+if ./scripts/smoke --startup-only --nvim "$NVIM" >"$SMOKE_LOG" 2>&1; then
+  ok "Neovim starts cleanly"
 else
-  echo -e "   ${RED}✗ Neovim failed to load${NC}"
+  fail "Neovim failed to start cleanly"
+  grep -v '^XFAIL' "$SMOKE_LOG" | sed 's/^/   /' | tail -20
 fi
+rm -f "$SMOKE_LOG"
 echo ""
+
+# In isolated mode, startup and :checkhealth run against the smoke environment's
+# copy of this config (refreshed by check 4) instead of the real data directory.
+if [ "$ISOLATED" -eq 1 ]; then
+  SMOKE_HOME="${SMOKE_HOME:-${XDG_CACHE_HOME:-$HOME/.cache}/nvim-smoke/$NVIM_VERSION}"
+  export XDG_CONFIG_HOME="$SMOKE_HOME/config" XDG_DATA_HOME="$SMOKE_HOME/data"
+  export XDG_STATE_HOME="$SMOKE_HOME/state" XDG_CACHE_HOME="$SMOKE_HOME/cache"
+fi
 
 # Check 5: Startup time
 echo -e "${BLUE}5. Measuring startup performance...${NC}"
-nvim --startuptime /tmp/nvim_health_startup.log --headless +qa 2>&1
-STARTUP_TIME=$(grep "NVIM STARTED" /tmp/nvim_health_startup.log | awk '{print $1}')
-echo "   Startup time: ${STARTUP_TIME}ms"
-# Convert to integer for comparison (remove decimal point)
+STARTUP_LOG="$(mktemp)"
+"$NVIM" --headless +qa >/dev/null 2>&1 # warm-up: module cache and page cache
+TIMES=()
+for _ in 1 2 3 4 5; do
+  rm -f "$STARTUP_LOG"
+  "$NVIM" --startuptime "$STARTUP_LOG" --headless +qa >/dev/null 2>&1
+  TIMES+=("$(grep "NVIM STARTED" "$STARTUP_LOG" | tail -1 | awk '{print $1}')")
+done
+rm -f "$STARTUP_LOG"
+STARTUP_TIME="$(printf '%s\n' "${TIMES[@]}" | sort -n | sed -n 3p)"
+echo "   Runs: ${TIMES[*]} ms"
+echo "   Median startup time: ${STARTUP_TIME}ms"
 STARTUP_MS=$(echo "$STARTUP_TIME" | awk '{printf "%d", $1}')
-if ((STARTUP_MS < 150)); then
-  echo -e "   ${GREEN}✓ Under 150ms target${NC}"
-elif ((STARTUP_MS < 500)); then
-  echo -e "   ${YELLOW}⚠ Acceptable (150-500ms)${NC}"
+if [ -z "$STARTUP_TIME" ]; then
+  fail "no startup time measured"
+elif ((STARTUP_MS < 150)); then
+  ok "Under 150ms target"
+elif ((STARTUP_MS <= 500)); then
+  warn "Above the 150ms target (fails above 500ms)"
 else
-  echo -e "   ${RED}✗ Slow (>500ms)${NC}"
+  fail "Slow (>500ms)"
 fi
 echo ""
 
-# Check 6: Plugin directory
-echo -e "${BLUE}6. Checking plugin directory...${NC}"
-PLUGIN_DIR="$HOME/.local/share/nvim/lazy"
-if [ -d "$PLUGIN_DIR" ]; then
-  PLUGIN_COUNT=$(find "$PLUGIN_DIR" -maxdepth 1 -type d | wc -l)
-  echo -e "   ${GREEN}✓ Plugin directory exists${NC}"
-  echo "   Plugins installed: $((PLUGIN_COUNT - 1))"
+# Check 6: :checkhealth for deprecations and LSP
+echo -e "${BLUE}6. Running :checkhealth vim.deprecated vim.lsp...${NC}"
+HEALTH_LOG="$(mktemp)"
+"$NVIM" --headless "+checkhealth vim.deprecated vim.lsp" "+write! $HEALTH_LOG" +qa >/dev/null 2>&1
+if [ ! -s "$HEALTH_LOG" ]; then
+  fail ":checkhealth produced no output"
+elif grep -q "ERROR" "$HEALTH_LOG"; then
+  fail ":checkhealth reported errors:"
+  grep -n "ERROR" "$HEALTH_LOG" | sed 's/^/     /' | head -10
 else
-  echo -e "   ${YELLOW}⚠ Plugin directory not found${NC}"
+  WARN_COUNT=$(grep -c "WARNING" "$HEALTH_LOG")
+  ok "No ERROR lines ($WARN_COUNT warnings)"
+fi
+rm -f "$HEALTH_LOG"
+echo ""
+
+# Check 7: Plugin directory
+echo -e "${BLUE}7. Checking plugin directory...${NC}"
+PLUGIN_DIR="${XDG_DATA_HOME:-$HOME/.local/share}/nvim/lazy"
+if [ -d "$PLUGIN_DIR" ]; then
+  PLUGIN_COUNT=$(find "$PLUGIN_DIR" -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
+  ok "Plugin directory exists ($PLUGIN_DIR)"
+  echo "   Plugins installed: $PLUGIN_COUNT"
+else
+  warn "Plugin directory not found ($PLUGIN_DIR)"
   echo "   Plugins will be installed on first run"
 fi
 echo ""
 
-# Check 7: Config file structure
-echo -e "${BLUE}7. Checking config structure...${NC}"
+# Check 8: Config file structure
+echo -e "${BLUE}8. Checking config structure...${NC}"
 REQUIRED_FILES=("init.lua" "lua/options.lua" "lua/mappings.lua" "lua/plugins.lua" "lua/autocmd.lua")
-ALL_FOUND=true
 for file in "${REQUIRED_FILES[@]}"; do
   if [ -f "$file" ]; then
-    echo -e "   ${GREEN}✓${NC} $file"
+    ok "$file"
   else
-    echo -e "   ${RED}✗${NC} $file (missing)"
-    ALL_FOUND=false
+    fail "$file (missing)"
   fi
 done
-if $ALL_FOUND; then
-  echo -e "   ${GREEN}✓ All core files present${NC}"
-fi
 echo ""
 
-# Check 8: Documentation
-echo -e "${BLUE}8. Checking documentation...${NC}"
-DOC_FILES=("docs/AGENTS.md" "docs/KEYMAPS.md" "docs/LSP.md" "docs/PERFORMANCE.md")
+# Check 9: Documentation
+echo -e "${BLUE}9. Checking documentation...${NC}"
+DOC_FILES=("AGENTS.md" "docs/KEYMAPS.md" "docs/LSP.md" "docs/PERFORMANCE.md")
 for file in "${DOC_FILES[@]}"; do
   if [ -f "$file" ]; then
-    echo -e "   ${GREEN}✓${NC} $file"
+    ok "$file"
   else
-    echo -e "   ${YELLOW}⚠${NC} $file (missing)"
+    warn "$file (missing)"
   fi
 done
 echo ""
 
 # Summary
 echo "===================================="
-echo -e "${GREEN}🎉 Health check complete!${NC}"
+if [ "$FAILURES" -eq 0 ]; then
+  echo -e "${GREEN}🎉 Health check passed!${NC}"
+else
+  echo -e "${RED}❌ Health check failed: $FAILURES problem(s)${NC}"
+fi
 echo ""
 echo "For detailed health check: nvim +checkhealth"
 echo "For startup profiling: nvim +StartupTime"
 echo ""
+[ "$FAILURES" -eq 0 ]

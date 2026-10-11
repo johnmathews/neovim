@@ -41,7 +41,7 @@ local function symbols_outline()
     symbols = ""
   elseif not vim.api.nvim_win_get_config(0).zindex then
     -- Winbar symbols disabled (lspsaga removed)
-    symbols = nil
+    symbols = ""
   end
   return symbols
 end

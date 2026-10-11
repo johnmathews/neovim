@@ -26,12 +26,14 @@ vim.api.nvim_set_keymap("n", "gD", "<cmd>lua vim.lsp.buf.declaration()<CR>", {
   silent = true,
   desc = "Go to Declaration",
 })
-vim.api.nvim_set_keymap("n", "gi", "<cmd>Telescope lsp_implementations<CR>", {
+-- grr and gri override Neovim's default LSP keys with Telescope pickers; gr and gi stay
+-- free, so the other gr* defaults and Vim's gi (insert at the last insert position) work
+vim.api.nvim_set_keymap("n", "gri", "<cmd>Telescope lsp_implementations<CR>", {
   noremap = true,
   silent = true,
   desc = "Go to Implementation (Telescope)",
 })
-vim.api.nvim_set_keymap("n", "gr", "<cmd>Telescope lsp_references<CR>", {
+vim.api.nvim_set_keymap("n", "grr", "<cmd>Telescope lsp_references<CR>", {
   noremap = true,
   silent = true,
   desc = "Show References (Telescope)",
@@ -115,7 +117,9 @@ map(
 
 -- open the current file in the default app
 -- gx is mapped to open a url using the open-browser plugin
-map("n", "<leader>x", ":!xdg-open %<CR><CR>", KeymapOptions("Open current file in default app"))
+vim.keymap.set("n", "<leader>x", function()
+  vim.ui.open(vim.fn.expand("%:p"))
+end, KeymapOptions("Open current file in default app"))
 
 -- open the current file in Typora (macOS) - sibling to <leader>x (default app)
 map("n", "<leader>X", ":lua Functions.open_in_typora()<CR>", KeymapOptions("Open current file in Typora"))
@@ -155,13 +159,25 @@ map("n", "<Tab>dc", ":cexpr []<CR>", KeymapOptions("Clear quickfix window"))
 -- Jump List
 map("n", "<C-p>", "<C-i>", default_options)
 
--- auto session
-local ok = pcall(require, "session-lens")
-if ok then
-  vim.keymap.set("n", "<localleader>fs", function()
-    require("session-lens").search_session()
-  end, KeymapOptions("Sessions: search"))
+-- comments (native gc)
+-- invert commenting of visually selected lines
+-- https://github.com/numToStr/Comment.nvim/issues/17#issuecomment-939410954
+vim.keymap.set("v", "gci", ":normal gcc<CR>", { silent = true, desc = "Comment: invert each selected line" })
+-- open a commented line below or above, in insert mode (a plain line when the buffer
+-- has no commentstring, where gcc would only warn and leave the placeholder x behind)
+local function comment_line_keys(open)
+  return function()
+    if vim.bo.commentstring == "" then
+      return open
+    end
+    return open .. "<Esc>Vcx<Esc><Cmd>normal gcc<CR>fxa<BS>"
+  end
 end
+vim.keymap.set("n", "gco", comment_line_keys("o"), { expr = true, desc = "Comment: add line below" })
+vim.keymap.set("n", "gcO", comment_line_keys("O"), { expr = true, desc = "Comment: add line above" })
+
+-- auto session
+map("n", "<localleader>fs", "<Cmd>AutoSession search<CR>", KeymapOptions("Sessions: search"))
 
 -- backgroud git commit and push
 map("n", "gG", ":lua Functions.asyncGitCommitAndPush()<CR>", KeymapOptions("Quietly push all changes to remote"))

@@ -1,3 +1,5 @@
+**Status:** superseded by [TESTING.md](../TESTING.md) and [CHANGELOG.md](../CHANGELOG.md) (2026-10-11).
+
 # Testing & Changelog Guide
 
 This document answers common questions about testing and change management for this Neovim configuration.

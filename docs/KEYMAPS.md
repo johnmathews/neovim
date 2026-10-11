@@ -93,7 +93,7 @@ Complete reference of all custom keybindings in this Neovim configuration.
 
 | Key      | Mode   | Description                        |
 | -------- | ------ | ---------------------------------- |
-| `<Tab>p` | Normal | Projects (switch between projects) |
+| `<Tab>p` | Normal | Sessions: search (`:AutoSession search`) |
 | `<Tab>h` | Normal | Help tags (search Vim help)        |
 | `<Tab>z` | Normal | Resume last Telescope picker       |
 | `<Tab>b` | Normal | LSP workspace symbols              |
@@ -149,10 +149,13 @@ Complete reference of all custom keybindings in this Neovim configuration.
 
 ### Telescope-based LSP Navigation
 
-| Key  | Mode   | Description                             |
-| ---- | ------ | --------------------------------------- |
-| `gr` | Normal | Show references (Telescope picker)      |
-| `gi` | Normal | Go to implementation (Telescope picker) |
+`grr` and `gri` replace Neovim's default LSP keys of the same name. `gr` and `gi` themselves are not mapped, so the
+other `gr*` defaults work and `gi` is Vim's "insert where insert mode last stopped".
+
+| Key   | Mode   | Description                             |
+| ----- | ------ | --------------------------------------- |
+| `grr` | Normal | Show references (Telescope picker)      |
+| `gri` | Normal | Go to implementation (Telescope picker) |
 
 ### LSP with Telescope (Advanced Searching)
 
@@ -179,6 +182,7 @@ Complete reference of all custom keybindings in this Neovim configuration.
 | ---------------- | ------------- | ------------------------------------------------ |
 | `<leader>cf`     | Normal/Visual | Format file or selection (conform.nvim)          |
 | `<leader>cl`     | Normal        | Run linter manually (nvim-lint)                  |
+| `<leader>cL`     | Normal        | LSP definitions, references and more (Trouble)   |
 | `<LocalLeader>t` | Normal        | Show active LSP servers, formatters, and linters |
 
 ---
@@ -244,10 +248,9 @@ Complete reference of all custom keybindings in this Neovim configuration.
 
 ## Markdown
 
-| Key          | Mode   | Description                                   |
-| ------------ | ------ | --------------------------------------------- |
-| `<leader>mg` | Normal | Preview the current Markdown buffer with Glow |
-| `<leader>mp` | Normal | Toggle Markdown Print Mode (see below)        |
+| Key          | Mode   | Description                            |
+| ------------ | ------ | -------------------------------------- |
+| `<leader>mp` | Normal | Toggle Markdown Print Mode (see below) |
 
 ### Markdown Print Mode (`<leader>mp`)
 
@@ -289,7 +292,7 @@ Toggle back to terminal mode before committing to keep diffs clean.
 | `wc`              | Normal | Get highlight group under cursor |
 | `<leader>x`       | Normal | Open current file in default app |
 | `<C-p>`           | Normal | Jump forward in jump list        |
-| `<localleader>fs` | Normal | Search sessions (auto-session)   |
+| `<localleader>fs` | Normal | Search sessions (`:AutoSession search`) |
 
 ### Jump List
 
@@ -302,13 +305,19 @@ Toggle back to terminal mode before committing to keep diffs clean.
 
 ## Plugin-Specific Keymaps
 
-### Comment.nvim
+### Commenting (native `gc`)
 
-| Key   | Mode   | Description                    |
-| ----- | ------ | ------------------------------ |
-| `gcc` | Normal | Toggle comment on current line |
-| `gc`  | Visual | Toggle comment on selection    |
-| `gci` | Visual | Invert comment on selection    |
+Neovim's built-in commenting. The comment style follows the treesitter node under the cursor, so JSX in a `.tsx` file
+gets `{/* ... */}` and the TypeScript around it `// ...`.
+
+| Key          | Mode   | Description                                      |
+| ------------ | ------ | ------------------------------------------------ |
+| `gcc`        | Normal | Toggle comment on current line                   |
+| `gc{motion}` | Normal | Toggle comment over a motion                     |
+| `gc`         | Visual | Toggle comment on selection                      |
+| `gci`        | Visual | Invert comment on each selected line             |
+| `gco`        | Normal | Add a comment line below and enter insert mode   |
+| `gcO`        | Normal | Add a comment line above and enter insert mode   |
 
 ### Leap.nvim (Motion)
 

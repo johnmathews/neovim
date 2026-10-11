@@ -1,27 +1,40 @@
 #!/usr/bin/env bash
 # Pre-push hook for Neovim config
-# Runs quality gate before pushing to remote:
+# Runs quality gate, then the full smoke gate, before pushing to remote:
 #   - Stylua formatting check
 #   - Luacheck linting
-#   - Neovim load test
-# Install: ln -s ../../scripts/pre-push .git/hooks/pre-push
+#   - Neovim startup check (scripts/smoke --startup-only)
+#   - Smoke gate: a real buffer per language (scripts/smoke, about 1 to 1.5 minutes)
+# An environment the smoke gate cannot run in fails the push; it is never skipped.
+# Install: scripts/install-hooks (sets core.hooksPath, so every worktree runs its own copy)
 
 set -e
 
 echo "🚀 Running pre-push checks..."
 echo ""
 
-# Change to config directory
-cd "$(dirname "$0")/../.." || exit 1
+# Change to the root of the checkout being pushed (a worktree runs its own files)
+cd "$(git rev-parse --show-toplevel)" || exit 1
 
 # Run quality gate - comprehensive validation
-if ./scripts/quality-gate; then
-  echo ""
-  echo "✅ Safe to push to remote."
-  exit 0
-else
+if ! ./scripts/quality-gate; then
   echo ""
   echo "❌ Pre-push checks failed!"
   echo "Fix errors before pushing, or bypass with: git push --no-verify"
   exit 1
 fi
+
+# Run the full smoke gate. Exit 2 means the environment is not bootstrapped:
+# scripts/smoke prints how to seed or bootstrap it.
+echo ""
+echo "🧪 Running smoke gate (scripts/smoke)..."
+rc=0
+./scripts/smoke || rc=$?
+echo ""
+if [ "$rc" -eq 0 ]; then
+  echo "✅ Safe to push to remote."
+  exit 0
+fi
+echo "❌ Smoke gate failed (exit $rc)!"
+echo "Fix errors before pushing, or bypass with: git push --no-verify"
+exit 1

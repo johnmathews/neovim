@@ -63,6 +63,39 @@ Each test file contains **intentional errors and edge cases** to verify that:
   - Undefined variables
   - Deprecated syntax
 
+### Zsh (`test/zsh/`)
+- **File:** `test_sample.zsh`
+- **Tests:**
+  - bashls attaches to zsh
+  - ShellCheck in bash mode (missing quotes)
+
+### TypeScript (`test/typescript/`)
+- **File:** `test_sample.ts`
+- **Tests:**
+  - Type errors (ts_ls)
+  - Missing object property
+
+- **File:** `test_sample.tsx`
+- **Tests:**
+  - Commenting: `gcc` on a JSX line gives `{/* ... */}`, on a TypeScript line `// ...`
+  - Missing required prop (ts_ls)
+
+### JSON (`test/json/`)
+- **File:** `test_sample.json`
+- **Tests:**
+  - Trailing comma (jsonls, jsonlint)
+
+### TOML (`test/toml/`)
+- **File:** `test_sample.toml`
+- **Tests:**
+  - Duplicate key (taplo)
+
+### SQL (`test/sql/`)
+- **File:** `test_sample.sql`
+- **Tests:**
+  - Highlighting with no LSP attached
+  - Messy layout for the sqlfluff formatter
+
 ## How to Use
 
 ### Manual Testing
@@ -79,8 +112,9 @@ Each test file contains **intentional errors and edge cases** to verify that:
 3. **Test LSP features:**
    - **Go to definition:** `gd` on a function/variable
    - **Hover documentation:** `K` on a symbol
-   - **Code actions:** `<leader>ca` on an error
-   - **Rename:** `<leader>rn` on a symbol
+   - **Code actions:** `gra` on an error
+   - **Rename:** `grn` on a symbol
+   - **References:** `grr` (Telescope)
    - **Format:** `<leader>cf` to format the file
 
 4. **Test linting:**
@@ -93,34 +127,28 @@ Each test file contains **intentional errors and edge cases** to verify that:
 
 ### Automated Testing
 
-### LSP Attachment Test
-
-Run the automated LSP test suite:
+`scripts/smoke` opens every file listed in `test/smoke/cases.lua` in an isolated Neovim and fails when a buffer does
+not get the expected LSP clients, settings, diagnostics, treesitter parser, textobjects or keymaps, or when any
+message goes unexplained. `scripts/gate-selftest` proves the gate fails on known-bad configs. See the smoke gate
+section of [`docs/TESTING.md`](../docs/TESTING.md).
 
 ```bash
-./test/test_lsp.sh
+./scripts/smoke --seed-from ~/.local/share/nvim   # first run per Neovim version
+./scripts/smoke                                   # every case
+./scripts/smoke --only python                     # one case
+./scripts/gate-selftest                           # every fixture must fail the gate
 ```
 
-This script verifies that LSP servers attach correctly for:
-- ✅ Lua (lua_ls)
-- ✅ Python (pyright/pylsp)
-- ✅ JavaScript (ts_ls/tsserver)
-- ✅ YAML (yamlls)
-
-**Results:** All LSP servers attach successfully within 3 seconds.
-
-### Future Enhancements
-
-- Diagnostic count assertions
-- Format diff verification
-- CI/CD integration
-- Automated linter output validation
+The gate's own files live in `test/smoke/`: `run.lua` (the engine), `preinit.lua` (notify and deprecation
+recorder), `cases.lua` (per-language expectations), `xfail.lua` (known failures with finding IDs), `allow.lua`
+(accepted messages), `bootstrap.lua` (the `--bootstrap` restore), `fixture.lua` (applies and checks fixtures), and
+`fixtures/` (known-bad configs for the self-test).
 
 ## Expected Behavior
 
 Each test file should:
 
-- ✅ Have LSP server attach automatically (`:LspInfo`)
+- ✅ Have its LSP server attach automatically (`:checkhealth vim.lsp`), except SQL, which has none on purpose
 - ✅ Show diagnostic warnings/errors inline
 - ✅ Provide code actions where applicable
 - ✅ Support go-to-definition and hover documentation
@@ -134,7 +162,7 @@ When adding new test files:
 2. Add sample file with intentional errors
 3. Document the errors in comments
 4. Update this README with test details
-5. Verify LSP/linter behavior manually
+5. Add a case to `test/smoke/cases.lua` and run `./scripts/smoke --only <name>`
 
 ## Notes
 

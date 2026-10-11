@@ -1,0 +1,11 @@
+# Test file for TOML LSP (taplo) and formatting.
+# Contains an intentional duplicate key.
+
+[project]
+name = "smoke-sample"
+version = "0.1.0"
+name = "duplicate-key"
+
+[tool.example]
+enabled = true
+values = [1, 2, 3]

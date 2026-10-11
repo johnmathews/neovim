@@ -48,8 +48,11 @@ Agents must:
 - **Plugin manager:** `lazy.nvim`
 - **Required CLIs:** `stylua`, `luacheck`, `ripgrep`, `fd`, `node` > v18
   - Install luacheck: `brew install luacheck` (macOS)
-- **Optional CLIs:** ...
-- **Python:** used for data and scripting; ensure `pynvim` installed if needed.
+- **Optional CLIs:** `uv` (the Python provider: `uv tool install pynvim`), Typora (macOS, `<leader>X`), and the
+  `tree-sitter` CLI, which becomes required at the Neovim 0.12 cutover. Formatters, linters and LSP servers come from
+  Mason (`lua/plugins/mason.lua`, `lua/plugins/lsp.lua`).
+- **Python:** used for data and scripting. The Python provider is the `pynvim` tool from `uv tool install pynvim`
+  (`$UV_TOOL_DIR/pynvim`, default `~/.local/share/uv/tools/pynvim`), set in `init.lua`. The Node provider is disabled.
 - **Preferred shell:** zsh
 
 ---
@@ -70,11 +73,13 @@ actions, or go to definition be tested?
 - Keymaps: `./lua/mappings.lua`
 - Autocmds: `./lua/autocmd.lua`
 - Plugins: `./lua/plugins/`
-- LSP setup: `./lua/plugins/lsp.lua` (and related files under `lua/plugins/`)
+- LSP setup: `./lua/plugins/lsp.lua` (enable list, LspAttach) + per-server overrides in `./after/lsp/`
 - Format/Lint: `./lua/plugins/conform.lua` + linters; Stylua for Lua
 - Treesitter: `./lua/plugins/treesitter.lua`
 - Telescope: `./lua/plugins/telescope.lua`
 - Snippets: `./lua/snippets/`
+- Gates and hooks: `./scripts/` (smoke, gate-selftest, quality-gate, health-check, pre-commit, pre-push)
+- Smoke gate engine, cases and known failures: `./test/smoke/`; sample files per language under `./test/`
 
 ---
 
@@ -106,10 +111,10 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 
 ## Build / Lint / Test Commands
 
-- **Lint Lua:** `luacheck lua/` (uses `.luacheckrc`)
-  - Should report: `0 warnings / 0 errors in 51 files`
-  - Config: `.luacheckrc` defines globals, disables line length, ignores unused vars in snippets
-  - Run from config root: `cd ~/.config/nvim && luacheck lua/`
+- **Lint Lua:** `luacheck lua/ after/ test/smoke` (uses `.luacheckrc`; the same paths `scripts/quality-gate` lints)
+  - Should report `0 warnings / 0 errors`
+  - Config: `.luacheckrc` defines globals, sets `max_line_length = 150`, ignores unused vars in snippets
+  - Run from config root: `cd ~/.config/nvim && luacheck lua/ after/ test/smoke`
 - **Format Lua:** `stylua .` (formats all Lua files)
   - Check only: `stylua --check .`
 - **Prettier:** `prettierd` via conform.nvim (for Markdown)
@@ -118,8 +123,11 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 - **Manual format:** `<leader>cf`
 - **Manual lint:** `<leader>cl`
 - **Run single test:** `t<leader>n` (nearest), `t<leader>f` (file)
-- **Health check:** `:checkhealth` or `nvim --headless "+CheckHealth" +qa`
-- **Full quality gate:** `./scripts/quality-gate` (stylua + luacheck + nvim load test)
+- **Health check:** `:checkhealth` or `./scripts/health-check` (`--isolated` runs in the smoke environment, never the
+  real data dir)
+- **Full quality gate:** `./scripts/quality-gate` (stylua + luacheck + `scripts/smoke --startup-only`)
+- **Smoke gate:** `./scripts/smoke` opens a real buffer per language in an isolated Neovim; first run per Neovim
+  version: `./scripts/smoke --seed-from ~/.local/share/nvim`. `./scripts/gate-selftest` proves the gates can fail.
 
 ---
 
@@ -134,7 +142,7 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 - **Types & Docs:** Add `---@param` and `---@return` annotations for LSP; use `---@class` for table schemas.
 - **Comments:** Use single-line `--` comments; avoid multi-line blocks; prefer self-documenting code over comments.
 - **Keymaps:** Define in `lua/mappings.lua` with `desc` field for discoverability; group related maps by prefix.
-- **Linting:** All code must pass `luacheck lua/` (0 warnings) and `stylua --check .` before commit.
+- **Linting:** All code must pass `luacheck lua/ after/ test/smoke` (0 warnings) and `stylua --check .` before commit.
 - **Commits:** Atomic, tested with `./scripts/quality-gate` before commit.
 
 ---
@@ -144,22 +152,28 @@ There should be _one good way_ to do a task (finding, applying, deciding, viewin
 | Purpose           | Command                              |
 | ----------------- | ------------------------------------ |
 | Format all Lua    | `stylua .`                           |
-| Lint Lua          | `luacheck lua/`                      |
+| Lint Lua          | `luacheck lua/ after/ test/smoke`    |
 | Lint single file  | `luacheck lua/plugins/telescope.lua` |
 | Health check      | `./scripts/health-check`             |
 | Quality gate      | `./scripts/quality-gate`             |
+| Smoke gate        | `./scripts/smoke`                    |
+| Gate self-test    | `./scripts/gate-selftest`            |
 | Pre-commit hook   | `./scripts/pre-commit`               |
-| Validate setup    | `nvim --headless "+CheckHealth" +qa` |
+| Pre-push hook     | `./scripts/pre-push`                 |
+| Validate setup    | `./scripts/health-check --isolated`  |
 | Re-index OpenCode | `:reload` inside OpenCode            |
 | Export summaries  | `:export summary.md` inside OpenCode |
 
 ### Testing & Quality Scripts
 
-Three automation scripts are provided in `scripts/`:
+These automation scripts are provided in `scripts/` (details in `docs/TESTING.md`):
 
-1. **`health-check`** - Comprehensive configuration health check
-2. **`quality-gate`** - Pre-commit/pre-push validation
-3. **`pre-commit`** - Git pre-commit hook (optional)
+1. **`health-check`** - Comprehensive configuration health check; exits 1 on any failure
+2. **`quality-gate`** - Pre-commit/pre-push validation; a missing tool fails it
+3. **`smoke`** - Buffer-opening smoke gate in an isolated environment
+4. **`gate-selftest`** - Proves `smoke`, `quality-gate` and `health-check` fail on known-bad inputs
+5. **`pre-commit`** / **`pre-push`** - Git hooks, installed by **`install-hooks`** through `core.hooksPath`
+6. **`versions.env`** - Versions `health-check` enforces
 
 ### Luacheck Configuration
 
@@ -168,7 +182,7 @@ The `.luacheckrc` file configures luacheck behavior:
 - **Allowed globals:** Neovim-specific globals like `vim`, `KeymapOptions`, plugin toggle functions
 - **Line length:** Maximum 150 characters (`max_line_length = 150`)
 - **Snippet exceptions:** Unused variables/functions allowed in `lua/snippets/` (common for snippet helpers)
-- **Target:** Zero warnings/errors across all 51 Lua files
+- **Target:** Zero warnings/errors across every checked Lua file
 
 ---
 
@@ -198,8 +212,8 @@ This section is informational only, not actionable.
 informational only, not actionable
 
 **Target:** less than 150ms cold boot startup  
-**Current:** ~342ms (as of 2025-01-13)  
-**Status:** 2.3x slower than target
+**Current:** ~140ms headless median (as of 2026-10-10, Neovim 0.11.6 and 0.12.6)  
+**Status:** under target. Removing the `poetry` and `neovim-node-host` shell-outs from `init.lua` cut about 280ms
 
 ### Startup Profiling
 
@@ -217,22 +231,26 @@ nvim +StartupTime
 
 ### Top Contributors to Startup Time
 
-1. **Lazy.nvim plugin loading** (~108ms) - Plugin manager overhead
-2. **LSP configuration** (~15ms) - Mason + multiple servers
-3. **Telescope setup** (~16ms) - Fuzzy finder + extensions
-4. **Completion stack** (~10ms) - nvim-cmp + LuaSnip
-5. **Treesitter** (~11ms) - Core + plugins
+1. **`require('plugins')`** (~113ms inclusive) - lazy.nvim and every non-lazy plugin's config
+2. **Mason** (~18ms) - mason, mason-tool-installer and mason-lspconfig setup
+3. **Telescope setup** (~16ms) - Fuzzy finder + extensions (measured with project.nvim's extension, since removed)
+4. **Custom snippets** (~9ms) - `luasnip.loaders.from_lua`
+5. **LSP configuration** (~7ms) - `lua/plugins/lsp.lua`
 
-**See `PERFORMANCE.md` for detailed analysis and optimization recommendations.**
+**See `docs/PERFORMANCE.md` for detailed analysis and optimization recommendations.**
 
 ---
 
 ## Documentation
 
-- **`KEYMAPS.md`** - Complete keymap reference (searchable via `<Tab>tk`)
-- **`LSP.md`** - Language Server Protocol, formatters, and linters documentation
-- **`PERFORMANCE.md`** - Startup performance analysis and optimization guide
-- **`TESTING.md`** - Testing infrastructure, quality gates, and CI/CD setup
+- **`docs/KEYMAPS.md`** - Complete keymap reference (searchable via `<Tab>tk`)
+- **`docs/LSP.md`** - Language Server Protocol, formatters, and linters documentation
+- **`docs/MARKDOWN-FORMATTING.md`** - Markdown formatting, linting and print mode
+- **`docs/PERFORMANCE.md`** - Startup performance analysis and optimization guide
+- **`docs/TESTING.md`** - Smoke gate, quality gate, health check and git hooks
+- **`docs/CHANGELOG.md`** - Version history
+- **`docs/archive/`** - Superseded docs, kept for their history
+- **`journal/`** - Dated development journal entries
 - **`AGENTS.md`** - This file (architecture and conventions)
 
 ---

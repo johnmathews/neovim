@@ -1,0 +1,10 @@
+{
+  "name": "smoke-sample",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "echo test"
+  },
+  "tags": ["a", "b", "c",],
+  "nested": { "enabled": true, "count": 3 }
+}

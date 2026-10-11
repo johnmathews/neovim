@@ -5,13 +5,13 @@ function M.asyncGitCommitAndPush(commitMessage)
     commitMessage = "quick commit" -- Default commit message
   end
 
-  vim.loop.spawn("git", {
+  vim.uv.spawn("git", {
     args = { "rev-parse", "--inside-work-tree" },
-    cwd = vim.loop.cwd(),
+    cwd = vim.uv.cwd(),
   }, function(code)
     if code ~= 0 then
       vim.schedule(function()
-        vim.api.nvim_out_write("Can't commit, not in a git repository\n")
+        vim.api.nvim_echo({ { "Can't commit, not in a git repository" } }, true, {})
       end)
       return
     end
@@ -20,7 +20,7 @@ function M.asyncGitCommitAndPush(commitMessage)
       vim.fn.system("git add .")
       vim.fn.system('git commit -m "' .. commitMessage .. '"')
       vim.fn.system("git push")
-      vim.api.nvim_out_write('git commit --all --message "' .. commitMessage .. '"\n')
+      vim.api.nvim_echo({ { 'git commit --all --message "' .. commitMessage .. '"' } }, true, {})
     end)
   end)
 end

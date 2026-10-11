@@ -1,3 +1,5 @@
+**Status:** superseded by [CHANGELOG.md](../CHANGELOG.md) and [PERFORMANCE.md](../PERFORMANCE.md) (2026-10-11).
+
 # Neovim Configuration Improvements
 
 **Date:** 2025-11-08  

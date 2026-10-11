@@ -4,15 +4,15 @@
 #   - Quality gate (stylua, luacheck, Neovim load test)
 #   - Trailing whitespace detection in staged .lua files
 #   - Debug statement detection (warning only)
-# Install: ln -s ../../scripts/pre-commit .git/hooks/pre-commit
+# Install: scripts/install-hooks (sets core.hooksPath, so every worktree runs its own copy)
 
 set -e
 
 echo "🔍 Running pre-commit checks..."
 echo ""
 
-# Change to config directory
-cd "$(dirname "$0")/../.." || exit 1
+# Change to the root of the checkout being committed (a worktree runs its own files)
+cd "$(git rev-parse --show-toplevel)" || exit 1
 
 # Color codes
 RED='\033[0;31m'
@@ -37,20 +37,20 @@ echo ""
 echo "🔎 Checking staged files for common issues..."
 
 # Only check Lua files if there are any staged
-LUA_FILES=$(git diff --cached --name-only | grep '\.lua$' || true)
+LUA_FILES=$(git diff --cached --name-only --diff-filter=d | grep '\.lua$' || true)
 
 if [ -n "$LUA_FILES" ]; then
-  # Check for trailing whitespace in staged Lua files
-  if echo "$LUA_FILES" | xargs grep -l '[[:space:]]$' 2>/dev/null; then
+  # Trailing whitespace in the staged content (not the working tree, which may differ)
+  if ! git diff --cached --check -- '*.lua'; then
     echo -e "${YELLOW}⚠ Found trailing whitespace in staged Lua files${NC}"
-    echo "  Fix with: sed -i '' 's/[[:space:]]*$//' <file>"
+    echo "  Fix with: stylua <file>"
     FAILED=1
   fi
 
   # Check for debug statements (warning only, don't block)
   DEBUG_FILES=$(echo "$LUA_FILES" | grep -v '^test/' || true)
   if [ -n "$DEBUG_FILES" ]; then
-    if echo "$DEBUG_FILES" | xargs grep -l 'vim.print\|print(' 2>/dev/null; then
+    if echo "$DEBUG_FILES" | tr '\n' '\0' | xargs -0 grep -l -e 'vim.print' -e 'print(' -- 2>/dev/null; then
       echo -e "${YELLOW}⚠ Found print/debug statements in staged files${NC}"
       echo "  Consider removing debug statements before committing"
     fi

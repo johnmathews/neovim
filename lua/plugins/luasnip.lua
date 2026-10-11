@@ -51,7 +51,12 @@ local function window_for_choiceNode(choiceNode)
   end
 
   vim.api.nvim_buf_set_text(buf, 0, 0, 0, 0, buf_text)
-  local w, h = vim.lsp.util._make_floating_popup_size(buf_text)
+  -- float size: the widest line and the line count
+  local w = 1
+  for _, line in ipairs(buf_text) do
+    w = math.max(w, vim.fn.strdisplaywidth(line))
+  end
+  local h = math.max(#buf_text, 1)
 
   -- adding highlight so we can see which one is been selected.
   local extmark = vim.api.nvim_buf_set_extmark(

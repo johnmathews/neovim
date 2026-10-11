@@ -137,15 +137,21 @@ prettierd = {
 
 ### 2. `lua/plugins/nvim-lint.lua`
 
-The markdownlint `args` function appends `--disable MD013` when print mode is
-active:
+`lint.linters.markdownlint` is a function that nvim-lint calls on every lint run. It
+builds the argument list (`--stdin`, then `--config` with the nearest
+`.markdownlint.json`), appends `--disable MD013` when print mode is active, and
+returns a copy of the stock linter with those `args`:
 
 ```lua
 if vim.b.markdown_print_mode then
-  table.insert(args, "--disable")
-  table.insert(args, "MD013")
+  vim.list_extend(args, { "--disable", "MD013" })
 end
+
+return vim.tbl_extend("force", {}, markdownlint, { args = args })
 ```
+
+nvim-lint only accepts `args` as a list, so the function wraps the whole linter
+rather than the `args` field.
 
 ### 3. `ftplugin/markdown.vim`
 

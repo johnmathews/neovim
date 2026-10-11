@@ -1,60 +1,21 @@
+-- Faster Lua module loading (Nvim ≥ 0.9)
+pcall(vim.loader.enable)
+
 vim.g.loaded_perl_provider = 0
 vim.g.loaded_ruby_provider = 0
 
--- Ensure neovim-node-host is found (works with NVM/Homebrew)
-local function set_node_host_prog()
-  -- try to find the host in PATH
-  local h = io.popen("command -v neovim-node-host 2>/dev/null")
-  local p = h and h:read("*a") or ""
-  if h then
-    h:close()
-  end
-  p = (p or ""):gsub("%s+$", "")
-  if p ~= "" then
-    vim.g.node_host_prog = p
-    return
-  end
+-- No remote plugin needs the node host
+vim.g.loaded_node_provider = 0
 
-  -- fallback: add common NVM path (adjust version if needed)
-  local nvm_bin = vim.fn.expand("~/.nvm/versions/node/v20.12.2/bin")
-  if vim.fn.isdirectory(nvm_bin) == 1 then
-    vim.env.PATH = nvm_bin .. ":" .. vim.env.PATH
-    local h2 = io.popen("command -v neovim-node-host 2>/dev/null")
-    local p2 = h2 and h2:read("*a") or ""
-    if h2 then
-      h2:close()
-    end
-    p2 = (p2 or ""):gsub("%s+$", "")
-    if p2 ~= "" then
-      vim.g.node_host_prog = p2
-    end
-  end
-end
-set_node_host_prog()
-
+-- Python host: the pynvim tool from `uv tool install pynvim`, found where uv puts it.
+-- Without it Neovim auto-detects, which finds whatever python3 is first on PATH.
 local function set_python_host_prog()
-  local default_py = vim.fn.expand("~/.pyenv/versions/3.10.12/envs/nvim/bin/python3")
-  local host = nil
-
-  -- Prefer Poetry ONLY if it's on PATH and returns a path
-  if vim.fn.executable("poetry") == 1 then
-    local handle = io.popen("poetry env info -p 2>/dev/null")
-    local result = handle and handle:read("*a") or ""
-    if handle then
-      handle:close()
-    end
-    result = (result or ""):gsub("[\r\n]", "")
-    local poetry_py = result ~= "" and (result .. "/bin/python") or nil
-    if poetry_py and vim.fn.executable(poetry_py) == 1 then
-      host = poetry_py
-    end
+  local data = vim.env.XDG_DATA_HOME or (vim.env.HOME .. "/.local/share")
+  local tool_dir = vim.env.UV_TOOL_DIR or (data .. "/uv/tools")
+  local python = tool_dir .. "/pynvim/bin/python"
+  if vim.fn.executable(python) == 1 then
+    vim.g.python3_host_prog = python
   end
-
-  if not host then
-    host = default_py
-  end
-
-  vim.cmd(("let g:python3_host_prog = '%s'"):format(host:gsub("'", "\\'")))
 end
 set_python_host_prog()
 
@@ -107,7 +68,7 @@ vim.api.nvim_create_autocmd({ "BufRead", "BufNewFile" }, {
   end,
 })
 
-vim.lsp.set_log_level("WARN")
+vim.lsp.log.set_level("WARN")
 
 -- use the following to see what highlight group the text under the cursor is part of
 -- :exe 'hi '.synIDattr(synstack(line('.'), col('.'))[-1], 'name')
